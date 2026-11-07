@@ -7,6 +7,7 @@ class Control extends EventTarget {
   hidden = false; open = false; attrs = new Map();
   setAttribute(key, value) { this.attrs.set(key, value); }
   querySelector() { return this.summary; }
+  focus() { this.focused = true; }
 }
 function setup(matches) {
   const menu = new Control(), nav = new Control(), search = new Control(), media = new EventTarget();
@@ -32,6 +33,18 @@ test('desktop and responsive changes restore navigation and disclosure accessibi
   assert.equal(menu.hidden, false); assert.equal(nav.hidden, true); assert.equal(search.open, false);
   media.matches = false; media.dispatchEvent(new Event('change'));
   assert.equal(menu.hidden, true); assert.equal(nav.hidden, false); assert.equal(search.open, true);
+});
+test('Escape closes mobile navigation and returns focus without closing Search', () => {
+  const { menu, nav, search } = setup(true);
+  menu.dispatchEvent(new Event('click'));
+  search.open = true;
+  const event = new Event('keydown');
+  event.key = 'Escape';
+  nav.dispatchEvent(event);
+  assert.equal(nav.hidden, true);
+  assert.equal(menu.attrs.get('aria-expanded'), 'false');
+  assert.equal(menu.focused, true);
+  assert.equal(search.open, true);
 });
 test('mobile layout contract places full-width menu after entire toolbar, with no overlay panels', async () => {
   const sheet = postcss.parse(await readFile('src/styles/global.css', 'utf8'));

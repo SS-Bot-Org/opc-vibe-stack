@@ -34,3 +34,18 @@ export function assertHeaderStructure(html) {
   const tools = search.parentNode;
   assert.equal(nav.parentNode, tools.parentNode, 'menu and toolbar are separate flow items');
 }
+export function assertArticleNavigation(html, locale) {
+  const doc = parse(html);
+  const toc = elements(doc, (n) => attr(n, 'data-toc') !== undefined);
+  assert.equal(toc.length, 1, 'one table of contents for desktop and mobile');
+  const links = elements(toc[0], (n) => attr(n, 'data-toc-link') !== undefined);
+  assert.ok(links.length > 2, 'rendered Markdown headings reach the article layout');
+  const ids = new Set(elements(doc, (n) => attr(n, 'id')).map((n) => attr(n, 'id')));
+  for (const link of links) {
+    const href = attr(link, 'href');
+    assert.ok(href.startsWith('#'));
+    assert.ok(ids.has(decodeURIComponent(href.slice(1))), `TOC target exists: ${href}`);
+  }
+  assert.match(text(toc[0]), locale === 'zh' ? /本页目录/ : /On this page/);
+  assert.ok(links.some((n) => attr(n, 'href') === '#sources-heading'));
+}

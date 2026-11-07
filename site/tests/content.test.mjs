@@ -6,7 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { articleSchema, assertConditional } from '../src/lib/content-schema.mjs';
 import { readInventory, alternateRoutes } from '../src/lib/inventory.mjs';
-import { assertUnavailable, assertSwitchTarget, assertHeaderStructure } from './rendered.mjs';
+import { assertUnavailable, assertSwitchTarget, assertHeaderStructure, assertArticleNavigation } from './rendered.mjs';
 const site = process.cwd();
 async function fixture(run) {
   const dir = await mkdtemp(path.join(tmpdir(), 'opc-content-'));
@@ -65,6 +65,7 @@ test('draft translations are excluded from public inventory and hreflang, no inv
   assert.match(enHtml, /rel="canonical" href="https:\/\/opcvibestack.com\/en\/articles\/spec-first-agent-loop\/"/);
   assert.ok(!enHtml.includes('hreflang="zh-Hans"'));
   assertHeaderStructure(enHtml);
+  assertArticleNavigation(enHtml, 'en');
   assertSwitchTarget(await readFile(path.join(dir, 'dist/en/articles/codex/index.html'), 'utf8'), '/zh/articles/codex/');
   assertSwitchTarget(await readFile(path.join(dir, 'dist/en/stack/index.html'), 'utf8'), '/zh/stack/');
   assertSwitchTarget(await readFile(path.join(dir, 'dist/404.html'), 'utf8'), '/zh/');
@@ -92,6 +93,7 @@ test('rendered Chinese article with draft English counterpart preserves context 
   }
   const result = build(dir); assert.equal(result.status, 0, result.output);
   const html = await readFile(path.join(dir, 'dist/zh/articles/translation-fixture/index.html'), 'utf8');
+  assertArticleNavigation(html, 'zh');
   assertUnavailable(html, /尚无英文版 — 继续阅读中文/);
   assert.match(html, /rel="canonical" href="https:\/\/opcvibestack.com\/zh\/articles\/translation-fixture\/"/);
   assert.ok(!html.includes('hreflang="en"'));

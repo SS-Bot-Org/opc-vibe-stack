@@ -1,0 +1,14 @@
+---
+import search from '../assets/icons/search.svg?raw';
+import sun from '../assets/icons/sun.svg?raw';
+import moon from '../assets/icons/moon.svg?raw';
+import menu from '../assets/icons/menu-2.svg?raw';
+import arrow from '../assets/icons/arrow-right.svg?raw';
+import copy from '../assets/icons/copy.svg?raw';
+import chevron from '../assets/icons/chevron-down.svg?raw';
+
+const icons = { search, sun, moon, menu, arrow, copy, chevron };
+interface Props { name: keyof typeof icons; class?: string; }
+const { name, class: className } = Astro.props;
+---
+<span class:list={['icon', className]} aria-hidden="true" set:html={icons[name]} />

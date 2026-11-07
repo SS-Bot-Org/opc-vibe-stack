@@ -17,8 +17,8 @@ const { publicSources = [], internalBriefing = [], locale = 'en' } = Astro.props
 const zh = locale === 'zh';
 ---
 {(publicSources.length > 0 || internalBriefing.length > 0) && (
-  <section aria-labelledby="sources-heading" style="margin-top:2rem">
-    <h2 id="sources-heading">{zh ? '来源' : 'Sources'}</h2>
+  <section class="source-list" aria-labelledby="sources-heading">
+    <h2 id="sources-heading">{zh ? '参考来源' : 'Source references'}</h2>
     {publicSources.length > 0 && (
       <ul>
         {publicSources.map((s) => (

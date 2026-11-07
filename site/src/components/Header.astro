@@ -4,39 +4,47 @@ import { navFor, uiFor } from '../lib/i18n';
 import LocaleSwitcher from './LocaleSwitcher.astro';
 import SearchControl from './SearchControl.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import Icon from './Icon.astro';
 
 interface Props {
   currentPath: string;
   locale?: Locale | string;
+  activeSection?: string;
 }
-const { currentPath, locale = 'en' } = Astro.props;
+const { currentPath, locale = 'en', activeSection } = Astro.props;
 const nav = navFor(locale);
 const ui = uiFor(locale);
 const home = locale === 'zh' ? '/zh/' : '/en/';
 
 function isCurrent(href: string): boolean {
   if (href === home) return currentPath === home || currentPath === home.slice(0, -1);
-  return currentPath === href || currentPath.startsWith(href);
+  return currentPath === href || currentPath.startsWith(href) || href === activeSection;
 }
 ---
 <header class="site-header">
   <div class="site-header__inner">
-    <a class="brand" href={home}>{site.name}</a>
-    <button type="button" class="header-menu" aria-controls="primary-navigation" aria-expanded="true" data-header-menu hidden>{locale === 'zh' ? '导航' : 'Menu'}</button>
+    <a class="brand" href={home} aria-label={site.name}><span class="brand__mark">OPC</span><span class="brand__name">Vibe Stack</span></a>
+    <button type="button" class="header-menu" aria-controls="primary-navigation" aria-expanded="true" data-header-menu hidden><Icon name="menu" />{locale === 'zh' ? '导航' : 'Menu'}</button>
     <nav id="primary-navigation" class="header-nav" aria-label={ui.primaryNav} data-header-nav>
+      <p class="nav-eyebrow">{locale === 'zh' ? '探索' : 'Explore'}</p>
       <ul class="nav">
-        {nav.map((item) => (
-          <li>
-            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+        <li><a href={home} aria-current={isCurrent(home) ? 'page' : undefined}>{locale === 'zh' ? '概览' : 'Overview'}</a></li>
+        {nav.map((item, index) => (
+          <li class:list={[index === 4 && 'nav__divider']}>
+            <a href={item.href} aria-current={isCurrent(item.href) ? (currentPath === item.href ? 'page' : 'true') : undefined}>
               {item.label}
             </a>
           </li>
         ))}
       </ul>
+      <div class="sidebar-footer">
+        <a href={`${home}about/`}>{locale === 'zh' ? '关于' : 'About'}</a>
+        <a href="/en/rss.xml">{locale === 'zh' ? 'RSS（英文）' : 'RSS'}</a>
+      </div>
     </nav>
     <div class="header-tools">
       <details class="header-search" open data-header-search>
-        <summary aria-expanded="true">{locale === 'zh' ? '搜索' : 'Search'}</summary>
+        <summary aria-expanded="true"><Icon name="search" />{locale === 'zh' ? '搜索' : 'Search'}</summary>
         <SearchControl locale={locale === 'zh' ? 'zh' : 'en'} />
       </details>
       <ThemeToggle locale={locale} />

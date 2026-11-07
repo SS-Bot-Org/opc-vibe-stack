@@ -22,6 +22,10 @@ const href = target?.href ?? `/${other}/`;
   {unavailable ? (
     <span class="meta" data-translation-unavailable>{other === 'zh' ? ui.notInZh : ui.notInEn}</span>
   ) : (
-    <a href={href} lang={other === 'zh' ? 'zh-Hans' : 'en'}>{other === 'zh' ? ui.langZh : ui.langEn}</a>
+    <>
+      <span class="locale-switcher__current" lang={locale === 'zh' ? 'zh-Hans' : 'en'}>{locale === 'zh' ? '中文' : 'EN'}</span>
+      <span class="locale-switcher__divider" aria-hidden="true">/</span>
+      <a href={href} lang={other === 'zh' ? 'zh-Hans' : 'en'} aria-label={other === 'zh' ? ui.langZh : ui.langEn}>{other === 'zh' ? '中文' : 'EN'}</a>
+    </>
   )}
 </div>

@@ -1,5 +1,6 @@
 ---
 import { uiFor } from '../lib/i18n';
+import Icon from './Icon.astro';
 interface Props {
   locale?: string;
 }
@@ -9,6 +10,7 @@ const indexUrl = `/${locale}/search-index.json`;
 ---
 <div class="search" data-search data-index-url={indexUrl} data-empty={ui.searchEmpty} data-error={ui.searchError} data-results={ui.searchResults}>
   <label class="visually-hidden" for="site-search">{ui.searchLabel}</label>
+  <Icon name="search" class="search__icon" />
   <input
     id="site-search"
     class="search__input"

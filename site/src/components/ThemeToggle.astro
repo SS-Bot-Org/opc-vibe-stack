@@ -1,5 +1,6 @@
 ---
 import { uiFor } from '../lib/i18n';
+import Icon from './Icon.astro';
 interface Props {
   locale?: string;
 }
@@ -13,8 +14,8 @@ const ui = uiFor(locale);
   aria-label={ui.themeToggle}
   title={ui.themeToggle}
 >
-  <span class="theme-toggle__icon theme-toggle__icon--to-dark" aria-hidden="true">☾</span>
-  <span class="theme-toggle__icon theme-toggle__icon--to-light" aria-hidden="true">☀</span>
+  <Icon name="sun" class="theme-toggle__icon--to-dark" />
+  <Icon name="moon" class="theme-toggle__icon--to-light" />
   <span class="visually-hidden">{ui.themeToggle}</span>
 </button>
 <script is:inline>

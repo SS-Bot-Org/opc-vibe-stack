@@ -14,6 +14,8 @@ interface Props {
   noindex?: boolean;
   locale?: Locale | string;
   ogImage?: string;
+  article?: boolean;
+  activeSection?: string;
 }
 
 const {
@@ -24,6 +26,8 @@ const {
   noindex = false,
   locale: localeProp,
   ogImage = site.ogImagePath,
+  article = false,
+  activeSection,
 } = Astro.props;
 
 const locale = (localeProp ?? detectLocaleFromPath(Astro.url.pathname)) as Locale | string;
@@ -79,8 +83,8 @@ const alternateLinks = noindex || !routes.has(Astro.url.pathname) ? [] : alterna
   </head>
   <body>
     <a class="skip-link" href="#main">{ui.skipToContent}</a>
-    <Header currentPath={Astro.url.pathname} locale={locale} />
-    <main id="main" class:list={['page', wide && 'page--wide']}>
+    <Header currentPath={Astro.url.pathname} locale={locale} activeSection={activeSection} />
+    <main id="main" tabindex="-1" class:list={['page', wide && 'page--wide', article && 'page--article']}>
       <slot />
     </main>
     <footer class="site-footer">

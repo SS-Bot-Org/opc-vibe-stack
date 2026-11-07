@@ -4,7 +4,7 @@ export const uiZh: UiStrings = {
   skipToContent: '跳到正文',
   primaryNav: '主导航',
   searchLabel: '搜索文章',
-  searchPlaceholder: '按标题或标签搜索…',
+  searchPlaceholder: '搜索指南',
   searchSubmit: '搜索',
   searchEmpty: '没有匹配的文章。',
   searchError: '搜索索引暂不可用，请改用导航浏览。',

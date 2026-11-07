@@ -3,59 +3,81 @@ import SiteLayout from './SiteLayout.astro';
 import EvidenceLabel from '../components/EvidenceLabel.astro';
 import SourceList from '../components/SourceList.astro';
 import ContentNotice from '../components/ContentNotice.astro';
+import Icon from '../components/Icon.astro';
 import type { CollectionEntry } from 'astro:content';
+import type { MarkdownHeading } from 'astro';
 import { site } from '../data/site';
+import { wrapArticleTables } from '../lib/article-html.mjs';
 
 interface Props {
   entry: CollectionEntry<'articles'>;
+  headings: MarkdownHeading[];
   ogImage?: string;
 }
-
-const { entry, ogImage } = Astro.props;
+const { entry, headings, ogImage } = Astro.props;
 const d = entry.data;
 const locale = d.locale;
+const zh = locale === 'zh';
+const articleHtml = wrapArticleTables(await Astro.slots.render('default'), zh ? '数据表格，可横向滚动' : 'Data table, scroll horizontally if needed');
 const path = `/${locale}/articles/${d.slug}/`;
-const resolvedOg =
-  ogImage ??
-  (d.slug === '48h-mvp-agent-stack'
-    ? '/og/playbook-48h-mvp.png'
-    : d.slug === 'hardware-soft-split'
-      ? '/og/hardware.png'
-      : site.ogImagePath);
-const updatedLabel = locale === 'zh' ? '更新于' : 'Updated';
-const applicableLabel = locale === 'zh' ? '适用' : 'Applicable';
+const section = d.category === 'stack' ? 'stack' : d.category === 'playbook' ? 'playbooks'
+  : d.tags.includes('hardware') ? 'hardware'
+  : d.stage === 'cross' ? 'build' : d.stage;
+const sectionLabels: Record<string, string> = zh
+  ? { stack: '工具栈', playbooks: 'Playbooks', hardware: '硬件', 'anti-patterns': '反模式', research: '调研', build: '构建', sell: '销售' }
+  : { stack: 'Stack', playbooks: 'Playbooks', hardware: 'Hardware', 'anti-patterns': 'Anti-patterns', research: 'Research', build: 'Build', sell: 'Sell' };
+const sectionPath = `/${locale}/${section}/`;
+const resolvedOg = ogImage ?? (d.slug === '48h-mvp-agent-stack' ? '/og/playbook-48h-mvp.png'
+  : d.slug === 'hardware-soft-split' ? '/og/hardware.png' : site.ogImagePath);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+if (d.publicSources.length || d.internalBriefing.length) {
+  toc.push({ depth: 2, slug: 'sources-heading', text: zh ? '参考来源' : 'Source references' });
+}
 ---
-<SiteLayout
-  title={d.title}
-  description={d.summary}
-  canonicalPath={path}
-  noindex={d.status === 'deprecated'}
-  locale={locale}
-  ogImage={resolvedOg}
->
-  <article>
-    <p class="meta">
-      <span class="badge">{d.category}</span>
-      {' · '}
-      <span>{d.stage}</span>
-      {' · '}
-      {updatedLabel} {d.updated}
-      {d.status === 'deprecated' && <> · <span class="badge badge--deprecated">deprecated</span></>}
-    </p>
-    <h1>{d.title}</h1>
-    <p class="lede">{d.summary}</p>
-    <p>
-      <EvidenceLabel evidence={d.evidence} locale={locale} />
-      <span class="meta"> · {applicableLabel}: {d.applicableToolsVersions}</span>
-    </p>
-    {d.notice && <ContentNotice text={d.notice.text} />}
-    <div class="prose">
-      <slot />
-    </div>
-    <SourceList
-      publicSources={d.publicSources}
-      internalBriefing={d.internalBriefing}
-      locale={locale}
-    />
-  </article>
+<SiteLayout title={d.title} description={d.summary} canonicalPath={path} noindex={d.status === 'deprecated'}
+  locale={locale} ogImage={resolvedOg} wide={true} article={true} activeSection={sectionPath}>
+  <div class="article-layout">
+    <header class="article-header">
+      <nav class="breadcrumb" aria-label={zh ? '当前位置' : 'Breadcrumb'}>
+        <a href={sectionPath}>{sectionLabels[section]}</a><span aria-hidden="true">/</span><span>{zh ? '指南' : 'Guide'}</span>
+      </nav>
+      <h1 id="article-title">{d.title}</h1>
+      <p class="lede">{d.summary}</p>
+      <div class="article-meta">
+        <EvidenceLabel evidence={d.evidence} locale={locale} />
+        <span>{zh ? '更新于' : 'Updated'} <time datetime={d.updated}>{d.updated}</time></span>
+        {d.status === 'deprecated' && <span class="badge badge--deprecated">{zh ? '已弃用' : 'Deprecated'}</span>}
+      </div>
+      <p class="article-applicable">{zh ? '适用' : 'Applicable'}: {d.applicableToolsVersions}</p>
+      {d.notice && <ContentNotice text={d.notice.text} />}
+    </header>
+    {toc.length > 0 && <aside class="article-toc">
+      <details open data-toc>
+        <summary>{zh ? '本页目录' : 'On this page'}<Icon name="chevron" /></summary>
+        <nav aria-label={zh ? '本页目录' : 'On this page'}>
+          <p class="eyebrow toc-title">{zh ? '本页目录' : 'On this page'}</p>
+          <ol>
+            {toc.map((heading) => <li class:list={[heading.depth === 3 && 'toc-subheading']}>
+              <a href={`#${heading.slug}`} data-toc-link>{heading.text}</a>
+            </li>)}
+          </ol>
+        </nav>
+      </details>
+    </aside>}
+    <article class="article-body" aria-labelledby="article-title" data-article data-locale={locale}>
+      <div class="prose" set:html={articleHtml} />
+      <SourceList publicSources={d.publicSources} internalBriefing={d.internalBriefing} locale={locale} />
+      <template data-code-toolbar>
+        <div class="code-toolbar">
+          <span class="code-language"></span>
+          <button class="code-copy" type="button"><Icon name="copy" /><span>{zh ? '复制' : 'Copy'}</span></button>
+        </div>
+      </template>
+      <p class="visually-hidden" aria-live="polite" data-copy-status></p>
+    </article>
+  </div>
 </SiteLayout>
+<script>
+  import { enhanceArticle } from '../lib/article';
+  enhanceArticle();
+</script>

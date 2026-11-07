@@ -2,7 +2,7 @@ export const uiEn = {
   skipToContent: 'Skip to content',
   primaryNav: 'Primary',
   searchLabel: 'Search articles',
-  searchPlaceholder: 'Search by title or tag…',
+  searchPlaceholder: 'Search guides',
   searchSubmit: 'Search',
   searchEmpty: 'No matching articles.',
   searchError: 'Search index unavailable. Browse the sections instead.',

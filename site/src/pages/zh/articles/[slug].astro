@@ -31,7 +31,7 @@ const rendered = mode === 'full' && entry ? await render(entry) : null;
 const Content = rendered?.Content;
 ---
 {mode === 'full' && entry && Content ? (
-  <ArticleLayout entry={entry}>
+  <ArticleLayout entry={entry} headings={rendered?.headings ?? []}>
     <Content />
   </ArticleLayout>
 ) : enEntry ? (

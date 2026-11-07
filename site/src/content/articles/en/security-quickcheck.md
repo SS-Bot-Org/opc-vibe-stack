@@ -1,7 +1,7 @@
 ---
 title: "Security quickcheck for agentic coding"
 slug: security-quickcheck
-summary: "Hard no-gos for extensions, SSH keys, and agent tokens—treat marketplace and malware reports as unverified until you assess originals."
+summary: "15-minute defensive audit for editor extensions, SSH keys, agent tokens, and MCP servers—with unverified incident context."
 locale: en
 category: alert
 stage: cross
@@ -9,8 +9,8 @@ tools: [claude-code, codex, grok-build]
 priority: P0
 status: published
 evidence: unverified
-applicableToolsVersions: "Any local agent CLI and editor extension marketplace; re-check after tool updates"
-updated: "2026-11-06"
+applicableToolsVersions: "All local coding-agent CLIs, desktop chat apps, MCP servers, and editor extension marketplaces; re-audit after updates"
+updated: "2026-11-07"
 internalBriefing:
   - date: "2026-11-01"
     note: "Cursor marketplace Claude Code extension compromise report"
@@ -35,51 +35,87 @@ publicSources:
 tags: [alert, security]
 notice:
   text: "Incident claims below are social reports (unverified). This page is a defensive checklist—not confirmation that you were compromised, and not attack instructions."
-  relatedSlugs: []
+  relatedSlugs: [rules-hooks]
 ---
 
 ## Conclusion
 
-Treat agent tooling like production access: least privilege, no secrets in prompts, and verify what extensions, SSH keys, and session tokens exist on the machine. **Alert:** recent X reports describe (1) a tampered Claude Code–branded extension in Cursor’s marketplace (poster-claimed ~11 hours on or around 2026-10-29, possible SSH key persistence) and (2) Windows infostealers targeting coding-agent and chat tokens. Those claims are **unverified** here—open the linked posts (and any vendor notices you can find) yourself before acting as if the details are settled.
+A coding agent runs with your local user’s shell, filesystem, and network privileges—treat its extensions, MCP servers, and session tokens like **production root equivalents**. Keep secrets out of prompts, audit what runs inside your editor, and know how to rotate credentials fast when ecosystem alerts surface.
 
-## Prerequisites
+> [!WARNING] Unverified incident reports (defensive context only)
+> Recent briefing-linked X posts report two risks worth defensive hygiene checks:
+> 1. A tampered **Claude Code–branded extension** in Cursor’s marketplace (poster-claimed live window of ~11 hours around `2026-10-29`, alleging possible SSH `authorized_keys` persistence).
+> 2. **Windows infostealer campaigns** targeting local coding-agent and AI chat session tokens alongside browser credentials.
+>
+> Both incident claims remain **unverified** on this site—open the linked posts and check official vendor advisories yourself before treating specific timelines or indicators as established fact.
 
-- Access to your editor’s extension list and `~/.ssh/authorized_keys` (or OS equivalent)
-- Ability to rotate tokens / sign out of agent CLIs and related desktop apps
-- Willingness to treat marketplace installs and MCP servers as code you run
+## Five-surface defensive triage matrix
+
+| Attack / exposure surface | What goes wrong | 5-minute check | Defensive response if suspicious |
+|---|---|---|---|
+| **Editor extensions** | Typosquatted or tampered update runs arbitrary local code | List installed extensions + recent update dates; verify exact publisher ID | Uninstall immediately, inspect `~/.ssh/authorized_keys`, rotate tokens |
+| **SSH `authorized_keys`** | Silent persistent backdoor logins to workstation or VPS | Read `~/.ssh/authorized_keys` on laptop and servers line by line | Delete unknown keys, rotate SSH keypairs, review host auth logs |
+| **Agent CLI & chat tokens** | Stealer grabs cached OAuth/session tokens; password reset alone fails | Check active sessions in Anthropic / OpenAI / xAI / GitHub dashboards | Sign out all sessions, revoke API keys, re-authenticate on a clean OS |
+| **Deploy & cloud keys** | Agent session accidentally reads or mutates production infra | Check shell env + `.env*` exposure in working directories | Scope deploy user to `/srv/<app>` only; never run agents as `root` |
+| **MCP servers & skills** | Untrusted server/script injects prompts or exfiltrates local files | Audit `.mcp.json`, `~/.codex/config.toml`, and `.claude/skills/` | Keep only audited servers; pass scoped tokens via env vars only |
+
+> [!FLOW] Credential containment order (if you suspect exposure)
+> 1. **Isolate & sign out** — Remove the suspect extension/package and sign out of active CLI & desktop sessions.
+> 2. **Revoke tokens** — Revoke API keys, OAuth grants, Git PATs, and VPS deploy keys from vendor consoles.
+> 3. **Verify persistence** — Audit `~/.ssh/authorized_keys`, shell startup files, and cron/launch agents cleanly.
+> 4. **Re-issue scoped keys** — Mint fresh least-privilege credentials from a trusted machine and log the date.
 
 ## Steps
 
-1. **Inventory extensions** installed or updated in the last two weeks; remove anything you did not intentionally add. Prefer pinned versions and known publishers over social “install this” links.
-2. **Check SSH authorized keys** for unknown public keys; remove strangers. If anything looks wrong, rotate keys and review recent login activity. (Suggested after the marketplace-compromise report—still **unverified** as to whether your machine was affected.)
-3. **Assume password change alone may be insufficient** if a stealer took session tokens or API keys. Sign out of agent CLIs and related apps, revoke API keys, and rotate deploy credentials. Do **not** follow malware analysis or exploit steps from social posts—defensive rotation only.
-4. **Keep secrets out of chat.** Use env files that are gitignored; never paste tokens into prompts.
-5. **Scope deploy credentials** to the site path only; do not run casual agent sessions as root.
-6. **Prefer verify commands** that cannot exfiltrate secrets (local tests over “curl this weird URL”).
-7. **MCP and skills:** only connect servers and install skill packs you trust; servers that fetch outside content can introduce prompt-injection risk (see Claude Code MCP docs).
+1. **Audit editor extensions installed or auto-updated in the last 14 days.** Remove anything you do not recognize, verify publisher identities directly in the official marketplace, and never install extensions from shortened social links.
+2. **Inspect `~/.ssh/authorized_keys` (and VPS deploy accounts).** Every public key on disk should have a comment and owner you recognize immediately.
+3. **Rotate session tokens—not just passwords—when token theft is suspected.** Infostealers target live session cookies and CLI tokens stored on disk; revoking active sessions and API keys in each vendor dashboard is required to cut off stolen tokens. Do **not** run untrusted “scanner” scripts from social threads.
+4. **Enforce a hard `.env` wall.** Keep secrets in gitignored `.env` files or your OS keychain, block `.env*` reads via hooks ([Rules files + hooks](/en/articles/rules-hooks/)), and verify static builds never inline server secrets into client bundles (see Astro’s environment-variable rules).
+5. **Scope deployment identities tightly.** Your VPS deploy key should write only to `/srv/<site>/releases/`—never grant passwordless `root` to a workstation shell where coding agents run casually.
+6. **Keep verify commands local and offline-safe.** Prefer deterministic local test/build scripts (`npm test`, `npm run build`) over commands that `curl` external scripts.
+7. **Vet every MCP server and `SKILL.md` folder before enabling.** Per Anthropic’s MCP security guidance, MCP servers that fetch arbitrary external content can expose your agent session to indirect prompt injection.
 
-## Template fields
+## Copy-pasteable hygiene baselines
+
+### Repository `.gitignore` secret baseline
 
 ```text
-Extensions reviewed on:
-Unknown SSH keys found?:
-Agent CLI / API token rotation date:
-Desktop app sign-out completed?:
-Deploy identity scope:
-MCP servers reviewed:
+# Local secrets & environment overrides (never commit)
+.env
+.env.*
+!.env.example
+
+# Local private keys, archives & deployment records
+*.pem
+*.key
+ops/records/
+dist/
 ```
 
-## Definition of done
+### Private 15-minute security audit log (keep outside public repo)
 
-You can state when you last reviewed extensions and SSH keys, you rotated agent credentials after any credible token-theft report that applies to your OS, and your agent sessions cannot read production secrets by default.
+```text
+Audit date: YYYY-MM-DD
+OS / workstation:
+Editor extensions checked (publisher verified, unused removed):
+~/.ssh/authorized_keys checked (workstation + VPS):
+Agent CLI & API keys rotated on:
+Active MCP servers & SKILL.md packs reviewed:
+Deploy key scope verified (non-root, path-restricted):
+```
+
+## 15-minute defensive checklist
+
+- [ ] Every installed editor extension matches a known publisher you intentionally chose
+- [ ] `~/.ssh/authorized_keys` on both local machine and VPS contains zero unrecognized public keys
+- [ ] Zero API keys, `.env` contents, or SSH private keys appear in Git history (`git status` / `.gitignore` verified)
+- [ ] Agent CLIs and MCP configs reference environment variables rather than plaintext tokens in repo files
+- [ ] Production VPS deploy credentials are non-root and scoped strictly to the release directory
+- [ ] You know where to revoke active OAuth sessions and API keys for Claude, OpenAI, xAI, GitHub, and Cloudflare
 
 ## Anti-patterns
 
-- Installing marketplace extensions from social links without checking the publisher
-- Storing cloud keys in the repo “just for the agent”
-- Treating an X thread as a completed forensic report
-- Publishing or requesting exploit / persistence reproduction steps
-
-## Sources
-
-Incident items cite the briefing-linked X posts only (opened for this revision). Official Astro env-var and Claude Code docs support general secret hygiene. Upgrade any claim to `documentation-backed` only after a vendor advisory or primary notice is assessed.
+- **One-click installing extensions or MCP servers from viral X threads** — typosquatted names target fast-moving AI tool brands first.
+- **Changing a password while leaving existing API keys and OAuth sessions active** — stolen session tokens keep working until explicitly revoked.
+- **Putting cloud admin keys in the project folder “so the agent can deploy”** — stage builds locally and deploy through a narrow, checksummed script instead.
+- **Treating social-media malware threads as verified forensics (or running pasted exploit PoCs)** — stick to vendor advisories and clean defensive rotation.

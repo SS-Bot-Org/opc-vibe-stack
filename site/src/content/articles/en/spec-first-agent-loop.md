@@ -1,7 +1,7 @@
 ---
 title: "Spec first, then let the agent change code"
 slug: spec-first-agent-loop
-summary: "Specify outcomes and acceptance checks before any agent edits the repository—Spec Kit or a short hand-written slice."
+summary: "Specify outcomes, boundaries, and verify checks before any agent edits code—using Spec Kit or a 5-line slice brief."
 locale: en
 category: guide
 stage: research
@@ -9,8 +9,8 @@ tools: [claude-code, codex, grok-build]
 priority: P0
 status: published
 evidence: documentation-backed
-applicableToolsVersions: "Any of Claude Code, Codex, or Grok Build; Spec Kit skills when installed; pair with your repo’s verify command"
-updated: "2026-11-06"
+applicableToolsVersions: "Claude Code, Codex, or Grok Build; GitHub Spec Kit when installed; paired with your repo’s verify command"
+updated: "2026-11-07"
 internalBriefing:
   - date: "2026-11-01"
     note: "Spec Kit / specify-before-code brief"
@@ -41,49 +41,99 @@ tags: [research, spec, workflow]
 
 ## Conclusion
 
-Most agent failures are underspecified goals. Write the outcome, constraints, and verify step first; then let the agent edit. Prefer a structured specify → plan → tasks → implement loop (GitHub Spec Kit or an equivalent short slice) over a vague “make it better” prompt.
+Most “agent went off the rails” stories are actually underspecified goals. Write the target outcome, file boundaries, non-goals, and verification command **before** any coding agent opens an editor buffer. Whether you adopt GitHub’s **Spec Kit** (`specify → plan → tasks → implement`) or write a 15-line Markdown slice by hand, freezing acceptance criteria upfront is the highest-leverage habit in an OPC workflow.
+
+> [!FLOW] Specify-before-code slice loop
+> 1. **Constitution / Boundary** — Lock stack rules, forbidden paths, and non-goals once per project.
+> 2. **Specify & Clarify** — Write user outcome and tickable acceptance checks before implementation.
+> 3. **Plan & Tasks** — Split into small, file-scoped tasks ordered by verification gates.
+> 4. **Implement & Converge** — Run one task at a time; commit only when the verify command is green.
+
+## Vague prompting vs spec-first loop
+
+| Dimension | Vague “vibe” prompt | Spec-first slice loop |
+|---|---|---|
+| Starting input | *“Add search and make the UI nicer”* | Written user outcome + routes/files in scope + non-goals |
+| Architecture decisions | Invented mid-edit by the model | Reviewed in `spec.md` / `plan.md` before code changes |
+| Typical diff size | 20+ touched files, mixed concerns | 1–4 files per task, easy human diff review |
+| Failure recovery | Endless chat debugging spirals | `git checkout` one small task or tighten the spec |
+| Completion signal | “Looks right in chat” | Deterministic verify command exits `0` |
 
 ## Prerequisites
 
-- A repository (or greenfield folder) under version control
-- One command that proves “good enough for now”
-- Optional: Spec Kit installed for your coding agent (`specify init` / agent skills per current Spec Kit docs)
+- A repository (or new project directory) initialized with Git
+- One command that proves the current slice works (`npm test`, `npm run build`, or a focused smoke script)
+- Optional: [GitHub Spec Kit](https://github.github.com/spec-kit/quickstart.html) (`specify init` and agent slash-commands/skills per current official docs)
 
 ## Steps
 
-1. **Capture the problem** in five lines: user, pain, success signal, non-goals, deadline.
-2. **Write acceptance checks** as bullets a stranger could tick (UI path, CLI output, or test names).
-3. **Freeze the interface** for this slice: routes, file boundaries, or API shapes that must not drift.
-4. **Prefer specify-before-code.** With Spec Kit (or the same logic by hand), run a constitution / boundary pass once per project, then specify → clarify → plan → tasks → implement → converge. Do not start implementation until acceptance criteria exist. Star counts and social hype around Spec Kit are poster-claimed—use the official quickstart, not the number.
-5. **Optional: voice or chat dump first.** If the idea is half-baked, dump features, stack, and logic into a reasoning chat, then ask it to produce an unambiguous technical specification (architecture, folders, data flow, edge cases, implementation steps) before handing that document to Claude Code / Codex / Grok Build. This step is a community practice tip—treat it as **unverified** until you dogfood it.
-6. **Prompt with four fields, not filler.** Prefer: what task to complete; what the finished result looks like; how to know it is done; what must never be done. Skip empty “think carefully / step by step” padding. (Community tip citing Claude Code prompt work—**unverified** as a performance claim.)
-7. **Hand the agent only this slice.** Forbid drive-by refactors in the prompt/rules.
-8. **Verify, then commit.** If verify fails, fix or roll back—do not stack new features.
+1. **Capture the slice in five lines:** target user, concrete pain, observable success signal, explicit non-goals, and timebox.
+2. **Write stranger-testable acceptance checks:** concrete URLs, CLI exit codes, or named test cases—never subjective adjectives like “clean” or “modern.”
+3. **Freeze interfaces for this slice:** routes, schema fields, and directories that must **not** drift during implementation.
+4. **Run a structured specify → plan → tasks pass.** Using GitHub Spec Kit (or plain Markdown files in `specs/`), establish project boundaries once, clarify ambiguities before planning, and break the plan into ordered tasks before calling [Claude Code](/en/articles/claude-code/), [Codex](/en/articles/codex/), or [Grok Build](/en/articles/grok-build/).
+5. **Optional pre-spec brain dump (unverified community tip):** when an idea is still rough, talk or type raw notes into a reasoning chat and ask it to draft a structured technical spec (data flow, edge cases, file tree, acceptance checks)—then **edit that draft yourself** before handing it to a coding agent.
+6. **Frame the coding prompt with four concrete fields** (what to build, what finished looks like, how to verify it is done, and what must never be done) rather than filler phrases like *“think carefully step by step.”*
+7. **Execute one task at a time.** Forbid drive-by refactors in both your prompt and your project rules ([Rules files + hooks](/en/articles/rules-hooks/)).
+8. **Verify, then commit.** If the verify command fails, either fix the defect within scope or revert and refine the spec—never pile new features onto a broken build.
 
-## Template fields
+> [!NOTE] Evidence boundary on sources
+> The `specify → plan → tasks → implement` workflow is **documentation-backed** via GitHub’s official Spec Kit quickstart. Social star counts, the voice-to-spec pre-pass, and the four-field prompt framing come from briefing-linked X posts—treat any productivity multipliers as **poster-claimed and unverified** until you test them on your own repository.
+
+## Copy-pasteable templates
+
+### 1. Slice specification (`specs/001-slice.md` — blank + filled example)
+
+```markdown
+# Slice Spec: [Short name]
+
+- **User & pain:**
+- **Success signal (observable):**
+- **Non-goals / hard don'ts:**
+- **Interfaces frozen (routes / schemas / files in scope):**
+- **Verify command:**
+
+## Acceptance checks
+- [ ] Check 1:
+- [ ] Check 2:
+
+---
+# Filled mini-example: Static article search index
+- **User & pain:** Readers on /en/ cannot find guides by tag without clicking every section.
+- **Success signal:** Static `/en/search-index.json` emits published EN articles only; client input filters by title/tag.
+- **Non-goals / hard don'ts:** No external search SaaS, no draft/deprecated leaks, browsing still works without JS.
+- **Interfaces frozen:** `site/src/pages/en/search-index.json.ts`, `site/src/components/SearchControl.astro`, `site/tests/search.test.mjs`.
+- **Verify command:** `cd site && npm run check && npm test && npm run build`
+```
+
+### 2. Four-field agent handoff prompt
 
 ```text
-User:
-Problem:
-Success signal:
-Non-goals / absolute don’ts:
-Verify command:
-Files in scope:
-Files forbidden:
-Spec artifact path (spec.md / plan.md / tasks.md or equivalent):
+1. Task to complete:
+   Implement task #1 from specs/001-slice.md ([one-sentence summary]).
+
+2. What the finished result looks like:
+   - [Exact route, CLI output, or test assertion that will exist]
+   - Only these files are created or modified: [file list]
+
+3. How to know it is done:
+   `cd site && npm run check && npm test && npm run build` exits 0 with zero new warnings.
+
+4. What must NEVER be done:
+   - Do not install new npm dependencies
+   - Do not modify files outside the scoped list or weaken existing tests
+   - Stop and ask if a requirement in specs/001-slice.md conflicts with existing types
 ```
 
 ## Definition of done
 
-You can point to a written spec (or Spec Kit artifacts) and a green verify command for the slice the agent touched.
+- [ ] A written spec artifact (`specs/...` or Spec Kit output) exists before any agent edits application code
+- [ ] Every acceptance item can be checked objectively via a test, build gate, or concrete UI action
+- [ ] Forbidden paths and non-goals are stated explicitly in the handoff prompt
+- [ ] Your verify command passes (`exit 0`) on the resulting diff before you move to the next slice
 
 ## Anti-patterns
 
-- “Make it better” with no acceptance checks
-- Letting the agent invent architecture mid-flight without updating the spec
-- Pasting half-finished ideas straight into a coding agent and debugging forever
-- Treating social star counts as proof the workflow fits your OPC
-
-## Sources
-
-Frontmatter lists Spec Kit documentation (primary for the specify-before-code flow) plus X posts that motivated this weekly revision. Voice-dump and four-field prompt tips remain practice reports unless you reproduce them yourself.
+- **Prompting “make it better” with zero acceptance checks** — invites cosmetic churn and silent regressions.
+- **Letting the agent invent new routes or schema fields mid-flight** — pause, update the spec intentionally, and re-run validation.
+- **Dumping a raw 2,000-word brainstorm straight into a repo agent** — separate messy exploration from bounded repository execution.
+- **Equating GitHub star velocity with fit for a solo company** — adopt only the lightest spec ceremony that keeps your diffs green.

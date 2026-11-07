@@ -1,7 +1,7 @@
 ---
 title: "规则文件 + hooks：别只靠 AGENTS.md"
 slug: rules-hooks
-summary: "硬约束写进 hooks 与验证命令；可复用活写成 SKILL.md；MCP 按工具各自配置。"
+summary: "常规约定放 AGENTS.md/CLAUDE.md，标准作业放 SKILL.md，硬红线交 hooks/CI 拦截，MCP 按工具各配。"
 locale: zh
 category: checklist
 stage: build
@@ -9,8 +9,8 @@ tools: [claude-code, codex]
 priority: P0
 status: published
 evidence: documentation-backed
-applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex hooks/MCP（config.toml）— 以你已安装版本的厂商文档为准"
-updated: "2026-11-06"
+applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
+updated: "2026-11-07"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -54,50 +54,125 @@ tags: [build, hooks, skills, mcp, safety]
 
 ## 结论
 
-散文规则有用；**hooks 与验证命令才强制**。把 AGENTS.md / CLAUDE.md 当常开指引。可重复活放进 skills（`SKILL.md`）。绝不能失手的检查放进 hooks 或 CI。跨工具共用一台 MCP 服务器时，配置**每个工具自己的文件**——别幻想有一份所有 CLI 都会魔法读取的共享配置。
+自然语言规则文件（`AGENTS.md`、`CLAUDE.md`）能校准默认习惯，**但长上下文下模型依然会遗忘文字叮嘱**。把 agent 控制面拆成职责分明的四层：常驻上下文放规则文件、可复用多步作业抽成 `SKILL.md`、绝不能失守的红线交给 **生命周期 hooks + CI** 强制拦截、共用 MCP 服务器则按各工具原生格式分别配置。
+
+> [!FLOW] 四层 Agent 控制与拦截管线
+>
+> 1. **常驻规则（`AGENTS.md` / `CLAUDE.md`）** — 每次会话加载精简目录导航、验证命令与代码风格约定。
+> 2. **按需技能（`SKILL.md`）** — 把多步重复SOP按需挂载，避免撑爆日常上下文窗口。
+> 3. **生命周期 Hooks（`PreToolUse` / `PostToolUse`）** — 用确定性退出码硬拦截敏感文件读写并自动跑格式化/检查。
+> 4. **CI 终审门禁（`npm run build`）** — 在合并或部署前锁死 schema、单测与最终构建产物完整性。
+
+> [!IMPORTANT] 文字只负责提醒，退出码才负责执法
+> 凡是一旦违规就会泄露密钥、改坏数据库迁移或发出死链的底线规则，**绝不能**只写在 `AGENTS.md` 里。必须同时配上一条生命周期 hook（`PreToolUse` / `PostToolUse` / `Stop`）或返回非零退出码的构建门禁。
+
+## 四层 Agent 控制面分工
+
+| 控制层 | 是否硬强制？ | 加载时机 | 该放什么内容 |
+|---|---|---|---|
+| **`AGENTS.md` / `CLAUDE.md`** | 软建议 | 每次会话常驻 | 目录结构、构建/测试命令、代码风格、核心禁区清单 |
+| **`SKILL.md` 技能目录** | 流程引导 | 任务匹配时按需加载 | 可复用的多步 SOP（如周更入库、发版核查、迁移步骤） |
+| **生命周期 Hooks** | **确定性硬拦截** | 固定工具调用/结束节点 | 拒绝读写受保护文件、跑快速静态检查、拦截未验证收工 |
+| **CI / `npm run build`** | **确定性硬拦截** | 合并前与发版前 | 全量 schema 校验、内部链接/锚点核验、完整回归测试 |
+
+## 把「口头希望」改造成自动门禁
+
+| 脆弱的纯文字叮嘱 | 确定性的 Hook / 构建门禁替代方案 |
+|---|---|
+| *「请绝对不要读取或修改 `.env` 和私钥」* | `PreToolUse` hook 拦截命中 `.env*` / `*.pem` 的读写调用，并配合 `.gitignore` |
+| *「汇报完成前请务必跑一遍类型检查」* | 在 `Stop` 或编辑后 hook 中自动执行 `npm run check`，非零退出直接打回 |
+| *「翻译文章不要漏配 slug 或写错更新日志链接」* | 由 `scripts/validate.mjs` 与 `scripts/validate-output.mjs` 在构建期自动卡死 |
 
 ## 前置条件
 
-- 支持项目规则和/或生命周期 hooks 的 agent CLI
-- 一条够快的 lint/测试/冒烟命令
-- 可选：skills 目录、以及你真正信任的 MCP 服务器
+- 已按当前厂商文档安装 [Claude Code](/zh/articles/claude-code/) 和/或 [Codex](/zh/articles/codex/)
+- 具备足够快的验证命令（编辑期 hook 建议 `<15 秒`，完整发版门禁 `<60 秒`）
+- 接入任何第三方 skill 包或外部 MCP 服务器前，已完成人工信任审阅
 
 ## 步骤
 
-1. 列出**硬禁区**（例如永不改 migrations、永不提交密钥、永不关掉鉴权测试）。
-2. 禁区写进规则文件，**同时**写进会让改动失败的 hook 或 CI。Claude Code hooks 在固定生命周期点运行（如 `PreToolUse` / `PostToolUse`），可拒绝工具调用——别指望模型「记住」一段话。
-3. 要求 agent 声称完成前跑验证命令；可行时用 `Stop` 或编辑后 hook 跑同一命令。
-4. **把重复活抽成 skills。** skill 是带 `SKILL.md`（名称 + 描述 + 步骤）的文件夹。Claude Code 文档写项目 skills 在 `.claude/skills/`；Agent Skills 开放标准提供共享的 `SKILL.md` 形状。一 skill 一活；常开说明放 AGENTS.md / CLAUDE.md。跨工具目录布局不同——复制社交片段前先重读各厂商文档。
-5. **按工具各配一次 MCP。** 同一服务器、不同文件：Claude Code 常用项目 `.mcp.json`（`claude mcp add` / `--scope project`）；Codex 用 `~/.codex/config.toml` 或可信项目配置里的 `[mcp_servers.*]`；Cursor 用自己的 MCP JSON（常在 `.cursor/`）。每个工具分别加服务器，改掉方言字段差异，再用该工具的 MCP 状态界面确认。永不提交原始 API 密钥。会拉外网内容的服务器有注入风险——先核实信任。
-6. agent 犯错后，当天把教训追加进规则文件或相关 skill。
-7. 无关任务之间清空或重置上下文，避免指令污染。
+1. **给 `AGENTS.md` / `CLAUDE.md` 瘦身。** 常驻规则控制在 80 行以内，只留目录说明、精确命令、编码规范与最高优先级边界。
+2. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上 hook 或构建脚本校验。例如 Claude Code 的 `PreToolUse` / `PostToolUse` / `Stop` 可在固定节点跑脚本并直接拒绝违规调用。
+3. **严控 Hook 耗时。** 高频触发的编辑期 hook 只跑路径白名单或单文件语法检查；全量构建与集成测试放到 `Stop` 阶段或提交前门禁，避免因太慢而自己动手关掉保护。
+4. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。
+5. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
+   - **Claude Code：** 项目 `.mcp.json`（或 `claude mcp add --scope project ...`）
+   - **Codex：** `~/.codex/config.toml`（或受信任项目配置）中的 `[mcp_servers.<name>]`
+   - **Cursor（若辅助使用）：** `.cursor/mcp.json`
+   配完后分别在各工具自带的 MCP 状态页确认连通，密钥一律走环境变量引用，严禁明文入库。
+6. **犯错当天闭环。** 每次踩坑复盘后，当天补一行规则、收紧对应 `SKILL.md` 或加一条拦截规则。
 
-## 模板字段
+## 可直接复制的实用模板
+
+### 1. 可复用 `SKILL.md` 骨架（`.claude/skills/weekly-refresh/SKILL.md`）
+
+```markdown
+---
+name: weekly-refresh
+description: 执行周日简报到站点的周更流程，核验原文链接与证据标签，并跑通完整静态构建门禁。
+---
+
+# 内容周更标准作业（SOP）
+
+1. 过滤本周输入，只保留可复用的 OPC 实操动作、工具状态变化或安全告警。
+2. 逐条打开引用的公开 URL；对社交帖中的效率数字保留「发帖人主张、未验证」限定。
+3. 同步更新 `en` 与 `zh` 对应文章，保持相同 `slug` 并更新 `updated` 日期。
+4. 新增周更记录，确认每条 `affectedPages` 在本版构建产物中真实存在。
+5. 执行 `cd site && npm run check && npm test && npm run build`，全部零报错后才可收工。
+```
+
+### 2. 同一 MCP 服务器在不同工具中的原生配置（零明文密钥）
+
+```json
+// Claude Code — 项目根目录 .mcp.json（仅引用环境变量，严禁提交真实密钥）
+{
+  "mcpServers": {
+    "docs-lookup": {
+      "command": "npx",
+      "args": ["-y", "@example/docs-mcp-server"],
+      "env": {
+        "DOCS_API_TOKEN": "${DOCS_API_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+```toml
+# OpenAI Codex — ~/.codex/config.toml（遵循 Codex 官方 TOML 表结构）
+[mcp_servers.docs-lookup]
+command = "npx"
+args = ["-y", "@example/docs-mcp-server"]
+env_vars = ["DOCS_API_TOKEN"]
+```
+
+### 3. 控制面盘点工作表
 
 ```text
-硬禁区：
-Hook 事件 + matcher（或 CI 检查）：
-验证命令：
-Skills 目录 / skill 名称：
-MCP 服务器名：
-Claude Code 配置路径（.mcp.json 或 settings）：
-Codex mcp_servers 条目（config.toml）：
-Cursor MCP 配置路径：
-教训日志位置：
+硬性禁区（必须自动报错阻断）：
+Hook 触发事件 + 匹配规则（Claude Code / CLI）：
+快速 Hook 校验命令（<15 秒）：
+完整发版门禁命令：
+项目 Skills 目录与已启用技能列表：
+共用 MCP 服务器名称与信任审阅日期：
+  - Claude Code 配置位置：
+  - Codex config.toml 条目：
 ```
+
+> [!WARNING] 把第三方 Skills 与 MCP 当成可执行代码审阅
+> 外部 `SKILL.md` 附带脚本以及会抓取外网网页的 MCP 服务器，都可能引入提示词注入或任意命令执行风险。启用前务必通读源码，并对照[安全速查](/zh/articles/security-quickcheck/)做好隔离。
 
 ## 完成定义
 
-禁止改动会自动失败（hook/CI），而不是只靠模型「记住」。重复活在可按名调用的 skills 里。你用的每个 agent 都能列出已连接的共享 MCP 服务器，且仓库里没有密钥副本。
+- [ ] `AGENTS.md` / `CLAUDE.md` 精炼清晰，写明了可直接执行的构建、类型检查与测试命令
+- [ ] 每条「绝不能发生」的底线都由生命周期 hook 或非零退出的构建/CI 脚本兜底，而非只靠文字祈祷
+- [ ] 重复性多步任务已抽成独立 `SKILL.md`，触发描述具体不撞车
+- [ ] 所用的每个 agent 都通过各自原生配置文件连上共享 MCP，且 Git 仓库中零密钥残留
+- [ ] 无关任务切换时主动清空上下文，避免旧指令残留污染
 
 ## 反模式
 
-- 规则文件是唯一控制面
-- hooks 太慢，大家干脆关掉
-- 一个巨大「我们怎么干活」skill 对所有任务都松松匹配
-- 把同一份 MCP JSON 粘进错误工具的文件格式就算胜利
-- 启用未读过的市场 skills/脚本（把它们当你会跑的代码）
-
-## 来源
-
-frontmatter 列出 Claude Code hooks/skills/MCP 文档、Codex MCP 配置参考、Agent Skills，以及促使本版修订的简报相关帖/博客。Cursor/Codex 的精确 hook 文件名会变——复制社交片段前务必重读当前厂商文档。
+- **把 `AGENTS.md` 当成权限防火墙** —— 自然语言只能减少误操作，不能替代文件权限与进程隔离。
+- **每次保存文件都触发耗时 3 分钟的全量测试 hook** —— 卡顿会逼你亲手关掉所有校验；高频 hook 务必控制在 15 秒内。
+- **塞一个包罗万象的「团队开发总纲」巨型 Skill** —— 匹配边界模糊会导致乱触发；坚持一 Skill 一具体活。
+- **把 JSON 硬塞进 Codex 的 `config.toml`** —— 跨工具复用时务必转换成对应 CLI 的原生配置方言，并在工具升级后复查文档。

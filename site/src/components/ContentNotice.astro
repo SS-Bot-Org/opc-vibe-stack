@@ -1,9 +1,45 @@
 ---
+import { getPublicArticles, articleHref } from '../lib/content';
+
 interface Props {
   text: string;
+  relatedSlugs?: string[];
+  locale?: string;
 }
-const { text } = Astro.props;
+const { text, relatedSlugs = [], locale = 'en' } = Astro.props;
+const zh = locale === 'zh';
+
+const resolvedLinks: Array<{ href: string; title: string; fallbackEn: boolean }> = [];
+if (relatedSlugs.length > 0) {
+  const localPool = await getPublicArticles(locale);
+  const enPool = locale === 'en' ? localPool : await getPublicArticles('en');
+  for (const slug of relatedSlugs) {
+    const sameLocale = localPool.find((a) => a.data.slug === slug);
+    if (sameLocale) {
+      resolvedLinks.push({ href: articleHref(slug, locale), title: sameLocale.data.title, fallbackEn: false });
+      continue;
+    }
+    const enMatch = enPool.find((a) => a.data.slug === slug);
+    if (enMatch) {
+      resolvedLinks.push({ href: articleHref(slug, 'en'), title: enMatch.data.title, fallbackEn: true });
+    }
+  }
+}
 ---
 <aside class="notice" role="note">
-  <strong>Notice.</strong> {text}
+  <p class="notice__body">
+    <strong>{zh ? '提示：' : 'Notice.'}</strong> {text}
+  </p>
+  {resolvedLinks.length > 0 && (
+    <p class="notice__links">
+      {zh ? '相关页面：' : 'Related:'}{' '}
+      {resolvedLinks.map((item, idx) => (
+        <>
+          {idx > 0 && ' · '}
+          <a href={item.href}>{item.title}</a>
+          {item.fallbackEn && <span class="meta"> ({zh ? '英文' : 'EN'})</span>}
+        </>
+      ))}
+    </p>
+  )}
 </aside>

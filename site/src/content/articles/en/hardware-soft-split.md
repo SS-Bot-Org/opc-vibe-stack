@@ -1,7 +1,7 @@
 ---
 title: "Firmware vs companion app: OPC hardware split"
 slug: hardware-soft-split
-summary: "Separate firmware, companion app, and cloud; keep a verify-yourself list for supply chain and compliance—not a storefront."
+summary: "Decouple firmware, companion app, and cloud release trains; keep supply chain, radio, and OTA signing under human verification."
 locale: en
 category: guide
 stage: cross
@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Tool-independent guidance; confirm local regulations and vendor docs for your product class"
-updated: "2026-11-06"
+updated: "2026-11-07"
 internalBriefing: []
 publicSources:
   - title: "FCC Equipment Authorization (overview)"
@@ -24,58 +24,91 @@ tags: [hardware, firmware, compliance, supply-chain]
 
 ## Conclusion
 
-If your OPC ships a physical device, treat **firmware**, **companion app**, and optional **cloud** as three products with separate release trains. Use agents for the software sides; treat certifications, factories, and radio rules as **verify-yourself** work—not something this site sells or certifies.
+When a one-person company ships physical hardware, treat **firmware**, **companion app**, and optional **cloud services** as three distinct products on separate release trains. Let coding agents accelerate the companion app and cloud layers against a mocked device transport, keep firmware behind hardware-in-the-loop verification and offline human signing keys, and treat radio, safety, and factory compliance as **verify-yourself** engineering—never marketing guesswork.
+
+> [!FLOW] Decoupled hardware-software release pipeline
+>
+> 1. **Freeze Transport Contract** — Specify BLE/USB packets and build a software mock device first.
+> 2. **Agent-Built Companion MVP** — Iterate fast on pairing UX, offline controls, and automated UI tests against the mock.
+> 3. **Hardware-in-Loop Firmware** — Validate bootloaders, watchdogs, and radio behavior on physical bench units.
+> 4. **Human-Signed OTA & Compliance** — Sign firmware offline and verify regulatory grants before taking live orders.
+
+## Three-layer architecture split
+
+| Layer | Core responsibilities | Release cadence | Coding-agent fit | Failure mode when blurred |
+|---|---|---|---|---|
+| **1. Firmware** | Bootloader, drivers, radio stack, battery safety, signed OTA verification | Slow, gated, bench-tested | **Medium** — good for parsers/tests; unsafe without hardware-in-loop | Bricked customer units, battery drain, or unauthenticated OTA |
+| **2. Companion app** | BLE/USB discovery, local settings, diagnostics, firmware file transfer | Fast (weekly store or web builds) | **High** — once backed by a deterministic mock device | Useless app whenever Wi-Fi drops or a test rig is unplugged |
+| **3. Cloud (optional)** | Optional backup, cross-device sync, opt-in crash telemetry | Continuous, independent | **High** — standard web/API slice ([Spec first](/en/articles/spec-first-agent-loop/)) | Server outage or sunset permanently bricks physical hardware |
 
 ## Prerequisites
 
-- A clear product class (BLE gadget, USB accessory, simple IoT, etc.)
-- Willingness to read primary regulator / standards pages for your market
-- Software repo(s) with a verify command for the companion app (and firmware build if applicable)
+- A clearly bounded hardware class and target shipping jurisdictions (for example, USB-C HID accessory vs intentional BLE radiator sold in the US/EU)
+- Direct links to primary regulatory and security baseline docs for your market (such as FCC Equipment Authorization and CISA Secure by Design principles)
+- Separate software directories or repositories with automated verify commands and explicit path rules ([Rules files + hooks](/en/articles/rules-hooks/))
 
-## Split
+## Execution steps
 
-| Layer | Owns | Agent fit | High risk if blurred |
-|---|---|---|---|
-| Firmware | Boot, drivers, radio, OTA | Medium—need hardware-in-loop | Bricking devices; unsigned OTA |
-| Companion app | Pairing, UX, local settings | High | Shipping without offline pairing path |
-| Cloud (optional) | Accounts, sync, analytics | High | Privacy, outages blocking the device |
+1. **Write a boundary one-pager before touching PCB or app scaffolding:** Explicitly name what lives in firmware, what lives in the companion app, and verify that core device controls still work with **zero cloud connectivity**.
+2. **Define a versioned transport contract + software simulator:** Document every BLE characteristic or USB command frame so coding agents can build and test 90% of the companion app without needing a physical board plugged in.
+3. **Gate firmware updates behind human-held signing keys:** Implement cryptographic signature verification in the bootloader before any external beta, and store private signing keys completely offline ([Security quickcheck](/en/articles/security-quickcheck/)).
+4. **Work through the verify-yourself compliance checklist below:** Check off an item only when you hold the primary datasheet, module grant conditions, or lab report in your own files.
+5. **Audit landing copy against verified evidence:** Separate *“uses a pre-certified BLE module”* (which still carries host integration rules) from claiming full end-product certification you have not completed.
 
-## Steps
+## Marketing claim vs compliance reality
 
-1. Write a one-pager that names the three layers and which can ship independently.
-2. Define a **companion-app MVP** that demos value with a mock or single golden device.
-3. Keep firmware changes behind a signed update story before any public beta.
-4. Run the supply-chain / compliance checklist below—tick only what you personally verified.
-5. Do **not** put unverified certification claims on the marketing site.
+| Tempting launch claim | Operational & regulatory reality | Safe, honest OPC practice |
+|---|---|---|
+| *“FCC / CE Certified”* (copied from your wireless module’s datasheet) | Module grants only cover tested antennas, enclosures, and host integration conditions; final assemblies often still require host testing/authorization | Cite exact regulatory status only after verifying host rules with primary docs or an accredited lab |
+| *“Seamless automatic cloud firmware updates”* | Pushing unsigned or unthrottled OTA images from CI can brick every unit in the field at once | Stage canary rollouts, require cryptographic signature checks on-device, and sign releases offline |
+| *“Create an account to pair your device”* | Couples a \$99 physical tool to your solo SaaS uptime forever | Make local USB/BLE pairing and core controls work offline first; treat cloud sync as strictly optional |
+
+> [!WARNING] Orientation only — not legal or accredited lab advice
+> OPC Vibe Stack does not sell hardware services or certify compliance. Radio emissions, lithium-battery transport, product safety, and import rules carry strict legal liability—consult primary regulator guidance, accredited test labs, and qualified counsel before selling regulated hardware.
+
+## Copy-pasteable boundary & mock transport sheet (`specs/hardware-split.md`)
+
+Give coding agents the software contract while fencing off signing keys and hardware claims:
+
+```markdown
+# Hardware / Software Split Spec: [Device Name]
+
+- **Product class & target markets:** [e.g., BLE desk timer — US & Canada]
+- **Offline-first rule:** Device + companion app must pair and operate with airplane-mode Wi-Fi off.
+- **OTA authority:** Bootloader verifies Ed25519 signature; private signing key is offline (NEVER in repo/CI/agent).
+
+## Transport contract v1 (shared by Firmware + Companion Mock)
+- **Transport:** [BLE GATT / WebUSB / Serial]
+- **Service UUID / Vendor ID:** `0000XXXX-0000-1000-8000-00805f9b34fb`
+- **State frame (device → app):** `{ protocolVersion: 1, batteryMv: number, mode: "idle" | "active", fwVersion: string }`
+- **Command frame (app → device):** `{ cmd: "set_mode" | "ping", payload: ... }`
+
+## Agent workspace boundaries
+- **Allowed for autonomous edits:** `companion-app/`, `mock-device/`, `protocol/tests/`
+- **Human-in-loop bench verification required:** `firmware/drivers/`, `firmware/bootloader/`
+- **Strictly off-limits to agents:** Offline signing keys, regulatory filing claims, factory BOM substitutions
+```
 
 ## Verify-yourself checklist (not legal advice)
 
-- [ ] Component / module vendors identified; datasheets retained
-- [ ] Radio module certifications checked for **your** enclosure and antenna plan (e.g. FCC ID lookup where applicable)
-- [ ] Power / battery safety path reviewed for your market
-- [ ] Packaging and labeling claims match tested behavior
-- [ ] OTA signing keys stored offline; agents never see production keys
-- [ ] Privacy policy covers companion telemetry before collection
-- [ ] Factory / CM NDA and change-control contact on file
-- [ ] RMA / support path exists before paid orders
-
-## Template fields
-
-- Product class / markets:
-- Firmware repo + signed OTA? (y/n):
-- Companion app URL / store draft:
-- Certifications claimed vs verified:
+- [ ] Primary component and wireless module vendors identified with official datasheets archived locally
+- [ ] Radio module grant conditions checked against **your** actual enclosure, PCB trace/antenna, and co-location plan (for example via official FCC ID lookup where applicable)
+- [ ] Power, thermal, and lithium-battery charging/shipping requirements reviewed for every target market
+- [ ] Physical device markings, packaging labels, and manual notices match verified regulatory status
+- [ ] Production OTA private signing keys generated and stored offline; coding agents never touch key material
+- [ ] Companion-app privacy policy explicitly discloses any telemetry or crash reporting **before** collection begins
+- [ ] Contract manufacturer / assembly house NDA, BOM lock, and engineering-change-notice (ECN) contact on file
+- [ ] Dead-on-arrival (DOA) replacement, recovery mode, and customer RMA path documented before taking paid orders
 
 ## Definition of done
 
-Marketing copy never claims a certification you have not verified. Companion app has a smoke path without production cloud. Firmware update authority is human-controlled.
+- [ ] Public marketing pages make zero certification, safety, or range claims that you have not personally verified
+- [ ] Companion app runs end-to-end automated smoke checks against a deterministic software mock without production cloud dependencies
+- [ ] Firmware builds are reproducible, version-stamped, and require offline human signature approval before release
 
 ## Anti-patterns
 
-- Letting an agent hold production signing keys
-- Copying a competitor’s “FCC certified” badge without your own grant
-- Coupling every button press to a cloud round-trip in v1
-
-## Sources
-
-See frontmatter `publicSources`. This page is orientation only—hire qualified counsel/labs when you sell regulated hardware.
+- **Storing production firmware signing keys in repo `.env` files or agent-accessible CI variables** — turns one leaked token or prompt-injection bug into fleet-wide malicious firmware authority.
+- **Slapping “FCC / CE Certified” badges onto a landing page because an internal chip vendor had one** — risks customs holds, takedowns, and enforcement penalties.
+- **Requiring a live cloud login just to toggle a local hardware setting in v1** — guarantees angry customers the first time your weekend server restarts.
+- **Letting coding agents refactor low-level power or flash-erase routines without bench hardware tests** — clean-compiling C/Rust code can still brown out batteries or corrupt boot sectors.

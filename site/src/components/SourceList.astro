@@ -15,31 +15,43 @@ interface Props {
 }
 const { publicSources = [], internalBriefing = [], locale = 'en' } = Astro.props;
 const zh = locale === 'zh';
+
+const kindLabel = (kind: string) => {
+  if (zh) {
+    if (kind === 'docs') return '官方文档';
+    if (kind === 'x') return 'X 帖文';
+    if (kind === 'blog') return '技术博客';
+    return '公开来源';
+  }
+  if (kind === 'docs') return 'Official docs';
+  if (kind === 'x') return 'X post';
+  if (kind === 'blog') return 'Blog';
+  return 'Public link';
+};
 ---
 {(publicSources.length > 0 || internalBriefing.length > 0) && (
   <section class="source-list" aria-labelledby="sources-heading">
     <h2 id="sources-heading">{zh ? '参考来源' : 'Source references'}</h2>
     {publicSources.length > 0 && (
-      <ul>
+      <ul class="source-list__items" role="list">
         {publicSources.map((s) => (
-          <li>
+          <li class="source-list__item">
+            <span class={`source-kind source-kind--${s.kind}`}>{kindLabel(s.kind)}</span>
             <a href={s.url} rel="noopener noreferrer">{s.title}</a>
-            <span class="meta"> ({s.kind})</span>
           </li>
         ))}
       </ul>
     )}
     {internalBriefing.length > 0 && (
-      <p class="meta">
-        {zh ? '内部简报溯源：' : 'Internal briefing provenance:'}{' '}
+      <p class="source-list__provenance meta">
+        <strong>{zh ? '内部简报溯源：' : 'Internal briefing provenance:'}</strong>{' '}
         {internalBriefing.map((b, i) => (
           <>
-            {i > 0 && '; '}
-            {b.date}
-            {b.note ? ` — ${b.note}` : ''}
+            {i > 0 && ' · '}
+            <span class="provenance-chip">{b.date}{b.note ? ` (${b.note})` : ''}</span>
           </>
         ))}
-        {zh ? '。这些日期是溯源标签，不是公开链接。' : '. These dates are provenance labels, not public links.'}
+        {zh ? ' — 以上日期仅为内部溯源标签，并非公开链接。' : ' — Provenance dates only, not public links.'}
       </p>
     )}
   </section>

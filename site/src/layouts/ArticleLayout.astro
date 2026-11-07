@@ -7,7 +7,8 @@ import Icon from '../components/Icon.astro';
 import type { CollectionEntry } from 'astro:content';
 import type { MarkdownHeading } from 'astro';
 import { site } from '../data/site';
-import { wrapArticleTables } from '../lib/article-html.mjs';
+import { transformArticleHtml } from '../lib/article-html.mjs';
+import { getRelatedArticles, articleHref } from '../lib/content';
 
 interface Props {
   entry: CollectionEntry<'articles'>;
@@ -18,20 +19,57 @@ const { entry, headings, ogImage } = Astro.props;
 const d = entry.data;
 const locale = d.locale;
 const zh = locale === 'zh';
-const articleHtml = wrapArticleTables(await Astro.slots.render('default'), zh ? '数据表格，可横向滚动' : 'Data table, scroll horizontally if needed');
+const articleHtml = transformArticleHtml(await Astro.slots.render('default'), { locale });
 const path = `/${locale}/articles/${d.slug}/`;
-const section = d.category === 'stack' ? 'stack' : d.category === 'playbook' ? 'playbooks'
+const section = d.category === 'stack' ? 'stack'
+  : d.category === 'playbook' ? 'playbooks'
+  : d.category === 'alert' ? 'anti-patterns'
   : d.tags.includes('hardware') ? 'hardware'
   : d.stage === 'cross' ? 'build' : d.stage;
+
 const sectionLabels: Record<string, string> = zh
   ? { stack: '工具栈', playbooks: 'Playbooks', hardware: '硬件', 'anti-patterns': '反模式', research: '调研', build: '构建', sell: '销售' }
   : { stack: 'Stack', playbooks: 'Playbooks', hardware: 'Hardware', 'anti-patterns': 'Anti-patterns', research: 'Research', build: 'Build', sell: 'Sell' };
+
+const categoryLabels: Record<string, string> = zh
+  ? { stack: '工具卡', guide: '实践指南', checklist: '核对清单', playbook: 'Playbook', alert: '安全告警' }
+  : { stack: 'Tool card', guide: 'Guide', checklist: 'Checklist', playbook: 'Playbook', alert: 'Security alert' };
+
+const stageLabels: Record<string, string> = zh
+  ? { research: '调研阶段', build: '构建阶段', sell: '销售阶段', cross: '跨阶段' }
+  : { research: 'Research stage', build: 'Build stage', sell: 'Sell stage', cross: 'Cross-stage' };
+
+const toolNames: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
+  'grok-build': 'Grok Build',
+};
+
+const availabilityLabels: Record<string, string> = zh
+  ? { active: '推荐可用 (active)', warning: '存在风险提示 (warning)', deprecated: '已停用 (deprecated)' }
+  : { active: 'Active in stack', warning: 'Warning', deprecated: 'Deprecated' };
+
+function estimateReadingMinutes(raw: string, isZh: boolean): number {
+  const cjk = (raw.match(/[\u4e00-\u9fff]/g) ?? []).length;
+  const words = (raw.replace(/[\u4e00-\u9fff]/g, ' ').match(/\S+/g) ?? []).length;
+  const units = isZh ? cjk + words * 1.4 : words;
+  const rate = isZh ? 340 : 210;
+  return Math.max(2, Math.round(units / rate));
+}
+
+const readMinutes = estimateReadingMinutes(entry.body ?? '', zh);
 const sectionPath = `/${locale}/${section}/`;
 const resolvedOg = ogImage ?? (d.slug === '48h-mvp-agent-stack' ? '/og/playbook-48h-mvp.png'
   : d.slug === 'hardware-soft-split' ? '/og/hardware.png' : site.ogImagePath);
+
+const related = await getRelatedArticles(entry, locale, 3);
+
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 if (d.publicSources.length || d.internalBriefing.length) {
   toc.push({ depth: 2, slug: 'sources-heading', text: zh ? '参考来源' : 'Source references' });
+}
+if (related.length > 0) {
+  toc.push({ depth: 2, slug: 'related-heading', text: zh ? '下一步推荐' : 'Next in the workflow' });
 }
 ---
 <SiteLayout title={d.title} description={d.summary} canonicalPath={path} noindex={d.status === 'deprecated'}
@@ -39,17 +77,43 @@ if (d.publicSources.length || d.internalBriefing.length) {
   <div class="article-layout">
     <header class="article-header">
       <nav class="breadcrumb" aria-label={zh ? '当前位置' : 'Breadcrumb'}>
-        <a href={sectionPath}>{sectionLabels[section]}</a><span aria-hidden="true">/</span><span>{zh ? '指南' : 'Guide'}</span>
+        <a href={sectionPath}>{sectionLabels[section]}</a>
+        <span aria-hidden="true">/</span>
+        <span>{categoryLabels[d.category] ?? (zh ? '指南' : 'Guide')}</span>
       </nav>
       <h1 id="article-title">{d.title}</h1>
       <p class="lede">{d.summary}</p>
       <div class="article-meta">
         <EvidenceLabel evidence={d.evidence} locale={locale} />
+        <span class="meta-pill">{stageLabels[d.stage]}</span>
+        <span>{zh ? `约 ${readMinutes} 分钟阅读` : `${readMinutes} min read`}</span>
         <span>{zh ? '更新于' : 'Updated'} <time datetime={d.updated}>{d.updated}</time></span>
         {d.status === 'deprecated' && <span class="badge badge--deprecated">{zh ? '已弃用' : 'Deprecated'}</span>}
       </div>
-      <p class="article-applicable">{zh ? '适用' : 'Applicable'}: {d.applicableToolsVersions}</p>
-      {d.notice && <ContentNotice text={d.notice.text} />}
+      <div class="article-tools-row">
+        <span class="article-tools-row__label">{zh ? '涉及工具：' : 'Tools:'}</span>
+        {d.tools.length > 0 ? (
+          <ul class="tool-chips" role="list">
+            {d.tools.map((tool) => (
+              <li>
+                {d.category === 'stack' && tool === (d.toolId ?? d.slug) ? (
+                  <span class="tool-chip tool-chip--current">{toolNames[tool] ?? tool}</span>
+                ) : site.primaryToolIds.includes(tool as (typeof site.primaryToolIds)[number]) ? (
+                  <a class="tool-chip" href={articleHref(tool, locale)}>{toolNames[tool] ?? tool}</a>
+                ) : (
+                  <span class="tool-chip">{toolNames[tool] ?? tool}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span class="tool-chip tool-chip--neutral">{zh ? '不绑定特定工具' : 'Tool-independent'}</span>
+        )}
+      </div>
+      <p class="article-applicable">
+        <strong>{zh ? '适用版本与范围：' : 'Applicability:'}</strong> {d.applicableToolsVersions}
+      </p>
+      {d.notice && <ContentNotice text={d.notice.text} relatedSlugs={d.notice.relatedSlugs} locale={locale} />}
     </header>
     {toc.length > 0 && <aside class="article-toc">
       <details open data-toc>
@@ -65,8 +129,51 @@ if (d.publicSources.length || d.internalBriefing.length) {
       </details>
     </aside>}
     <article class="article-body" aria-labelledby="article-title" data-article data-locale={locale}>
+      {d.category === 'stack' && (
+        <section class="stack-summary" aria-label={zh ? '工具定位速览' : 'Stack role at a glance'}>
+          <div class="stack-summary__header">
+            <span class="eyebrow">{zh ? '工具定位速览' : 'Stack role at a glance'}</span>
+            <span class={`badge badge--${d.toolAvailability ?? 'active'}`}>
+              {availabilityLabels[d.toolAvailability ?? 'active'] ?? d.toolAvailability}
+            </span>
+          </div>
+          <dl class="stack-summary__grid">
+            <div class="stack-summary__cell stack-summary__cell--fit">
+              <dt>{zh ? '最适合什么' : 'Best for'}</dt>
+              <dd>{d.bestFor}</dd>
+            </div>
+            <div class="stack-summary__cell stack-summary__cell--poor">
+              <dt>{zh ? '不适合什么' : 'Poor fit'}</dt>
+              <dd>{d.poorFit}</dd>
+            </div>
+            <div class="stack-summary__cell stack-summary__cell--caveat">
+              <dt>{zh ? '使用边界与注意' : 'Key caveats'}</dt>
+              <dd>{d.caveats}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
       <div class="prose" set:html={articleHtml} />
       <SourceList publicSources={d.publicSources} internalBriefing={d.internalBriefing} locale={locale} />
+      {related.length > 0 && (
+        <section class="related-guides" aria-labelledby="related-heading">
+          <h2 id="related-heading">{zh ? '下一步推荐' : 'Next in the workflow'}</h2>
+          <div class="related-guides__grid">
+            {related.map((rel) => (
+              <article class="related-card">
+                <div class="related-card__top">
+                  <span class="eyebrow">{categoryLabels[rel.data.category] ?? rel.data.category}</span>
+                  <EvidenceLabel evidence={rel.data.evidence} locale={locale} />
+                </div>
+                <h3 class="related-card__title">
+                  <a href={articleHref(rel.data.slug, locale)}>{rel.data.title}</a>
+                </h3>
+                <p class="related-card__summary">{rel.data.summary}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <template data-code-toolbar>
         <div class="code-toolbar">
           <span class="code-language"></span>

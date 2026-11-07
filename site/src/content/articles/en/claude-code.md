@@ -1,7 +1,7 @@
 ---
 title: "Claude Code"
 slug: claude-code
-summary: "Strong for interactive coding loops, plans, and repo-aware agent sessions."
+summary: "Interactive, repo-aware coding agent for plan-first refactors, verification loops, and enforceable hooks."
 locale: en
 category: stack
 stage: build
@@ -9,14 +9,20 @@ tools: [claude-code]
 priority: P0
 status: published
 evidence: documentation-backed
-applicableToolsVersions: "Claude Code (Anthropic CLI/agent); confirm current version before following steps"
-updated: "2026-11-06"
+applicableToolsVersions: "Claude Code CLI/agent (Anthropic); confirm current commands and hook schema against live vendor docs"
+updated: "2026-11-07"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
     url: "https://docs.anthropic.com/en/docs/claude-code/overview"
     kind: docs
-tags: [stack, build]
+  - title: "Automate actions with hooks (Claude Code)"
+    url: "https://code.claude.com/docs/en/hooks-guide"
+    kind: docs
+  - title: "Extend Claude with skills (SKILL.md)"
+    url: "https://code.claude.com/docs/en/skills"
+    kind: docs
+tags: [stack, build, hooks, workflow]
 toolId: claude-code
 toolAvailability: active
 bestFor: "Repo-local agent loops, plan-then-implement sessions, and rules/hooks enforcement."
@@ -26,35 +32,85 @@ caveats: "Keep secrets out of prompts; encode hard no-gos in rules files and hoo
 
 ## Conclusion
 
-Use Claude Code when you want an agent that lives in the repo, can plan, edit, and re-check against a command you define.
+Use **Claude Code** as your primary interactive repository agent whenever a change spans multiple files, needs codebase exploration before editing, or relies on deterministic lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`) to keep you out of trouble.
+
+> [!FLOW] Repo-local session loop
+> 1. **Frame & plan** — State the slice goal, file boundaries, and verify command; ask for a plan first.
+> 2. **Approve scope** — Trim out-of-scope refactors before any file is edited.
+> 3. **Implement & verify** — Let the agent edit and iterate until your verify command exits `0`.
+> 4. **Codify lessons** — Promote repeated corrections to `CLAUDE.md`, `SKILL.md`, or a blocking hook.
+
+## When to pick Claude Code vs hand off
+
+| Situation | Best owner | Why |
+|---|---|---|
+| Multi-file feature or refactor where couplings are unclear | **Claude Code** | Strong interactive exploration + plan-before-edit review loop |
+| Batching several independent, tightly specified slices | [Codex](/en/articles/codex/) | Clean CLI task execution when boundaries and tests already exist |
+| Turning a working build into a public offer & demo path | [Grok Build](/en/articles/grok-build/) | Keeps last-mile shipping and CTA smoke checks focused on buyers |
+| Preventing edits to migrations, `.env`, or production configs | [Rules + hooks](/en/articles/rules-hooks/) | Prose instructions drift; hooks and CI fail forbidden actions deterministically |
 
 ## Prerequisites
 
-- Official Claude Code install for your OS
-- A project that can run with one clear verify command (tests, lint, or smoke script)
+- Official Claude Code installation authenticated via Anthropic’s documented login flow
+- Git working tree clean enough to inspect `git diff` after a single task
+- One fast, non-destructive verification command (for example `npm test`, `npm run check`, or a local smoke script)
 
 ## Steps
 
-1. Install and authenticate per Anthropic’s current docs.
-2. Add a short project rules file that states goals, forbidden paths, and the verify command.
-3. Prefer plan mode for multi-file work; only implement after the plan matches your acceptance criteria.
-4. After mistakes, write the correction into the rules file so the next session inherits it.
+1. **Install and verify authentication** against the official Claude Code documentation—never paste raw API keys into project files or chat prompts.
+2. **Create a concise project rules file** (`CLAUDE.md` alongside `AGENTS.md` if you also run Codex) under ~80 lines: state what the product is, the exact verify command, and hard forbidden paths.
+3. **Default to plan-first on multi-file work.** Ask the agent to inspect affected files and list proposed edits before touching disk; reject scope creep early while changes cost zero tokens to undo.
+4. **Gate completion on your verify command.** Require the agent to run your test/typecheck/build command and report actual exit status rather than assuming edits work.
+5. **Turn mistakes into durable guardrails.** If the agent touches a forbidden directory or repeats a bad pattern, add a concise rule or move the constraint into a lifecycle hook ([Rules files + hooks](/en/articles/rules-hooks/)) the same day.
+6. **Reset context between unrelated slices.** Fresh context prevents stale assumptions from leaking into your next feature.
 
-## Template fields
+## Starter templates
 
-- Verify command:
-- Forbidden paths:
-- Definition of done:
+### Minimal project `CLAUDE.md`
+
+```markdown
+# Project Rules
+
+## Product slice
+Static Astro site + validated content collections. Run all commands from `site/`.
+
+## Verification gate (must pass before done)
+- Typecheck & tests: `npm run check && npm test`
+- Full build gate: `npm run build`
+
+## Hard boundaries (never touch without explicit approval)
+- Never read, print, or commit `.env*`, SSH keys, or deploy credentials
+- Never edit `ops/` production host targets or weaken `scripts/validate*.mjs`
+- Do not add runtime dependencies for static copy or simple CSS problems
+
+## Working style
+- Propose a short file-by-file plan before editing >2 files
+- Keep diffs focused on the requested slice; log follow-up ideas instead of refactoring unrelated files
+```
+
+### Scoped plan-first prompt
+
+```text
+Task: Add [one concrete user-visible capability or fix].
+In scope: [exact files/folders, e.g. site/src/components/SearchControl.astro, site/tests/search.test.mjs].
+Out of scope / never do: Do not add dependencies, change route URLs, or modify unrelated styles.
+Done when: [exact observable behavior] AND `npm run check && npm test && npm run build` exits 0.
+First step: Inspect the files in scope and give me a 4-bullet implementation plan. Wait for approval before editing.
+```
+
+> [!WARNING] Prompt & secret hygiene
+> Treat every prompt and connected MCP server as an untrusted boundary for credentials. Keep `.env` files gitignored, scope deploy keys outside agent-accessible shells, and review [Security quickcheck](/en/articles/security-quickcheck/) before installing third-party extensions or skill packs.
 
 ## Definition of done
 
-You can start a session, state a scoped task, and the agent can run your verify command without you pasting secrets.
+- [ ] Claude Code is authenticated without hardcoded keys in the repository or shell history
+- [ ] Repo root (or `CLAUDE.md` / `AGENTS.md`) documents a single verify command that runs in under a minute
+- [ ] Forbidden paths and secret boundaries are stated in rules and backed by hooks or CI checks
+- [ ] Multi-file tasks start with an explicit plan check before code edits begin
+- [ ] You review `git status` and `git diff` (especially lockfiles, auth, and deploy configs) before committing
 
 ## Anti-patterns
 
-- Pasting API keys or `.env` contents into the chat
-- Asking for “just rewrite everything” without a spec or verify loop
-
-## Sources
-
-See frontmatter `publicSources`.
+- **Pasting `.env` or live tokens into chat “just once”** — rotate immediately if exposed; inject secrets via gitignored local environment variables instead.
+- **“Rewrite the whole module and make it cleaner”** — unbounded prompts produce massive, unreviewable diffs; slice by one verifiable behavior at a time ([Spec first](/en/articles/spec-first-agent-loop/)).
+- **Stuffing 1,000 lines of prose into `CLAUDE.md`** — bloated always-on context dilutes critical rules; move task-specific playbooks into on-demand `SKILL.md` files.

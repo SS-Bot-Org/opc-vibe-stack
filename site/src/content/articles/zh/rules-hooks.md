@@ -60,8 +60,8 @@ tags: [build, hooks, skills, mcp, safety]
 >
 > 1. **常驻规则（`AGENTS.md` / `CLAUDE.md`）** — 每次会话加载精简目录导航、验证命令与代码风格约定。
 > 2. **按需技能（`SKILL.md`）** — 把多步重复SOP按需挂载，避免撑爆日常上下文窗口。
-> 3. **生命周期 Hooks（`PreToolUse` / `PostToolUse`）** — 用确定性退出码硬拦截敏感文件读写并自动跑格式化/检查。
-> 4. **CI 终审门禁（`npm run build`）** — 在合并或部署前锁死 schema、单测与最终构建产物完整性。
+> 3. **生命周期 Hooks（`PreToolUse` / `PostToolUse`）** — `PreToolUse` 在匹配调用执行前拒绝；`PostToolUse` 只做调用成功后的检查，不能阻止已发生的读写。
+> 4. **CI 终审门禁（`npm run check && npm test && npm run build`）** — 合并或部署前分别执行类型检查、回归测试、schema 与产物校验。
 
 > [!IMPORTANT] 文字只负责提醒，退出码才负责执法
 > 凡是一旦违规就会泄露密钥、改坏数据库迁移或发出死链的底线规则，**绝不能**只写在 `AGENTS.md` 里。必须同时配上一条生命周期 hook（`PreToolUse` / `PostToolUse` / `Stop`）或返回非零退出码的构建门禁。
@@ -73,14 +73,14 @@ tags: [build, hooks, skills, mcp, safety]
 | **`AGENTS.md` / `CLAUDE.md`** | 软建议 | 每次会话常驻 | 目录结构、构建/测试命令、代码风格、核心禁区清单 |
 | **`SKILL.md` 技能目录** | 流程引导 | 任务匹配时按需加载 | 可复用的多步 SOP（如周更入库、发版核查、迁移步骤） |
 | **生命周期 Hooks** | **确定性硬拦截** | 固定工具调用/结束节点 | 拒绝读写受保护文件、跑快速静态检查、拦截未验证收工 |
-| **CI / `npm run build`** | **确定性硬拦截** | 合并前与发版前 | 全量 schema 校验、内部链接/锚点核验、完整回归测试 |
+| **CI / `npm run build`** | **确定性硬拦截** | 合并前与发版前 | 构建执行 schema 与链接/锚点校验；CI 另行执行类型检查与回归测试 |
 
 ## 把「口头希望」改造成自动门禁
 
 | 脆弱的纯文字叮嘱 | 确定性的 Hook / 构建门禁替代方案 |
 |---|---|
 | *「请绝对不要读取或修改 `.env` 和私钥」* | `PreToolUse` hook 拦截命中 `.env*` / `*.pem` 的读写调用，并配合 `.gitignore` |
-| *「汇报完成前请务必跑一遍类型检查」* | 在 `Stop` 或编辑后 hook 中自动执行 `npm run check`，非零退出直接打回 |
+| *「汇报完成前请务必跑一遍类型检查」* | `Stop` hook 执行 `npm run check`，把失败映射为退出码 `2`，并检查 `stop_hook_active`；编辑后检查不能撤销编辑 |
 | *「翻译文章不要漏配 slug 或写错更新日志链接」* | 由 `scripts/validate.mjs` 与 `scripts/validate-output.mjs` 在构建期自动卡死 |
 
 ## 前置条件
@@ -92,7 +92,7 @@ tags: [build, hooks, skills, mcp, safety]
 ## 步骤
 
 1. **给 `AGENTS.md` / `CLAUDE.md` 瘦身。** 常驻规则控制在 80 行以内，只留目录说明、精确命令、编码规范与最高优先级边界。
-2. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上 hook 或构建脚本校验。例如 Claude Code 的 `PreToolUse` / `PostToolUse` / `Stop` 可在固定节点跑脚本并直接拒绝违规调用。
+2. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上 hook 或构建脚本校验。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
 3. **严控 Hook 耗时。** 高频触发的编辑期 hook 只跑路径白名单或单文件语法检查；全量构建与集成测试放到 `Stop` 阶段或提交前门禁，避免因太慢而自己动手关掉保护。
 4. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。
 5. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
@@ -161,6 +161,54 @@ Hook 触发事件 + 匹配规则（Claude Code / CLI）：
 
 > [!WARNING] 把第三方 Skills 与 MCP 当成可执行代码审阅
 > 外部 `SKILL.md` 附带脚本以及会抓取外网网页的 MCP 服务器，都可能引入提示词注入或任意命令执行风险。启用前务必通读源码，并对照[安全速查](/zh/articles/security-quickcheck/)做好隔离。
+
+### 4. 把 npm 失败转换为阻断退出码的 Stop 检查
+
+Claude Code 命令 hook **不是任意非零退出都会阻断**：支持阻断的事件使用退出码 `2`；普通退出码 `1` 且无有效 JSON 决策时通常只是非阻断错误。另一种方式是以退出码 `0` 返回事件专属 JSON 决策（例如 `PreToolUse` 使用 `hookSpecificOutput.permissionDecision: "deny"`；`Stop` 使用顶层 `decision: "block"` 和 `reason`）。详见[退出码与事件参考](https://code.claude.com/docs/en/hooks#exit-code-2-behavior-per-event)。
+
+以下示例针对本站仓库的 POSIX 目录结构，保存为仓库根目录下的 `.claude/hooks/stop-check.cjs`（先创建目录）。要求 PATH 中有 Node/npm，且 `site/` 已安装依赖。其他项目必须替换成自己的检查命令与目录；并非每个项目都有 `npm run check`。
+
+```javascript
+// stop-check.cjs — POSIX Node/npm example for this repository layout
+const { readFileSync } = require('node:fs');
+const { spawnSync } = require('node:child_process');
+try {
+  const input = JSON.parse(readFileSync(0, 'utf8'));
+  if (input.hook_event_name !== 'Stop') throw new Error('Expected a Stop event');
+  if (input.stop_hook_active === true) process.exit(0);
+  const root = process.env.CLAUDE_PROJECT_DIR;
+  if (!root) throw new Error('CLAUDE_PROJECT_DIR is required');
+  const result = spawnSync('npm', ['--prefix', 'site', 'run', 'check'], {
+    cwd: root, stdio: 'inherit', timeout: 45000,
+  });
+  if (result.error || result.status !== 0) {
+    console.error('Typecheck failed or could not run. Inspect the output, fix it, and rerun verification.');
+    process.exit(2);
+  }
+} catch {
+  console.error('Stop check could not validate its input or run; inspect the hook configuration.');
+  process.exit(2);
+}
+```
+
+把以下 `Stop` 条目合并到现有 `.claude/settings.json` 的 `hooks` 对象中，不要覆盖其他 hooks：
+
+```json
+{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node",
+        "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-check.cjs"],
+        "timeout": 60
+      }]
+    }]
+  }
+}
+```
+
+stdin 中的 `stop_hook_active` 防循环检查遵循[官方指引](https://code.claude.com/docs/en/hooks-guide#stop-hook-hits-the-block-cap)：后续停止请求会放行，避免无限循环。因此它只是反馈，**不是**所有检查已通过的证明，也不是安全权限边界。仍需独立的 CI 类型检查/测试/构建门禁与进程、文件权限。`PostToolUse` 无法撤销已经泄露的密钥；路径匹配还须覆盖 shell、MCP 等其他访问通道。依赖 hook 前请实测自己的工具/事件配置。本地回归测试只在隔离 npm 夹具中验证此包装器，未连接真实 Claude 会话。
 
 ## 完成定义
 

@@ -60,8 +60,8 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 >
 > 1. **Rules (`AGENTS.md` / `CLAUDE.md`)** — Load compact repo map, verify command, and coding conventions every session.
 > 2. **Skills (`SKILL.md`)** — Pull multi-step workflows on demand without bloating baseline context.
-> 3. **Hooks (`PreToolUse` / `PostToolUse`)** — Block secret paths and auto-run formatters or lints via exit codes.
-> 4. **CI Build Gate (`npm run build`)** — Enforce final schema, test, and output integrity before merge or deploy.
+> 3. **Hooks (`PreToolUse` / `PostToolUse`)** — Use `PreToolUse` to reject a matched call before execution; use `PostToolUse` for checks after it has already run.
+> 4. **CI gates (`npm run check && npm test && npm run build`)** — Run typecheck, regression tests, schema and output checks before merge or deploy.
 
 > [!IMPORTANT] Prose advises; exit codes enforce
 > If breaking a rule would leak secrets, corrupt migrations, or ship broken links, **never** leave that rule in `AGENTS.md` alone. Pair the prose rule with a fast lifecycle hook (`PreToolUse` / `PostToolUse` / `Stop`) or a required build gate that exits nonzero.
@@ -73,14 +73,14 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 | **`AGENTS.md` / `CLAUDE.md`** | Advisory | Every session | Repo map, build/test commands, coding conventions, short boundary list |
 | **`SKILL.md` folders** | Advisory workflow | On-demand when task matches | Repeatable SOPs (weekly content ingest, release check, schema migration checklist) |
 | **Lifecycle hooks** | **Deterministic** | Fixed tool/turn events | Blocking edits to protected paths, running fast format/lint checks, gating `Stop` |
-| **CI / `npm run build`** | **Deterministic** | Pre-merge & pre-deploy | Full schema, link/anchor inventory, and regression suite |
+| **CI / `npm run build`** | **Deterministic** | Pre-merge & pre-deploy | Build checks schema and links/anchors; CI separately runs typecheck and regression tests |
 
 ## Turning prose hopes into enforced checks
 
 | Fragile prose-only rule | Deterministic hook / build replacement |
 |---|---|
 | *“Please never edit `.env` or production deploy keys”* | `PreToolUse` hook denies file reads/writes matching `.env*` or `*.pem`, plus `.gitignore` |
-| *“Always run `npm run check` before saying you’re done”* | `Stop` / post-edit hook or required task script runs `npm run check` and blocks on nonzero exit |
+| *“Always run `npm run check` before saying you’re done”* | `Stop` hook runs `npm run check`, maps failures to exit `2`, and guards `stop_hook_active`; post-edit checks cannot undo an edit |
 | *“Don’t break translated slugs or changelog page links”* | `scripts/validate.mjs` + `scripts/validate-output.mjs` fail `npm run build` automatically |
 
 ## Prerequisites
@@ -92,7 +92,7 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 ## Steps
 
 1. **Audit your `AGENTS.md` / `CLAUDE.md` and cut bloat.** Keep always-on instructions under ~80 lines: directory layout, exact commands, code style, and top boundaries.
-2. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a hook or build-script check. In Claude Code, lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`) run shell commands at fixed points and can block the action.
+2. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a hook or build-script check. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
 3. **Keep hook commands fast.** Run targeted lint/type/path checks inside edit hooks; leave heavy full-repo integration suites for `Stop` or pre-push/CI so you never disable hooks out of impatience.
 4. **Extract recurring playbooks into `SKILL.md` folders.** Follow the [Agent Skills](https://agentskills.io/) structure (`SKILL.md` with YAML `name` + `description` + step-by-step instructions). Claude Code loads project skills from `.claude/skills/<skill-name>/SKILL.md`; verify exact skill directory paths in each tool’s current docs before symlinking across tools.
 5. **Configure shared MCP servers once per tool—in each tool’s native dialect.** One MCP server can serve Claude Code, Codex, and Cursor, **but there is no single universal config file**:
@@ -161,6 +161,54 @@ Shared MCP server(s) + trust review date:
 
 > [!WARNING] Treat skills and MCP servers like production dependencies
 > Community `SKILL.md` scripts and MCP servers that fetch untrusted web content can introduce prompt injection or arbitrary command execution. Read every script before enabling it, and review [Security quickcheck](/en/articles/security-quickcheck/).
+
+### 4. A Stop check that translates npm failure into a blocking exit
+
+Claude Code command hooks do **not** treat every nonzero exit as a block: exit `2` is the blocking signal on supported events; ordinary exit `1` without a valid JSON decision is generally a non-blocking error. Alternatively, return the event-specific JSON decision with exit `0` (for example, `PreToolUse` uses `hookSpecificOutput.permissionDecision: "deny"`; `Stop` uses top-level `decision: "block"` plus `reason`). See the [exit-code/event reference](https://code.claude.com/docs/en/hooks#exit-code-2-behavior-per-event).
+
+For this repository's POSIX layout, save the following as `.claude/hooks/stop-check.cjs` at the repository root (create the directories first). It requires Node and npm on PATH and dependencies installed in `site/`. Other projects must substitute their actual check command/directory; `npm run check` is not universal.
+
+```javascript
+// stop-check.cjs — POSIX Node/npm example for this repository layout
+const { readFileSync } = require('node:fs');
+const { spawnSync } = require('node:child_process');
+try {
+  const input = JSON.parse(readFileSync(0, 'utf8'));
+  if (input.hook_event_name !== 'Stop') throw new Error('Expected a Stop event');
+  if (input.stop_hook_active === true) process.exit(0);
+  const root = process.env.CLAUDE_PROJECT_DIR;
+  if (!root) throw new Error('CLAUDE_PROJECT_DIR is required');
+  const result = spawnSync('npm', ['--prefix', 'site', 'run', 'check'], {
+    cwd: root, stdio: 'inherit', timeout: 45000,
+  });
+  if (result.error || result.status !== 0) {
+    console.error('Typecheck failed or could not run. Inspect the output, fix it, and rerun verification.');
+    process.exit(2);
+  }
+} catch {
+  console.error('Stop check could not validate its input or run; inspect the hook configuration.');
+  process.exit(2);
+}
+```
+
+Merge this `Stop` entry into the existing `.claude/settings.json` `hooks` object; do not overwrite other hooks:
+
+```json
+{
+  "hooks": {
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node",
+        "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-check.cjs"],
+        "timeout": 60
+      }]
+    }]
+  }
+}
+```
+
+The stdin `stop_hook_active` guard follows the [official loop-prevention guidance](https://code.claude.com/docs/en/hooks-guide#stop-hook-hits-the-block-cap): it allows a subsequent stop rather than looping forever. Consequently this is feedback, **not** proof that all checks passed or a security boundary. Keep independent required CI typecheck/tests/build and process/file permissions. `PostToolUse` cannot undo a leaked secret; path matchers also need coverage for shell, MCP and other access routes. Test your actual tool/event configuration before relying on a hook. The local regression tests exercise this wrapper with isolated npm fixtures, not a live Claude session.
 
 ## Definition of done
 

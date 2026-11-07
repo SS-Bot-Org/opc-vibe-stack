@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { parse } from 'parse5';
 import assert from 'node:assert/strict';
 import { mkdtemp, cp, symlink, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -6,7 +7,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { articleSchema, assertConditional } from '../src/lib/content-schema.mjs';
 import { readInventory, alternateRoutes } from '../src/lib/inventory.mjs';
-import { assertUnavailable, assertSwitchTarget, assertHeaderStructure, assertArticleNavigation } from './rendered.mjs';
+import { elements, attr, text, assertUnavailable, assertSwitchTarget, assertHeaderStructure, assertArticleNavigation } from './rendered.mjs';
 const site = process.cwd();
 async function fixture(run) {
   const dir = await mkdtemp(path.join(tmpdir(), 'opc-content-'));
@@ -100,4 +101,37 @@ test('rendered Chinese article with draft English counterpart preserves context 
   const sitemap = await readFile(path.join(dir, 'dist/sitemap.xml'), 'utf8');
   assert.ok(!sitemap.includes('https://opcvibestack.com/en/articles/translation-fixture/'));
   assert.ok(sitemap.includes('https://opcvibestack.com/zh/articles/translation-fixture/'));
+}));
+
+
+test('FULL build preserves mixed Markdown task/plain lists in both article locales', async () => fixture(async (dir) => {
+  for (const locale of ['en', 'zh']) {
+    const file = path.join(dir, `src/content/articles/${locale}/codex.md`);
+    await writeFile(file, (await readFile(file, 'utf8')) + `
+
+## Mixed list regression
+
+- [ ] Verify **artifact**
+- Keep [previous release](/${locale}/stack/) for rollback.
+  - Nested **recovery** details
+- [x] Confirm manifest
+`);
+  }
+  const result = build(dir);
+  assert.equal(result.status, 0, result.output);
+  for (const locale of ['en', 'zh']) {
+    const doc = parse(await readFile(path.join(dir, `dist/${locale}/articles/codex/index.html`), 'utf8'));
+    const list = elements(doc, (n) => n.tagName === 'ul' && text(n).includes('Verify artifact'))[0];
+    assert.ok(list, 'the final rendered output retains a native mixed list');
+    const items = list.childNodes.filter((n) => n.tagName === 'li');
+    assert.equal(items.length, 3);
+    assert.match(text(items[0]), /Verify artifact/);
+    assert.match(text(items[1]), /Keep previous release for rollback/);
+    assert.match(text(items[1]), /Nested recovery details/);
+    assert.match(text(items[2]), /Confirm manifest/);
+    assert.equal(attr(elements(items[1], (n) => n.tagName === 'a')[0], 'href'), `/${locale}/stack/`);
+    assert.equal(elements(list, (n) => n.tagName === 'strong').length, 2);
+    assert.equal(elements(list, (n) => n.tagName === 'input').length, 2);
+    assert.equal(text(list).split('Nested recovery details').length - 1, 1);
+  }
 }));

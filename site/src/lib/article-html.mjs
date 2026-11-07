@@ -122,7 +122,6 @@ function extractTaskItemParts(liNode) {
   if (directInputIdx !== -1) {
     const input = children[directInputIdx];
     const rest = children.slice(directInputIdx + 1);
-    if (rest[0]?.nodeName === '#text') rest[0].value = rest[0].value.replace(/^\s+/, '');
     return { input, contentNodes: rest };
   }
   const firstP = children.find((c) => c.tagName === 'p');
@@ -132,7 +131,6 @@ function extractTaskItemParts(liNode) {
     if (pInputIdx !== -1) {
       const input = pChildren[pInputIdx];
       const pRest = pChildren.slice(pInputIdx + 1);
-      if (pRest[0]?.nodeName === '#text') pRest[0].value = pRest[0].value.replace(/^\s+/, '');
       const otherBlocks = children.filter((c) => c !== firstP);
       return { input, contentNodes: [...pRest, ...otherBlocks] };
     }
@@ -141,15 +139,21 @@ function extractTaskItemParts(liNode) {
 }
 
 function transformTaskList(ulNode, locale, nextCheckId) {
+  // A GFM task list may also contain ordinary items. Keep that native list
+  // intact rather than dropping its prose or changing the order/semantics.
+  const items = (ulNode.childNodes || []).filter((child) => child.tagName === 'li');
+  const itemParts = items.map(extractTaskItemParts);
+  if (!items.length || itemParts.some((parts) => !parts)) return null;
+
   const groupLabel = locale === 'zh' ? '可执行核对清单' : 'Actionable checklist';
   const group = parseFragment(
     `<div class="checklist" role="group" aria-label="${escapeHtml(groupLabel)}" data-checklist></div>`,
   ).childNodes[0];
 
-  for (const child of ulNode.childNodes || []) {
-    if (child.tagName !== 'li') continue;
-    const parts = extractTaskItemParts(child);
-    if (!parts) continue;
+  for (const parts of itemParts) {
+    if (parts.contentNodes[0]?.nodeName === '#text') {
+      parts.contentNodes[0].value = parts.contentNodes[0].value.replace(/^\s+/, '');
+    }
     const id = `opc-check-${nextCheckId()}`;
     const isChecked = (parts.input.attrs || []).some((a) => a.name === 'checked');
     const interactive = hasInteractiveElement(parts.contentNodes);

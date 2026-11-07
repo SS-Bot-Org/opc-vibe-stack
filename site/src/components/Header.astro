@@ -22,7 +22,8 @@ function isCurrent(href: string): boolean {
 <header class="site-header">
   <div class="site-header__inner">
     <a class="brand" href={home}>{site.name}</a>
-    <nav aria-label={ui.primaryNav}>
+    <button type="button" class="header-menu" aria-controls="primary-navigation" aria-expanded="true" data-header-menu hidden>{locale === 'zh' ? '导航' : 'Menu'}</button>
+    <nav id="primary-navigation" class="header-nav" aria-label={ui.primaryNav} data-header-nav>
       <ul class="nav">
         {nav.map((item) => (
           <li>
@@ -34,9 +35,20 @@ function isCurrent(href: string): boolean {
       </ul>
     </nav>
     <div class="header-tools">
-      <SearchControl locale={locale === 'zh' ? 'zh' : 'en'} />
+      <details class="header-search" open data-header-search>
+        <summary aria-expanded="true">{locale === 'zh' ? '搜索' : 'Search'}</summary>
+        <SearchControl locale={locale === 'zh' ? 'zh' : 'en'} />
+      </details>
       <ThemeToggle locale={locale} />
       <LocaleSwitcher currentPath={currentPath} locale={locale} />
     </div>
   </div>
 </header>
+
+<script>
+  import { configureHeader } from '../lib/header.mjs';
+  const menu = document.querySelector<HTMLButtonElement>('[data-header-menu]');
+  const nav = document.querySelector<HTMLElement>('[data-header-nav]');
+  const search = document.querySelector<HTMLDetailsElement>('[data-header-search]');
+  if (menu && nav && search) configureHeader(menu, nav, search, window.matchMedia('(max-width: 799px)'));
+</script>

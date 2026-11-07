@@ -7,13 +7,24 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/validate.mjs && astro build",
+    "build": "node scripts/validate.mjs && astro build && node scripts/validate-output.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "check": "astro check",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "astro": "^7.4.7"
+    "astro": "^7.4.7",
+    "parse5": "^8.1.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
   },
-  "description": "OPC Vibe Stack \u2014 English-first best-practice site for one-person companies using Claude Code, Codex, and Grok Build"
+  "description": "OPC Vibe Stack — English-first best-practice site for one-person companies using Claude Code, Codex, and Grok Build",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/node": "^22.20.5",
+    "postcss": "^8.5.32",
+    "typescript": "^6.0.3"
+  }
 }

@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { site } from '../data/site';
+import { readInventory } from './inventory.mjs';
 
 export type Article = CollectionEntry<'articles'>;
 export type ChangelogEntry = CollectionEntry<'changelog'>;
@@ -77,8 +78,9 @@ export type SearchIndexItem = {
 
 export async function buildSearchIndex(locale = 'en'): Promise<SearchIndexItem[]> {
   const listed = await getListedArticles(locale);
-  // Search indexes published guidance; stack cards included for discoverability
-  return listed.map((a) => ({
+  const { routes } = await readInventory();
+  // Use the same published route inventory as sitemap and alternate links.
+  return listed.filter((a) => routes.has(articleHref(a.data.slug, locale))).map((a) => ({
     title: a.data.title,
     tags: a.data.tags,
     summary: a.data.summary,

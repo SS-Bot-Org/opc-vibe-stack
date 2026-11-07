@@ -10,6 +10,7 @@ export const uiEn = {
   localeSwitcher: 'Language',
   langEn: 'English',
   langZh: '简体中文',
+  notInEn: 'Not yet available in English — continue reading in Chinese',
   notInZh: 'Not yet available in Chinese — read in English',
   fallbackTitle: 'Chinese version not available yet',
   fallbackBody:

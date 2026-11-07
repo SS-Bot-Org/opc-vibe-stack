@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code + Codex + Grok Build / xAI docs as of 2026-11; re-check CLI names before a timed run"
-updated: "2026-11-06"
+updated: "2026-11-07"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -20,7 +20,7 @@ publicSources:
     url: "https://developers.openai.com/codex"
     kind: docs
   - title: "xAI documentation"
-    url: "https://docs.x.ai/"
+    url: "https://docs.x.ai/build/overview"
     kind: docs
   - title: "Spec Kit quickstart"
     url: "https://github.github.com/spec-kit/quickstart.html"
@@ -89,3 +89,33 @@ A cold visitor can open the demo URL, understand the offer, and complete the pri
 ## Sources
 
 See frontmatter `publicSources`. Stack division details: [Claude Code](/en/articles/claude-code/), [Codex](/en/articles/codex/), [Grok Build](/en/articles/grok-build/). Spec-first companion: [Spec first](/en/articles/spec-first-agent-loop/).
+
+
+## Worked example: make a broken content release fail
+
+Use the [OPC Vibe Stack repository](https://github.com/SS-Bot-Org/opc-vibe-stack) as a small content-MVP demo. The runnable fixture lives in `site/tests/content.test.mjs`; it creates a temporary site, changes a quoted YAML link, runs the **full** build, and checks for a nonzero exit. It does not change your working content or publish anything.
+
+Copy this task brief into your coding agent:
+
+```text
+Goal: reject a release containing a nonexistent changelog target.
+In scope: YAML parsing, shared content contracts, final-output validation, regression tests.
+Not in scope: new articles, deployment, external link crawling, changing evidence labels.
+Reproduction: in a temporary copy, replace /en/playbooks/ in a published
+changelog affectedPages list with the quoted string "/en/does-not-exist/".
+Acceptance: full npm run build exits nonzero with "missing output";
+the regression test exits zero because it EXPECTS that failure.
+Safety: keep the real source untouched; no network deployment or production probes.
+```
+
+After checking out the repository, run with Node.js ≥22.23.4:
+
+```bash
+cd site
+npm ci
+node --test --test-name-pattern='quoted nonexistent changelog link' tests/content.test.mjs
+```
+
+Expected: the selected `FULL npm run build rejects quoted nonexistent changelog link` test passes. Its inner build fails deliberately; the test runner itself exits **0**. Run `npm run check && npm test && npm run build` for the full local gate.
+
+Local reproduction: Node 22.23.4 on Linux, 2026-11-07. This verifies a content-release failure case only—not agent quality, revenue, browser layout, or production deployment. External sources are not crawled. The article's overall evidence label remains documentation-backed; this small locally tested example does not upgrade every recommendation to “tested”.

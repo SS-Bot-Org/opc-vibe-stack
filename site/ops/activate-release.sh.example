@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Remote helper for the EXAMPLE ONLY. Receives a trusted packaged artifact tar on stdin.
+set -euo pipefail
+ROOT="${1:?root}"; RELEASE_ID="${2:?release ID}"; PROBE_ORIGIN="${3:?probe origin}"
+[[ "$ROOT" =~ ^/[a-zA-Z0-9_/-]+$ && "$ROOT" != / && "$ROOT" != */../* && "$ROOT" != */.. ]] || exit 64
+[[ "$RELEASE_ID" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$ ]] || exit 64
+[[ "$PROBE_ORIGIN" =~ ^https?://[a-zA-Z0-9.:-]+$ ]] || exit 64
+mkdir -p "$ROOT/releases" "$ROOT/deployment-records"
+[[ "$(realpath "$ROOT")" == "$ROOT" && ! -L "$ROOT/releases" && ! -L "$ROOT/deployment-records" ]] || exit 64
+exec 9>"$ROOT/.deploy.lock"
+flock -n 9 || { echo 'Another deployment holds the lock' >&2; exit 75; }
+release="$ROOT/releases/$RELEASE_ID"
+record="$ROOT/deployment-records/$RELEASE_ID"
+# IDs are never reused, even after an unsuccessful activation.
+mkdir "$record"
+mkdir "$release"
+previous=''
+if [[ -e "$ROOT/current" || -L "$ROOT/current" ]]; then
+  [[ -L "$ROOT/current" ]] || { echo 'current must be a symlink' >&2; exit 65; }
+  previous="$(readlink -f "$ROOT/current")"
+  [[ "$previous" == "$ROOT/releases/"* && -d "$previous" ]] || exit 65
+fi
+printf '%s\n' "$previous" >"$record/previous-target"
+activated=false
+success=false
+link="$ROOT/.current-$RELEASE_ID"
+finish() {
+  result=$?
+  if [[ "$success" != true && "$activated" == true ]]; then
+    if [[ -n "$previous" ]]; then
+      ln -s "$previous" "$link" && mv -Tf "$link" "$ROOT/current"
+    else
+      rm -- "$ROOT/current"
+    fi
+    printf 'rolled-back\n' >"$record/status"
+  elif [[ "$success" != true ]]; then
+    printf 'rejected-before-activation\n' >"$record/status"
+  fi
+  # Never erase an immutable release, including rejected ones; inspect it manually.
+  [[ ! -L "$link" ]] || rm -- "$link"
+  [[ ! -f "$record/probe.tmp" ]] || rm -- "$record/probe.tmp"
+  exit "$result"
+}
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+# GNU tar rejects absolute / parent traversal paths; artifacts must be trusted inputs.
+tar --no-same-owner --no-same-permissions -xzf - -C "$release"
+python3 - "$release" <<'PY'
+import hashlib, json, pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+manifest = json.loads((root / 'release.json').read_text())
+assert re.fullmatch(r'[a-f0-9]{40}', manifest['revision']), 'invalid revision'
+assert manifest['verifiedAt'], 'missing build timestamp'
+actual = {}
+for file in root.rglob('*'):
+    assert not file.is_symlink(), 'artifact symlink forbidden'
+    if file.is_file() and file != root / 'release.json':
+        actual[file.relative_to(root).as_posix()] = hashlib.sha256(file.read_bytes()).hexdigest()
+assert actual == manifest['checksums'], 'artifact checksum/file-set mismatch'
+assert 'en/index.html' in actual and 'zh/index.html' in actual and 'sitemap.xml' in actual, 'missing required output'
+PY
+cp "$release/release.json" "$record/release.json"
+ln -s "$release" "$link"
+activated=true
+mv -Tf "$link" "$ROOT/current"
+# Confirm served bytes, not just status codes; avoids a cached/old release passing probes.
+for route in release.json en/index.html zh/index.html sitemap.xml; do
+  url="$route"
+  [[ "$route" != */index.html ]] || url="${route%index.html}"
+  curl --fail --silent --show-error --max-time 15 --retry 1 -H 'Cache-Control: no-cache' \
+    "$PROBE_ORIGIN/$url?release=$RELEASE_ID" >"$record/probe.tmp"
+  cmp --silent "$release/$route" "$record/probe.tmp"
+done
+rm -- "$record/probe.tmp"
+printf 'activated\n' >"$record/status"
+success=true

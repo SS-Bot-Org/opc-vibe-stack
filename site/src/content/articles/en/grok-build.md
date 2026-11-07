@@ -10,11 +10,11 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Grok Build / xAI build tooling; confirm current product docs before following steps"
-updated: "2026-11-06"
+updated: "2026-11-07"
 internalBriefing: []
 publicSources:
   - title: "xAI documentation"
-    url: "https://docs.x.ai/"
+    url: "https://docs.x.ai/build/overview"
     kind: docs
 tags: [stack, sell, build]
 toolId: grok-build

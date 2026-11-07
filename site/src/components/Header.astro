@@ -22,9 +22,8 @@ function isCurrent(href: string): boolean {
 <header class="site-header">
   <div class="site-header__inner">
     <a class="brand" href={home}>{site.name}</a>
-    <details class="header-nav" open data-header-nav>
-      <summary aria-expanded="true">{locale === 'zh' ? '导航' : 'Menu'}</summary>
-    <nav aria-label={ui.primaryNav}>
+    <button type="button" class="header-menu" aria-controls="primary-navigation" aria-expanded="true" data-header-menu hidden>{locale === 'zh' ? '导航' : 'Menu'}</button>
+    <nav id="primary-navigation" class="header-nav" aria-label={ui.primaryNav} data-header-nav>
       <ul class="nav">
         {nav.map((item) => (
           <li>
@@ -35,7 +34,6 @@ function isCurrent(href: string): boolean {
         ))}
       </ul>
     </nav>
-    </details>
     <div class="header-tools">
       <details class="header-search" open data-header-search>
         <summary aria-expanded="true">{locale === 'zh' ? '搜索' : 'Search'}</summary>
@@ -48,13 +46,9 @@ function isCurrent(href: string): boolean {
 </header>
 
 <script>
-  const media = window.matchMedia('(max-width: 799px)');
-  const disclosures = document.querySelectorAll<HTMLDetailsElement>('[data-header-nav], [data-header-search]');
-  function sync() { disclosures.forEach((el) => { el.open = !media.matches; el.querySelector('summary')?.setAttribute('aria-expanded', String(el.open)); }); }
-  sync();
-  media.addEventListener('change', sync);
-  disclosures.forEach((el) => el.addEventListener('toggle', () => {
-    el.querySelector('summary')?.setAttribute('aria-expanded', String(el.open));
-    if (media.matches && el.open) disclosures.forEach((other) => { if (other !== el) other.open = false; });
-  }));
+  import { configureHeader } from '../lib/header.mjs';
+  const menu = document.querySelector<HTMLButtonElement>('[data-header-menu]');
+  const nav = document.querySelector<HTMLElement>('[data-header-nav]');
+  const search = document.querySelector<HTMLDetailsElement>('[data-header-search]');
+  if (menu && nav && search) configureHeader(menu, nav, search, window.matchMedia('(max-width: 799px)'));
 </script>

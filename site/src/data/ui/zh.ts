@@ -12,6 +12,7 @@ export const uiZh: UiStrings = {
   localeSwitcher: '语言',
   langEn: 'English',
   langZh: '简体中文',
+  notInEn: '尚无英文版 — 继续阅读中文',
   notInZh: '尚无中文版 — 阅读英文',
   fallbackTitle: '暂无中文版',
   fallbackBody: '此页尚未翻译。你可以阅读英文版，或浏览中文「关于」与「工具栈」。',

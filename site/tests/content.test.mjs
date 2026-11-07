@@ -6,6 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { articleSchema, assertConditional } from '../src/lib/content-schema.mjs';
 import { readInventory, alternateRoutes } from '../src/lib/inventory.mjs';
+import { assertUnavailable, assertSwitchTarget, assertHeaderStructure } from './rendered.mjs';
 const site = process.cwd();
 async function fixture(run) {
   const dir = await mkdtemp(path.join(tmpdir(), 'opc-content-'));
@@ -59,6 +60,14 @@ test('draft translations are excluded from public inventory and hreflang, no inv
   assert.match(html, /rel="canonical" href="https:\/\/opcvibestack.com\/en\/articles\/spec-first-agent-loop\/"/);
   assert.ok(!html.includes('hreflang='));
   assert.ok(!(await readFile(path.join(dir, 'dist/sitemap.xml'), 'utf8')).includes(`https://opcvibestack.com${route}`));
+  const enHtml = await readFile(path.join(dir, 'dist/en/articles/spec-first-agent-loop/index.html'), 'utf8');
+  assertUnavailable(enHtml, /Not yet available in Chinese — read in English/);
+  assert.match(enHtml, /rel="canonical" href="https:\/\/opcvibestack.com\/en\/articles\/spec-first-agent-loop\/"/);
+  assert.ok(!enHtml.includes('hreflang="zh-Hans"'));
+  assertHeaderStructure(enHtml);
+  assertSwitchTarget(await readFile(path.join(dir, 'dist/en/articles/codex/index.html'), 'utf8'), '/zh/articles/codex/');
+  assertSwitchTarget(await readFile(path.join(dir, 'dist/en/stack/index.html'), 'utf8'), '/zh/stack/');
+  assertSwitchTarget(await readFile(path.join(dir, 'dist/404.html'), 'utf8'), '/zh/');
   const index = JSON.parse(await readFile(path.join(dir, 'dist/zh/search-index.json'), 'utf8'));
   assert.ok(!index.some((item) => item.slug === 'spec-first-agent-loop'));
 }));
@@ -73,3 +82,20 @@ test('shared conditional contracts preserve evidence and risk notices', async ()
     date: '2026-11-07', environment: 'local fixture only', outcome: 'assertions passed',
   } }), 'fixture'));
 });
+
+test('rendered Chinese article with draft English counterpart preserves context and reports unavailable', async () => fixture(async (dir) => {
+  for (const locale of ['en', 'zh']) {
+    const source = path.join(dir, `src/content/articles/${locale}/spec-first-agent-loop.md`);
+    let raw = (await readFile(source, 'utf8')).replace('slug: spec-first-agent-loop', 'slug: translation-fixture');
+    if (locale === 'en') raw = raw.replace('status: published', 'status: draft');
+    await writeFile(path.join(dir, `src/content/articles/${locale}/translation-fixture.md`), raw);
+  }
+  const result = build(dir); assert.equal(result.status, 0, result.output);
+  const html = await readFile(path.join(dir, 'dist/zh/articles/translation-fixture/index.html'), 'utf8');
+  assertUnavailable(html, /尚无英文版 — 继续阅读中文/);
+  assert.match(html, /rel="canonical" href="https:\/\/opcvibestack.com\/zh\/articles\/translation-fixture\/"/);
+  assert.ok(!html.includes('hreflang="en"'));
+  const sitemap = await readFile(path.join(dir, 'dist/sitemap.xml'), 'utf8');
+  assert.ok(!sitemap.includes('https://opcvibestack.com/en/articles/translation-fixture/'));
+  assert.ok(sitemap.includes('https://opcvibestack.com/zh/articles/translation-fixture/'));
+}));

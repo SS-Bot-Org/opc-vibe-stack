@@ -366,6 +366,8 @@ tr:last-child td {
   white-space: nowrap;
 }
 
+.locale-switcher--unavailable { white-space: normal; max-width: 24rem; }
+
 .locale-switcher a {
   text-decoration: none;
 }
@@ -458,19 +460,23 @@ html[data-theme='dark'] .theme-toggle__icon--to-light {
   display: inline;
 }
 
-/* Native disclosures retain navigation/search access without JavaScript. */
-.header-nav summary, .header-search summary { cursor: pointer; padding: .35rem; }
+/* Progressive menu enhancement and native search retain no-JS access. */
+.header-menu, .header-search summary { cursor: pointer; padding: .35rem; }
+.header-menu { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: .3rem; }
 .primary-cta { display: inline-block; padding: .7rem 1rem; background: var(--accent); color: var(--surface); border-radius: .4rem; font-weight: 700; }
 @media (min-width: 800px) {
-  .header-nav summary, .header-search summary { display: none; }
+  .header-search summary { display: none; }
 }
 @media (max-width: 799px) {
   .site-header__inner { gap: .3rem .7rem; padding: .45rem 0; }
   .brand { flex: 1; }
-  .header-nav { order: 2; }
-  .header-nav nav { position: absolute; left: 0; right: 0; padding: 1rem; background: var(--surface); border-bottom: 1px solid var(--border); max-height: 60vh; overflow: auto; }
-  .header-tools { order: 3; width: 100%; gap: .6rem; justify-content: flex-end; }
-  .header-search { margin-right: auto; }
-  .header-search > .search { position: absolute; left: 1rem; right: 1rem; width: auto; padding: .5rem; background: var(--surface); border: 1px solid var(--border); }
+  .header-menu { order: 2; }
+  /* The complete toolbar comes first. An expanded menu contributes its own row. */
+  .header-nav { order: 4; flex-basis: 100%; position: static; padding: .5rem 0; max-height: 60vh; overflow: auto; }
+  .header-tools { order: 3; width: 100%; gap: .6rem; justify-content: flex-end; align-items: flex-start; }
+  .header-search { margin-right: auto; flex: 1; min-width: 0; }
+  .header-search > .search { position: static; width: 100%; min-width: 0; padding: .5rem 0; }
+  .header-search .search__results { position: static; margin-top: .35rem; }
   .header-search .search__input { width: 100%; }
+  .locale-switcher--unavailable { flex-basis: 100%; }
 }

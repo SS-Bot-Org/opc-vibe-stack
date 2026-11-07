@@ -1,0 +1,39 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import EvidenceLabel from '../../components/EvidenceLabel.astro';
+import { getArticlesByStage, articleHref } from '../../lib/content';
+
+const stage = 'build' as const;
+const articles = await getArticlesByStage(stage, 'en');
+---
+<SiteLayout
+  locale="en"
+  title="Build"
+  description="Build practices for OPC builders using AI coding agents."
+  canonicalPath="/en/build/"
+>
+  <h1>Build</h1>
+  <p class="lede">Published practice pieces for the build stage (plus cross-stage items).</p>
+  {articles.length === 0 ? (
+    <div class="empty-state">No published build articles yet.</div>
+  ) : (
+    <ul class="list-plain">
+      {articles.map((a) => (
+        <li>
+          <h2 style="margin:0 0 0.35rem;font-size:1.15rem">
+            <a href={articleHref(a.data.slug)}>{a.data.title}</a>
+          </h2>
+          <p style="margin:0">{a.data.summary}</p>
+          <p class="meta" style="margin:0.4rem 0 0">
+            <EvidenceLabel evidence={a.data.evidence} />
+            {' · '}
+            {a.data.category}
+            {a.data.stage === 'cross' && ' · cross-stage'}
+            {' · '}
+            Updated {a.data.updated}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )}
+</SiteLayout>

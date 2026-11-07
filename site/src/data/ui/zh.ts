@@ -1,0 +1,25 @@
+import type { UiStrings } from './en';
+
+export const uiZh: UiStrings = {
+  skipToContent: '跳到正文',
+  primaryNav: '主导航',
+  searchLabel: '搜索文章',
+  searchPlaceholder: '按标题或标签搜索…',
+  searchSubmit: '搜索',
+  searchEmpty: '没有匹配的文章。',
+  searchError: '搜索索引暂不可用，请改用导航浏览。',
+  searchResults: '结果',
+  localeSwitcher: '语言',
+  langEn: 'English',
+  langZh: '简体中文',
+  notInZh: '尚无中文版 — 阅读英文',
+  fallbackTitle: '暂无中文版',
+  fallbackBody: '此页尚未翻译。你可以阅读英文版，或浏览中文「关于」与「工具栈」。',
+  fallbackCta: '阅读英文版',
+  footerBlurb: '面向独立一人公司的非官方实践笔记。',
+  latestUpdate: '最近更新',
+  noUpdatesYet: '首条周更即将到来。',
+  themeToggle: '切换亮色 / 暗色主题',
+  themeLight: '亮色',
+  themeDark: '暗色',
+};

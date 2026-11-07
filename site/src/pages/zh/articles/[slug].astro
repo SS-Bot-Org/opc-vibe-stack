@@ -1,0 +1,59 @@
+---
+import { render } from 'astro:content';
+import ArticleLayout from '../../../layouts/ArticleLayout.astro';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import {
+  getPublicArticles,
+  getEnArticlesMissingZh,
+  articleHref,
+  type Article,
+} from '../../../lib/content';
+import { uiFor } from '../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const zh = await getPublicArticles('zh');
+  const missing = await getEnArticlesMissingZh();
+  return [
+    ...zh.map((entry) => ({
+      params: { slug: entry.data.slug },
+      props: { mode: 'full' as const, entry, enEntry: null as Article | null },
+    })),
+    ...missing.map((enEntry) => ({
+      params: { slug: enEntry.data.slug },
+      props: { mode: 'fallback' as const, entry: null as Article | null, enEntry },
+    })),
+  ];
+}
+
+const { mode, entry, enEntry } = Astro.props;
+const ui = uiFor('zh');
+const rendered = mode === 'full' && entry ? await render(entry) : null;
+const Content = rendered?.Content;
+---
+{mode === 'full' && entry && Content ? (
+  <ArticleLayout entry={entry}>
+    <Content />
+  </ArticleLayout>
+) : enEntry ? (
+  <SiteLayout
+    title={ui.fallbackTitle}
+    description={ui.fallbackBody}
+    canonicalPath={articleHref(enEntry.data.slug, 'en')}
+    locale="zh"
+    noindex={true}
+  >
+    <h1>{ui.fallbackTitle}</h1>
+    <p class="lede">{ui.fallbackBody}</p>
+    <p>
+      <strong>{enEntry.data.title}</strong> — {enEntry.data.summary}
+    </p>
+    <p>
+      <a href={articleHref(enEntry.data.slug, 'en')}>{ui.fallbackCta}</a>
+      {' · '}
+      <a href="/zh/stack/">中文工具栈</a>
+      {' · '}
+      <a href="/zh/about/">关于</a>
+    </p>
+    <meta http-equiv="refresh" content={`5;url=${articleHref(enEntry.data.slug, 'en')}`} />
+  </SiteLayout>
+) : null}

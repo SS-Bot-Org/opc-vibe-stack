@@ -1,0 +1,43 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import EvidenceLabel from '../../components/EvidenceLabel.astro';
+import { getArticlesByStage, articleHref } from '../../lib/content';
+
+const stage = 'research' as const;
+const articles = await getArticlesByStage(stage, 'zh');
+---
+<SiteLayout
+  locale="zh"
+  title="调研"
+  description="使用 AI 编程 agent 的一人公司调研实践。"
+  canonicalPath="/zh/research/"
+  alternateLinks={[
+    { locale: 'en', href: '/en/research/' },
+    { locale: 'zh', href: '/zh/research/' },
+  ]}
+>
+  <h1>调研</h1>
+  <p class="lede">调研阶段已发布实践（含跨阶段条目）。</p>
+  {articles.length === 0 ? (
+    <div class="empty-state">暂无已发布的调研文章。</div>
+  ) : (
+    <ul class="list-plain">
+      {articles.map((a) => (
+        <li>
+          <h2 style="margin:0 0 0.35rem;font-size:1.15rem">
+            <a href={articleHref(a.data.slug, 'zh')}>{a.data.title}</a>
+          </h2>
+          <p style="margin:0">{a.data.summary}</p>
+          <p class="meta" style="margin:0.4rem 0 0">
+            <EvidenceLabel evidence={a.data.evidence} locale="zh" />
+            {' · '}
+            {a.data.category}
+            {a.data.stage === 'cross' && ' · 跨阶段'}
+            {' · '}
+            更新于 {a.data.updated}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )}
+</SiteLayout>

@@ -1,0 +1,66 @@
+---
+import type { Locale } from '../data/site';
+import { uiFor } from '../lib/i18n';
+
+interface Props {
+  currentPath: string;
+  locale: Locale | string;
+}
+const { currentPath, locale } = Astro.props;
+const ui = uiFor(locale);
+
+/** Paths that have real zh translations (not fallbacks). */
+const ZH_OK = new Set([
+  '/zh/',
+  '/zh/about/',
+  '/zh/stack/',
+  '/zh/research/',
+  '/zh/build/',
+  '/zh/sell/',
+  '/zh/playbooks/',
+  '/zh/hardware/',
+  '/zh/anti-patterns/',
+  '/zh/changelog/',
+  '/zh/articles/claude-code/',
+  '/zh/articles/codex/',
+  '/zh/articles/grok-build/',
+  '/zh/articles/48h-mvp-agent-stack/',
+  '/zh/articles/weekly-content-site-refresh/',
+  '/zh/articles/hardware-soft-split/',
+  '/zh/articles/rules-hooks/',
+  '/zh/articles/security-quickcheck/',
+  '/zh/articles/ship-demo-checklist/',
+  '/zh/articles/spec-first-agent-loop/',
+]);
+
+function toLocalePath(path: string, target: 'en' | 'zh'): string {
+  const [base, hash] = path.split('#');
+  const parts = base.split('/').filter(Boolean);
+  const rest = parts.length && (parts[0] === 'en' || parts[0] === 'zh') ? parts.slice(1) : parts;
+  const normalized = rest.length === 0 ? `/${target}/` : `/${target}/${rest.join('/')}/`;
+  return hash ? `${normalized}#${hash}` : normalized;
+}
+
+const enPath = toLocalePath(currentPath, 'en');
+const zhCandidate = toLocalePath(currentPath, 'zh');
+const zhHasPage = ZH_OK.has(zhCandidate.split('#')[0]);
+---
+<div class="locale-switcher" aria-label={ui.localeSwitcher}>
+  {locale === 'en' ? (
+    zhHasPage ? (
+      <a href={zhCandidate} lang="zh-Hans">{ui.langZh}</a>
+    ) : (
+      <span class="locale-switcher__missing meta">
+        <span aria-current="page">{ui.langEn}</span>
+        {' · '}
+        <a href={enPath} lang="zh-Hans" title={ui.notInZh}>{ui.notInZh}</a>
+      </span>
+    )
+  ) : (
+    <>
+      <a href={enPath}>{ui.langEn}</a>
+      {' · '}
+      <span aria-current="page">{ui.langZh}</span>
+    </>
+  )}
+</div>

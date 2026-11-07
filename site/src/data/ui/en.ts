@@ -1,0 +1,25 @@
+export const uiEn = {
+  skipToContent: 'Skip to content',
+  primaryNav: 'Primary',
+  searchLabel: 'Search articles',
+  searchPlaceholder: 'Search by title or tag…',
+  searchSubmit: 'Search',
+  searchEmpty: 'No matching articles.',
+  searchError: 'Search index unavailable. Browse the sections instead.',
+  searchResults: 'Results',
+  localeSwitcher: 'Language',
+  langEn: 'English',
+  langZh: '简体中文',
+  notInZh: 'Not yet available in Chinese — read in English',
+  fallbackTitle: 'Chinese version not available yet',
+  fallbackBody:
+    'This page has not been translated. You can read the English version, or browse Chinese About and Stack pages.',
+  fallbackCta: 'Read in English',
+  footerBlurb: 'Unofficial practice notes for indie OPC builders.',
+  latestUpdate: 'Latest update',
+  noUpdatesYet: 'First weekly update coming soon.',
+  themeToggle: 'Toggle light and dark theme',
+  themeLight: 'Light',
+  themeDark: 'Dark',
+};
+export type UiStrings = typeof uiEn;

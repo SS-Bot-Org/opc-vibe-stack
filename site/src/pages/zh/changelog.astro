@@ -1,0 +1,65 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import EvidenceLabel from '../../components/EvidenceLabel.astro';
+import { getPublishedChangelog } from '../../lib/content';
+import { withTrailingSlash } from '../../lib/routes';
+
+const entries = await getPublishedChangelog('zh');
+---
+<SiteLayout
+  locale="zh"
+  title="更新日志"
+  description="来自 Vibe Coding 简报的周更沉淀。"
+  canonicalPath="/zh/changelog/"
+  alternateLinks={[
+    { locale: 'en', href: '/en/changelog/' },
+    { locale: 'zh', href: '/zh/changelog/' },
+  ]}
+>
+  <h1>更新日志</h1>
+  <p class="lede">带受影响页面与来源溯源的定期站点更新。</p>
+
+  {entries.length === 0 ? (
+    <div class="empty-state">
+      <strong>首条周更即将到来。</strong>
+      <p style="margin:0.75rem 0 0">
+        更新日志集合已就绪。软启动保持诚实空状态——不编造日期条目。
+      </p>
+    </div>
+  ) : (
+    <div class="prose">
+      {entries.map((e) => (
+        <section id={e.data.slug} style="margin-top:2rem">
+          <h2>{e.data.title}</h2>
+          <p class="meta">{e.data.date} · {e.data.summary}</p>
+          <ul>
+            {e.data.changes.map((c) => (
+              <li>
+                <strong>{c.type}</strong> — {c.text}{' '}
+                <EvidenceLabel evidence={c.evidence} locale="zh" />
+                <ul>
+                  {c.affectedPages.map((p) => (
+                    <li><a href={withTrailingSlash(p)}>{withTrailingSlash(p)}</a></li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+          {e.data.internalBriefing.length > 0 && (
+            <p class="meta">
+              内部简报溯源：{' '}
+              {e.data.internalBriefing.map((b) => b.date).join(', ')}
+            </p>
+          )}
+          {e.data.publicSources.length > 0 && (
+            <ul>
+              {e.data.publicSources.map((s) => (
+                <li><a href={s.url} rel="noopener noreferrer">{s.title}</a></li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  )}
+</SiteLayout>

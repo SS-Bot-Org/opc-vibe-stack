@@ -1,0 +1,95 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import { site, type Locale } from '../data/site';
+import { absoluteUrl, htmlLang } from '../lib/routes';
+import { uiFor, footerFor, detectLocaleFromPath } from '../lib/i18n';
+
+interface Props {
+  title: string;
+  description?: string;
+  wide?: boolean;
+  canonicalPath?: string;
+  noindex?: boolean;
+  locale?: Locale | string;
+  ogImage?: string;
+  alternateLinks?: { locale: string; href: string }[];
+}
+
+const {
+  title,
+  description = site.tagline,
+  wide = false,
+  canonicalPath,
+  noindex = false,
+  locale: localeProp,
+  ogImage = site.ogImagePath,
+  alternateLinks = [],
+} = Astro.props;
+
+const locale = (localeProp ?? detectLocaleFromPath(Astro.url.pathname)) as Locale | string;
+const ui = uiFor(locale);
+const footer = footerFor(locale);
+const path = canonicalPath ?? (locale === 'zh' ? '/zh/' : '/en/');
+const fullTitle = title === site.name ? title : `${title} · ${site.name}`;
+const canonical = absoluteUrl(path);
+const ogImageAbs = absoluteUrl(ogImage);
+const lang = htmlLang(locale);
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageAbs} />
+    <meta property="og:locale" content={locale === 'zh' ? 'zh_CN' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageAbs} />
+    {alternateLinks.map((a) => (
+      <link rel="alternate" hreflang={a.locale === 'zh' ? 'zh-Hans' : a.locale} href={absoluteUrl(a.href)} />
+    ))}
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} changelog`} href="/en/rss.xml" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      (function () {
+        try {
+          var KEY = 'opc-theme';
+          var stored = localStorage.getItem(KEY);
+          var mode = stored === 'light' || stored === 'dark'
+            ? stored
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', mode);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{ui.skipToContent}</a>
+    <Header currentPath={Astro.url.pathname} locale={locale} />
+    <main id="main" class:list={['page', wide && 'page--wide']}>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <p>© {new Date().getFullYear()} {site.name}. {ui.footerBlurb}</p>
+        <ul class="footer-nav">
+          {footer.map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

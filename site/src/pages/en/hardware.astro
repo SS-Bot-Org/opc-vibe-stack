@@ -1,0 +1,70 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { articleHref, getArticleBySlug } from '../../lib/content';
+
+const guide = await getArticleBySlug('hardware-soft-split', 'en');
+---
+<SiteLayout
+  title="Hardware"
+  description="Firmware vs companion app for OPC builders; supply-chain and compliance verify-yourself list."
+  canonicalPath="/en/hardware/"
+  locale="en"
+  ogImage="/og/hardware.png"
+>
+  <h1>Hardware</h1>
+  <p class="lede">
+    Soft/hardware OPCs still ship software. Split firmware, companion app, and cloud—then verify
+    supply chain and compliance yourself. This is not an e-commerce catalog.
+  </p>
+
+  <div class="prose">
+    <h2>Firmware vs companion app</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Owns</th>
+            <th>Agent fit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Firmware</td>
+            <td>Boot, drivers, radio, OTA</td>
+            <td>Medium — needs hardware-in-loop</td>
+          </tr>
+          <tr>
+            <td>Companion app</td>
+            <td>Pairing, UX, local settings</td>
+            <td>High</td>
+          </tr>
+          <tr>
+            <td>Cloud (optional)</td>
+            <td>Accounts, sync, analytics</td>
+            <td>High — privacy risk</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Verify-yourself (not legal advice)</h2>
+    <ul>
+      <li>Component vendors identified; datasheets retained</li>
+      <li>Radio / module certifications checked for <em>your</em> enclosure and antenna plan</li>
+      <li>Battery / power safety path reviewed for your markets</li>
+      <li>Labeling claims match tested behavior</li>
+      <li>OTA signing keys offline; agents never see production keys</li>
+      <li>Privacy policy covers companion telemetry before collection</li>
+      <li>Factory / CM change-control contact on file</li>
+      <li>RMA / support path before paid orders</li>
+    </ul>
+
+    {guide && (
+      <p>
+        Full checklist and template fields:
+        <a href={articleHref(guide.data.slug, 'en')}>{guide.data.title}</a>.
+      </p>
+    )}
+  </div>
+</SiteLayout>

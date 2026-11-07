@@ -1,0 +1,25 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { articleHref } from '../../lib/content';
+---
+<SiteLayout
+  title="Anti-patterns"
+  description="High-risk habits for OPC agent workflows—start with the security quickcheck."
+  canonicalPath="/en/anti-patterns/"
+  locale="en"
+>
+  <h1>Anti-patterns</h1>
+  <p class="lede">
+    Dedicated anti-pattern essays may grow here. For now, start with the cross-stage security alert.
+  </p>
+  <ul class="list-plain">
+    <li>
+      <h2 style="margin:0 0 0.35rem;font-size:1.15rem">
+        <a href={articleHref('security-quickcheck', 'en')}>Security quickcheck</a>
+      </h2>
+      <p style="margin:0">
+        Extension / marketplace trust, token hygiene, and <code>authorized_keys</code> checks—no exploit steps.
+      </p>
+    </li>
+  </ul>
+</SiteLayout>

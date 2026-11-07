@@ -1,0 +1,59 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getStackCards, articleHref } from '../../lib/content';
+
+const cards = await getStackCards('en');
+---
+<SiteLayout
+  locale="en"
+  title="Stack"
+  description="How a one-person company should split Claude Code, Codex, and Grok Build."
+  canonicalPath="/en/stack/"
+  wide={true}
+>
+  <h1>Stack</h1>
+  <p class="lede">
+    Three primary tools. No Cursor homepage card for now. Availability is separate from article status.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Tool</th>
+          <th>Best stage</th>
+          <th>Best for</th>
+          <th>Poor fit</th>
+          <th>Caveats</th>
+          <th>Availability</th>
+        </tr>
+      </thead>
+      <tbody>
+        {cards.map((c) => (
+          <tr>
+            <td><a href={articleHref(c.data.slug)}>{c.data.title}</a></td>
+            <td>{c.data.stage}</td>
+            <td>{c.data.bestFor}</td>
+            <td>{c.data.poorFit}</td>
+            <td>{c.data.caveats}</td>
+            <td>
+              <span class={`badge badge--${c.data.toolAvailability ?? 'active'}`}>
+                {c.data.toolAvailability ?? 'active'}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <section class="stack-cards" style="margin-top:2rem" aria-label="Tool cards">
+    {cards.map((c) => (
+      <article class="card">
+        <h2><a href={articleHref(c.data.slug)}>{c.data.title}</a></h2>
+        <p>{c.data.summary}</p>
+        <p class="meta">Updated {c.data.updated}</p>
+      </article>
+    ))}
+  </section>
+</SiteLayout>

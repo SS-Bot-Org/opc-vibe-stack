@@ -1,0 +1,40 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import EvidenceLabel from '../../components/EvidenceLabel.astro';
+import { getPlaybooks, articleHref } from '../../lib/content';
+
+const playbooks = await getPlaybooks('en');
+---
+<SiteLayout
+  title="Playbooks"
+  description="End-to-end OPC playbooks with toolchain and timebox."
+  canonicalPath="/en/playbooks/"
+  locale="en"
+  ogImage="/og/playbook-48h-mvp.png"
+>
+  <h1>Playbooks</h1>
+  <p class="lede">
+    Substantive end-to-end workflows: which tools, in what order, and how long the clock runs.
+  </p>
+  {playbooks.length === 0 ? (
+    <div class="empty-state">No published playbooks yet.</div>
+  ) : (
+    <ul class="list-plain">
+      {playbooks.map((a) => (
+        <li>
+          <h2 style="margin:0 0 0.35rem;font-size:1.15rem">
+            <a href={articleHref(a.data.slug, 'en')}>{a.data.title}</a>
+          </h2>
+          <p style="margin:0">{a.data.summary}</p>
+          <p class="meta" style="margin:0.4rem 0 0">
+            <EvidenceLabel evidence={a.data.evidence} />
+            {' · '}
+            {a.data.stage}
+            {' · '}
+            Updated {a.data.updated}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )}
+</SiteLayout>

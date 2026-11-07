@@ -1,0 +1,46 @@
+---
+interface Source {
+  title: string;
+  url: string;
+  kind: string;
+}
+interface Briefing {
+  date: string;
+  note?: string;
+}
+interface Props {
+  publicSources?: Source[];
+  internalBriefing?: Briefing[];
+  locale?: string;
+}
+const { publicSources = [], internalBriefing = [], locale = 'en' } = Astro.props;
+const zh = locale === 'zh';
+---
+{(publicSources.length > 0 || internalBriefing.length > 0) && (
+  <section aria-labelledby="sources-heading" style="margin-top:2rem">
+    <h2 id="sources-heading">{zh ? '来源' : 'Sources'}</h2>
+    {publicSources.length > 0 && (
+      <ul>
+        {publicSources.map((s) => (
+          <li>
+            <a href={s.url} rel="noopener noreferrer">{s.title}</a>
+            <span class="meta"> ({s.kind})</span>
+          </li>
+        ))}
+      </ul>
+    )}
+    {internalBriefing.length > 0 && (
+      <p class="meta">
+        {zh ? '内部简报溯源：' : 'Internal briefing provenance:'}{' '}
+        {internalBriefing.map((b, i) => (
+          <>
+            {i > 0 && '; '}
+            {b.date}
+            {b.note ? ` — ${b.note}` : ''}
+          </>
+        ))}
+        {zh ? '。这些日期是溯源标签，不是公开链接。' : '. These dates are provenance labels, not public links.'}
+      </p>
+    )}
+  </section>
+)}

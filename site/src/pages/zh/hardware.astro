@@ -1,0 +1,73 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { articleHref, getArticleBySlug } from '../../lib/content';
+
+const guide = await getArticleBySlug('hardware-soft-split', 'zh');
+---
+<SiteLayout
+  title="硬件"
+  description="一人公司的固件 vs 配套 App；供应链与合规自行核实清单。"
+  canonicalPath="/zh/hardware/"
+  locale="zh"
+  ogImage="/og/hardware.png"
+  alternateLinks={[
+    { locale: 'en', href: '/en/hardware/' },
+    { locale: 'zh', href: '/zh/hardware/' },
+  ]}
+>
+  <h1>硬件</h1>
+  <p class="lede">
+    软硬结合的一人公司仍在出软件。拆分固件、配套 App 与云端——再自行核实供应链与合规。这里不是电商目录。
+  </p>
+
+  <div class="prose">
+    <h2>固件 vs 配套 App</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>层</th>
+            <th>负责</th>
+            <th>Agent 适配</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>固件</td>
+            <td>启动、驱动、射频、OTA</td>
+            <td>中 — 需要板级闭环</td>
+          </tr>
+          <tr>
+            <td>配套 App</td>
+            <td>配对、体验、本地设置</td>
+            <td>高</td>
+          </tr>
+          <tr>
+            <td>云端（可选）</td>
+            <td>账号、同步、分析</td>
+            <td>高 — 隐私风险</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>自行核实（非法律意见）</h2>
+    <ul>
+      <li>元件供应商已明确；数据手册留存</li>
+      <li>按<em>你的</em>外壳与天线方案核对射频 / 模组认证</li>
+      <li>目标市场的电池 / 电源安全路径已审</li>
+      <li>标签声明与实测行为一致</li>
+      <li>OTA 签名密钥离线；agent 永不接触生产密钥</li>
+      <li>收集遥测前，隐私政策已覆盖配套 App</li>
+      <li>工厂 / CM 变更联系人在案</li>
+      <li>付费订单前已有 RMA / 支持路径</li>
+    </ul>
+
+    {guide && (
+      <p>
+        完整清单与模板字段：
+        <a href={articleHref(guide.data.slug, 'zh')}>{guide.data.title}</a>。
+      </p>
+    )}
+  </div>
+</SiteLayout>

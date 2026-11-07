@@ -1,0 +1,38 @@
+---
+import { uiFor } from '../lib/i18n';
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const ui = uiFor(locale);
+---
+<button
+  type="button"
+  class="theme-toggle"
+  data-theme-toggle
+  aria-label={ui.themeToggle}
+  title={ui.themeToggle}
+>
+  <span class="theme-toggle__icon theme-toggle__icon--to-dark" aria-hidden="true">☾</span>
+  <span class="theme-toggle__icon theme-toggle__icon--to-light" aria-hidden="true">☀</span>
+  <span class="visually-hidden">{ui.themeToggle}</span>
+</button>
+<script is:inline>
+  (function () {
+    var KEY = 'opc-theme';
+    var btn = document.querySelector('[data-theme-toggle]');
+    if (!btn) return;
+    function current() {
+      return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    }
+    function apply(mode) {
+      document.documentElement.setAttribute('data-theme', mode);
+      try { localStorage.setItem(KEY, mode); } catch (e) {}
+      btn.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');
+    }
+    btn.addEventListener('click', function () {
+      apply(current() === 'dark' ? 'light' : 'dark');
+    });
+    btn.setAttribute('aria-pressed', current() === 'dark' ? 'true' : 'false');
+  })();
+</script>

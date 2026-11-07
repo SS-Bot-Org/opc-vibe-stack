@@ -1,0 +1,29 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { articleHref } from '../../lib/content';
+---
+<SiteLayout
+  title="反模式"
+  description="一人公司 agent 工作流的高风险习惯——从安全速查开始。"
+  canonicalPath="/zh/anti-patterns/"
+  locale="zh"
+  alternateLinks={[
+    { locale: 'en', href: '/en/anti-patterns/' },
+    { locale: 'zh', href: '/zh/anti-patterns/' },
+  ]}
+>
+  <h1>反模式</h1>
+  <p class="lede">
+    专篇反模式文章可能在此扩展。眼下请先从跨阶段安全告警开始。
+  </p>
+  <ul class="list-plain">
+    <li>
+      <h2 style="margin:0 0 0.35rem;font-size:1.15rem">
+        <a href={articleHref('security-quickcheck', 'zh')}>安全速查</a>
+      </h2>
+      <p style="margin:0">
+        扩展 / 市场信任、令牌卫生与 <code>authorized_keys</code> 检查——不含利用步骤。
+      </p>
+    </li>
+  </ul>
+</SiteLayout>

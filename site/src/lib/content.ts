@@ -1,0 +1,96 @@
+import { getCollection, type CollectionEntry } from 'astro:content';
+import { site } from '../data/site';
+
+export type Article = CollectionEntry<'articles'>;
+export type ChangelogEntry = CollectionEntry<'changelog'>;
+
+export function isPublicArticle(a: Article): boolean {
+  return a.data.status === 'published' || a.data.status === 'deprecated';
+}
+
+export function isListedArticle(a: Article): boolean {
+  return a.data.status === 'published';
+}
+
+export async function getPublicArticles(locale = 'en'): Promise<Article[]> {
+  const all = await getCollection('articles');
+  return all
+    .filter((a) => a.data.locale === locale && isPublicArticle(a))
+    .sort((a, b) => b.data.updated.localeCompare(a.data.updated));
+}
+
+export async function getListedArticles(locale = 'en'): Promise<Article[]> {
+  const all = await getCollection('articles');
+  return all
+    .filter((a) => a.data.locale === locale && isListedArticle(a))
+    .sort((a, b) => b.data.updated.localeCompare(a.data.updated));
+}
+
+export async function getStackCards(locale = 'en'): Promise<Article[]> {
+  const listed = await getListedArticles(locale);
+  const cards = listed.filter((a) => a.data.category === 'stack');
+  return site.primaryToolIds
+    .map((id) => cards.find((c) => c.data.toolId === id || c.data.slug === id))
+    .filter((c): c is Article => Boolean(c));
+}
+
+export async function getArticlesByStage(
+  stage: 'research' | 'build' | 'sell',
+  locale = 'en',
+): Promise<Article[]> {
+  const listed = await getListedArticles(locale);
+  return listed.filter(
+    (a) =>
+      a.data.category !== 'stack' &&
+      (a.data.stage === stage || a.data.stage === 'cross'),
+  );
+}
+
+export async function getPlaybooks(locale = 'en'): Promise<Article[]> {
+  const listed = await getListedArticles(locale);
+  return listed.filter((a) => a.data.category === 'playbook');
+}
+
+export async function getArticleBySlug(slug: string, locale = 'en'): Promise<Article | undefined> {
+  const all = await getPublicArticles(locale);
+  return all.find((a) => a.data.slug === slug);
+}
+
+export async function getPublishedChangelog(locale = 'en'): Promise<ChangelogEntry[]> {
+  const all = await getCollection('changelog');
+  return all
+    .filter((e) => e.data.locale === locale && e.data.status === 'published')
+    .sort((a, b) => b.data.date.localeCompare(a.data.date) || b.data.slug.localeCompare(a.data.slug));
+}
+
+export function articleHref(slug: string, locale = 'en'): string {
+  return `/${locale}/articles/${slug}/`;
+}
+
+export type SearchIndexItem = {
+  title: string;
+  tags: string[];
+  summary: string;
+  url: string;
+  slug: string;
+};
+
+export async function buildSearchIndex(locale = 'en'): Promise<SearchIndexItem[]> {
+  const listed = await getListedArticles(locale);
+  // Search indexes published guidance; stack cards included for discoverability
+  return listed.map((a) => ({
+    title: a.data.title,
+    tags: a.data.tags,
+    summary: a.data.summary,
+    url: articleHref(a.data.slug, locale),
+    slug: a.data.slug,
+  }));
+}
+
+/** EN articles that lack a published zh counterpart (for zh fallback routes). */
+export async function getEnArticlesMissingZh(): Promise<Article[]> {
+  const en = await getPublicArticles('en');
+  const zh = await getPublicArticles('zh');
+  const zhSlugs = new Set(zh.map((a) => a.data.slug));
+  return en.filter((a) => !zhSlugs.has(a.data.slug));
+}

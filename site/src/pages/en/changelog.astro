@@ -1,0 +1,62 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import EvidenceLabel from '../../components/EvidenceLabel.astro';
+import { getPublishedChangelog } from '../../lib/content';
+import { withTrailingSlash } from '../../lib/routes';
+
+const entries = await getPublishedChangelog('en');
+---
+<SiteLayout
+  locale="en"
+  title="Changelog"
+  description="Weekly changes deposited from Vibe Coding briefings."
+  canonicalPath="/en/changelog/"
+>
+  <h1>Changelog</h1>
+  <p class="lede">Dated site updates with affected pages and source provenance.</p>
+
+  {entries.length === 0 ? (
+    <div class="empty-state">
+      <strong>First weekly update coming soon.</strong>
+      <p style="margin:0.75rem 0 0">
+        The changelog collection is ready. Soft launch ships an honest empty state—no fabricated
+        dated entries. The first briefing-derived refresh is the M2 MVP gate.
+      </p>
+    </div>
+  ) : (
+    <div class="prose">
+      {entries.map((e) => (
+        <section id={e.data.slug} style="margin-top:2rem">
+          <h2>{e.data.title}</h2>
+          <p class="meta">{e.data.date} · {e.data.summary}</p>
+          <ul>
+            {e.data.changes.map((c) => (
+              <li>
+                <strong>{c.type}</strong> — {c.text}{' '}
+                <EvidenceLabel evidence={c.evidence} />
+                <ul>
+                  {c.affectedPages.map((p) => (
+                    <li><a href={withTrailingSlash(p)}>{withTrailingSlash(p)}</a></li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+          {e.data.internalBriefing.length > 0 && (
+            <p class="meta">
+              Internal briefing provenance:{' '}
+              {e.data.internalBriefing.map((b) => b.date).join(', ')}
+            </p>
+          )}
+          {e.data.publicSources.length > 0 && (
+            <ul>
+              {e.data.publicSources.map((s) => (
+                <li><a href={s.url} rel="noopener noreferrer">{s.title}</a></li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  )}
+</SiteLayout>

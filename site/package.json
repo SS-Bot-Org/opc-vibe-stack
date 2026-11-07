@@ -1,0 +1,19 @@
+{
+  "name": "opc-vibe-stack",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "node scripts/validate.mjs && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "validate": "node scripts/validate.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.4.7"
+  },
+  "description": "OPC Vibe Stack \u2014 English-first best-practice site for one-person companies using Claude Code, Codex, and Grok Build"
+}

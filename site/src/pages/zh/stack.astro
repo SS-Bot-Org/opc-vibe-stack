@@ -1,0 +1,63 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { getStackCards, articleHref } from '../../lib/content';
+
+const cards = await getStackCards('zh');
+---
+<SiteLayout
+  title="工具栈"
+  description="一人公司如何分工使用 Claude Code、Codex 与 Grok Build。"
+  canonicalPath="/zh/stack/"
+  locale="zh"
+  wide={true}
+  alternateLinks={[
+    { locale: 'en', href: '/en/stack/' },
+    { locale: 'zh', href: '/zh/stack/' },
+  ]}
+>
+  <h1>工具栈</h1>
+  <p class="lede">
+    三个主工具。首页暂不设 Cursor 卡片。工具可用性（availability）与文章状态相互独立。
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>工具</th>
+          <th>最佳阶段</th>
+          <th>适合</th>
+          <th>不适合</th>
+          <th>注意</th>
+          <th>可用性</th>
+        </tr>
+      </thead>
+      <tbody>
+        {cards.map((c) => (
+          <tr>
+            <td><a href={articleHref(c.data.slug, 'zh')}>{c.data.title}</a></td>
+            <td>{c.data.stage}</td>
+            <td>{c.data.bestFor}</td>
+            <td>{c.data.poorFit}</td>
+            <td>{c.data.caveats}</td>
+            <td>
+              <span class={`badge badge--${c.data.toolAvailability ?? 'active'}`}>
+                {c.data.toolAvailability ?? 'active'}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <section class="stack-cards" style="margin-top:2rem" aria-label="工具卡">
+    {cards.map((c) => (
+      <article class="card">
+        <h2><a href={articleHref(c.data.slug, 'zh')}>{c.data.title}</a></h2>
+        <p>{c.data.summary}</p>
+        <p class="meta">更新于 {c.data.updated}</p>
+      </article>
+    ))}
+  </section>
+</SiteLayout>

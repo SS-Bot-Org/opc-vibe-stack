@@ -1,0 +1,39 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import EvidenceLabel from '../../components/EvidenceLabel.astro';
+import { getArticlesByStage, articleHref } from '../../lib/content';
+
+const stage = 'research' as const;
+const articles = await getArticlesByStage(stage, 'en');
+---
+<SiteLayout
+  locale="en"
+  title="Research"
+  description="Research practices for OPC builders using AI coding agents."
+  canonicalPath="/en/research/"
+>
+  <h1>Research</h1>
+  <p class="lede">Published practice pieces for the research stage (plus cross-stage items).</p>
+  {articles.length === 0 ? (
+    <div class="empty-state">No published research articles yet.</div>
+  ) : (
+    <ul class="list-plain">
+      {articles.map((a) => (
+        <li>
+          <h2 style="margin:0 0 0.35rem;font-size:1.15rem">
+            <a href={articleHref(a.data.slug)}>{a.data.title}</a>
+          </h2>
+          <p style="margin:0">{a.data.summary}</p>
+          <p class="meta" style="margin:0.4rem 0 0">
+            <EvidenceLabel evidence={a.data.evidence} />
+            {' · '}
+            {a.data.category}
+            {a.data.stage === 'cross' && ' · cross-stage'}
+            {' · '}
+            Updated {a.data.updated}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )}
+</SiteLayout>

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Example deploy: build locally, rsync a self-contained release, atomically flip `current`.
+# Do not embed credentials. Pass host via env when Fan authorizes deploy.
+set -euo pipefail
+
+ROOT="${ROOT:-/srv/opcvibestack}"
+RELEASE_ID="${RELEASE_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$(git rev-parse --short HEAD 2>/dev/null || echo local)}"
+DIST_DIR="${DIST_DIR:-./dist}"
+REMOTE="${REMOTE:?Set REMOTE like user@host}"
+
+npm run build
+ssh "$REMOTE" "mkdir -p '$ROOT/releases/$RELEASE_ID' '$ROOT/deployment-records'"
+rsync -az --delete "$DIST_DIR/" "$REMOTE:$ROOT/releases/$RELEASE_ID/"
+ssh "$REMOTE" "ln -sfn '$ROOT/releases/$RELEASE_ID' '$ROOT/current.new' && mv -Tf '$ROOT/current.new' '$ROOT/current'"
+echo "Activated $RELEASE_ID on $REMOTE"

@@ -1,0 +1,42 @@
+---
+import { site, type Locale } from '../data/site';
+import { navFor, uiFor } from '../lib/i18n';
+import LocaleSwitcher from './LocaleSwitcher.astro';
+import SearchControl from './SearchControl.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  currentPath: string;
+  locale?: Locale | string;
+}
+const { currentPath, locale = 'en' } = Astro.props;
+const nav = navFor(locale);
+const ui = uiFor(locale);
+const home = locale === 'zh' ? '/zh/' : '/en/';
+
+function isCurrent(href: string): boolean {
+  if (href === home) return currentPath === home || currentPath === home.slice(0, -1);
+  return currentPath === href || currentPath.startsWith(href);
+}
+---
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href={home}>{site.name}</a>
+    <nav aria-label={ui.primaryNav}>
+      <ul class="nav">
+        {nav.map((item) => (
+          <li>
+            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <SearchControl locale={locale === 'zh' ? 'zh' : 'en'} />
+      <ThemeToggle locale={locale} />
+      <LocaleSwitcher currentPath={currentPath} locale={locale} />
+    </div>
+  </div>
+</header>

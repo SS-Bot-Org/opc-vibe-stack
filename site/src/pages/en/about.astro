@@ -1,0 +1,48 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { evidenceCopy } from '../../data/site';
+---
+<SiteLayout
+  locale="en"
+  title="About"
+  description="About OPC Vibe Stack, how updates work, evidence labels, and the disclaimer."
+  canonicalPath="/en/about/"
+>
+  <h1>About</h1>
+  <p class="lede">
+    OPC Vibe Stack is an English-first knowledge site for one-person companies using
+    Claude Code, Codex, and Grok Build across research, build, and sell.
+  </p>
+
+  <div class="prose">
+    <h2>What this is</h2>
+    <p>
+      Executable checklists and tool-division guidance—not a news dump, course platform, or
+      unofficial vendor ranking. The site itself is dogfooded with the same agent stack.
+    </p>
+
+    <h2>How updates work</h2>
+    <p>
+      Daily Vibe Coding briefings (English X–first) feed a weekly editorial pass. Soft-launch
+      seed content is documentation-backed. The first real briefing-derived changelog is required
+      for MVP acceptance (M2), after a verification gate that checks original sources, tool
+      versions, and evidence labels.
+    </p>
+
+    <h2>Evidence labels</h2>
+    <ul>
+      <li><strong>Tested</strong> — {evidenceCopy.tested}</li>
+      <li><strong>Documentation-backed</strong> — {evidenceCopy['documentation-backed']}</li>
+      <li><strong>Unverified</strong> — {evidenceCopy.unverified}</li>
+    </ul>
+
+    <h2 id="disclaimer">Disclaimer</h2>
+    <p>
+      This site is <strong>unofficial</strong> and not affiliated with Anthropic, OpenAI, xAI, or
+      other tool vendors. Security decisions are yours: do not paste secrets into agents, and verify
+      extensions and SSH keys yourself. Numbers and third-party claims may be unverified even when
+      a public source is linked. Follow evidence labels. Nothing here is legal, financial, or
+      compliance advice—especially for hardware supply chain and certifications.
+    </p>
+  </div>
+</SiteLayout>

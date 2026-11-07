@@ -1,0 +1,66 @@
+---
+import SiteLayout from './SiteLayout.astro';
+import EvidenceLabel from '../components/EvidenceLabel.astro';
+import SourceList from '../components/SourceList.astro';
+import ContentNotice from '../components/ContentNotice.astro';
+import type { CollectionEntry } from 'astro:content';
+import { site } from '../data/site';
+
+interface Props {
+  entry: CollectionEntry<'articles'>;
+  ogImage?: string;
+}
+
+const { entry, ogImage } = Astro.props;
+const d = entry.data;
+const locale = d.locale;
+const path = `/${locale}/articles/${d.slug}/`;
+const alternateLinks = [
+  { locale: 'en', href: `/en/articles/${d.slug}/` },
+  { locale: 'zh', href: `/zh/articles/${d.slug}/` },
+];
+const resolvedOg =
+  ogImage ??
+  (d.slug === '48h-mvp-agent-stack'
+    ? '/og/playbook-48h-mvp.png'
+    : d.slug === 'hardware-soft-split'
+      ? '/og/hardware.png'
+      : site.ogImagePath);
+const updatedLabel = locale === 'zh' ? '更新于' : 'Updated';
+const applicableLabel = locale === 'zh' ? '适用' : 'Applicable';
+---
+<SiteLayout
+  title={d.title}
+  description={d.summary}
+  canonicalPath={path}
+  noindex={d.status === 'deprecated'}
+  locale={locale}
+  ogImage={resolvedOg}
+  alternateLinks={alternateLinks}
+>
+  <article>
+    <p class="meta">
+      <span class="badge">{d.category}</span>
+      {' · '}
+      <span>{d.stage}</span>
+      {' · '}
+      {updatedLabel} {d.updated}
+      {d.status === 'deprecated' && <> · <span class="badge badge--deprecated">deprecated</span></>}
+    </p>
+    <h1>{d.title}</h1>
+    <p class="lede">{d.summary}</p>
+    <p>
+      <EvidenceLabel evidence={d.evidence} locale={locale} />
+      <span class="meta"> · {applicableLabel}: {d.applicableToolsVersions}</span>
+    </p>
+    {d.notice && <ContentNotice text={d.notice.text} />}
+    <div class="prose">
+      <slot />
+    </div>
+    <SourceList
+      publicSources={d.publicSources}
+      internalBriefing={d.internalBriefing}
+      locale={locale}
+    />
+  </article>
+</SiteLayout>

@@ -1,0 +1,23 @@
+---
+import { evidenceCopy, evidenceCopyZh, type Evidence } from '../data/site';
+
+interface Props {
+  evidence: Evidence;
+  locale?: string;
+}
+const { evidence, locale = 'en' } = Astro.props;
+const zh = locale === 'zh';
+const label = zh
+  ? evidence === 'documentation-backed'
+    ? '文档依据'
+    : evidence === 'tested'
+      ? '已测试'
+      : '未验证'
+  : evidence === 'documentation-backed'
+    ? 'Documentation-backed'
+    : evidence === 'tested'
+      ? 'Tested'
+      : 'Unverified';
+const title = zh ? evidenceCopyZh[evidence] : evidenceCopy[evidence];
+---
+<span class={`badge badge--${evidence}`} title={title}>{label}</span>

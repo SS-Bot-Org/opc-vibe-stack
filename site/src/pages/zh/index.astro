@@ -1,0 +1,86 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import { site } from '../../data/site';
+import { getPublishedChangelog, getStackCards, articleHref } from '../../lib/content';
+
+const cards = await getStackCards('zh');
+const changelog = await getPublishedChangelog('zh');
+const latest = changelog[0];
+---
+<SiteLayout
+  title={site.name}
+  description="面向一人公司的可执行实践：Claude Code、Codex 与 Grok Build。"
+  canonicalPath="/zh/"
+  locale="zh"
+  alternateLinks={[
+    { locale: 'en', href: '/en/' },
+    { locale: 'zh', href: '/zh/' },
+  ]}
+  wide={true}
+>
+  <section class="hero">
+    <h1>{site.name}</h1>
+    <p class="lede">一个人也能更快上线——用 Claude Code、Codex 与 Grok Build，然后卖出去。</p>
+    <p>
+      可执行最佳实践：哪个阶段用哪个 agent、如何串起流水线、如何销售——并随每周 Vibe Coding 简报更新。
+    </p>
+  </section>
+
+  <section aria-labelledby="path-heading" style="margin-top:2rem">
+    <h2 id="path-heading">调研 → 构建 → 销售</h2>
+    <div class="card-grid">
+      <a class="card" href="/zh/research/" style="text-decoration:none;color:inherit">
+        <h3>调研</h3>
+        <p class="meta">先写规格。在 agent 改半个仓库前先把问题说清。</p>
+      </a>
+      <a class="card" href="/zh/build/" style="text-decoration:none;color:inherit">
+        <h3>构建</h3>
+        <p class="meta">规则、hooks 与验证环——不只靠 vibe。</p>
+      </a>
+      <a class="card" href="/zh/sell/" style="text-decoration:none;color:inherit">
+        <h3>销售</h3>
+        <p class="meta">落地页、演示、分发。上线别人能买的东西。</p>
+      </a>
+    </div>
+  </section>
+
+  <section aria-labelledby="stack-heading" style="margin-top:2.5rem">
+    <h2 id="stack-heading">主工具栈</h2>
+    <p><a href="/zh/stack/">查看完整分工对照表</a>。</p>
+    <div class="card-grid">
+      {cards.map((c) => (
+        <a class="card" href={articleHref(c.data.slug, 'zh')} style="text-decoration:none;color:inherit">
+          <h3>{c.data.title}</h3>
+          <p class="meta">{c.data.summary}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section aria-labelledby="m3-heading" style="margin-top:2.5rem">
+    <h2 id="m3-heading">Playbooks 与硬件</h2>
+    <div class="card-grid">
+      <a class="card" href="/zh/playbooks/" style="text-decoration:none;color:inherit">
+        <h3>Playbooks</h3>
+        <p class="meta">带工具链与时限的端到端闭环。</p>
+      </a>
+      <a class="card" href="/zh/hardware/" style="text-decoration:none;color:inherit">
+        <h3>硬件</h3>
+        <p class="meta">固件 vs 配套 App；自行核实清单。</p>
+      </a>
+    </div>
+  </section>
+
+  <section aria-labelledby="update-heading" style="margin-top:2.5rem">
+    <h2 id="update-heading">最近更新</h2>
+    {latest ? (
+      <div class="card">
+        <p class="meta">{latest.data.date}</p>
+        <h3><a href={`/zh/changelog/#${latest.data.slug}`}>{latest.data.title}</a></h3>
+        <p>{latest.data.summary}</p>
+      </div>
+    ) : (
+      <div class="empty-state">首条周更即将到来。</div>
+    )}
+  </section>
+</SiteLayout>

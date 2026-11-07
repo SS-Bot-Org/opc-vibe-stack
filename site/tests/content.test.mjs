@@ -103,7 +103,6 @@ test('rendered Chinese article with draft English counterpart preserves context 
   assert.ok(sitemap.includes('https://opcvibestack.com/zh/articles/translation-fixture/'));
 }));
 
-
 test('FULL build preserves mixed Markdown task/plain lists in both article locales', async () => fixture(async (dir) => {
   for (const locale of ['en', 'zh']) {
     const file = path.join(dir, `src/content/articles/${locale}/codex.md`);

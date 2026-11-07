@@ -179,7 +179,7 @@ try {
   const root = process.env.CLAUDE_PROJECT_DIR;
   if (!root) throw new Error('CLAUDE_PROJECT_DIR is required');
   const result = spawnSync('npm', ['--prefix', 'site', 'run', 'check'], {
-    cwd: root, stdio: 'inherit', timeout: 45000,
+    cwd: root, stdio: ['ignore', 2, 2], timeout: 45000,
   });
   if (result.error || result.status !== 0) {
     console.error('Typecheck failed or could not run. Inspect the output, fix it, and rerun verification.');
@@ -190,6 +190,8 @@ try {
   process.exit(2);
 }
 ```
+
+子进程的 stdout 与 stderr 都转写到 hook 的 **stderr**（`stdio: ['ignore', 2, 2]`）：退出码为 `2` 时 Claude Code 只把 stderr 回传给模型，类型检查打印在 stdout 的诊断信息否则模型看不到。
 
 把以下 `Stop` 条目合并到现有 `.claude/settings.json` 的 `hooks` 对象中，不要覆盖其他 hooks：
 

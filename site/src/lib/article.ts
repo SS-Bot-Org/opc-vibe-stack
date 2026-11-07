@@ -12,6 +12,7 @@ const CODE_LABELS_EN: Record<string, string> = {
   yml: 'YAML',
   ts: 'TypeScript',
   js: 'JavaScript',
+  javascript: 'JavaScript',
 };
 
 const CODE_LABELS_ZH: Record<string, string> = {
@@ -28,6 +29,7 @@ const CODE_LABELS_ZH: Record<string, string> = {
   yml: 'YAML',
   ts: 'TypeScript',
   js: 'JavaScript',
+  javascript: 'JavaScript',
 };
 
 /** Reading enhancements keep the full article and anchor links usable without JS. */

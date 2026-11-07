@@ -28,8 +28,9 @@ test('bilingual documented Stop wrapper maps failing checks to 2 and guards repe
     await writeFile(file, en.code);
     assert.equal(spawnSync(process.execPath, ['--check', file]).status, 0);
     async function checkScript(code) {
+      // The fixture prints its diagnostic to stdout, like tsc / astro check do.
       await writeFile(path.join(root, 'site/package.json'), JSON.stringify({
-        scripts: { check: `node -e "process.exit(${code})"` },
+        scripts: { check: `node -e "console.log('fixture-diagnostic TS2322'); process.exit(${code})"` },
       }));
     }
     const run = (input, project = root) => spawnSync(process.execPath, [file], {
@@ -43,6 +44,10 @@ test('bilingual documented Stop wrapper maps failing checks to 2 and guards repe
     const failure = run(event);
     assert.equal(failure.status, 2, failure.stderr);
     assert.match(failure.stderr, /Typecheck failed/);
+    // On exit 2 Claude Code feeds only stderr back to the model, so the
+    // check's own diagnostics must be routed there rather than to stdout.
+    assert.match(failure.stderr, /fixture-diagnostic TS2322/);
+    assert.doesNotMatch(failure.stdout, /fixture-diagnostic/);
     // If the guard incorrectly ran npm, the missing project would fail.
     assert.equal(run(JSON.stringify({ hook_event_name: 'Stop', stop_hook_active: true }), '/not-a-project').status, 0);
     assert.equal(run('{malformed').status, 2);

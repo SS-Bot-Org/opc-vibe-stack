@@ -65,7 +65,6 @@ test('GFM task lists become interactive accessible checklists without nesting li
   assert.equal(attr(inputs[1], 'aria-labelledby'), 'opc-check-2-label');
 });
 
-
 test('mixed task/plain lists retain native list order, nested prose, formatting and links', () => {
   for (const locale of ['en', 'zh']) {
     const source = '<ul class="contains-task-list"><li>Before <em>all</em> tasks</li><li class="task-list-item"><p><input type="checkbox" disabled> Verify <strong>artifact</strong></p><p>Keep this explanation.</p></li><li>Keep <a href="/en/stack/">previous release</a><ul><li>Nested recovery details</li></ul></li><li class="task-list-item"><input type="checkbox" disabled checked> Confirm manifest</li></ul>';

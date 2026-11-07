@@ -179,7 +179,7 @@ try {
   const root = process.env.CLAUDE_PROJECT_DIR;
   if (!root) throw new Error('CLAUDE_PROJECT_DIR is required');
   const result = spawnSync('npm', ['--prefix', 'site', 'run', 'check'], {
-    cwd: root, stdio: 'inherit', timeout: 45000,
+    cwd: root, stdio: ['ignore', 2, 2], timeout: 45000,
   });
   if (result.error || result.status !== 0) {
     console.error('Typecheck failed or could not run. Inspect the output, fix it, and rerun verification.');
@@ -190,6 +190,8 @@ try {
   process.exit(2);
 }
 ```
+
+The child process writes both stdout and stderr to the hook's **stderr** (`stdio: ['ignore', 2, 2]`): on exit `2`, Claude Code feeds only stderr back to the model, so typecheck diagnostics printed to stdout would otherwise be invisible to it.
 
 Merge this `Stop` entry into the existing `.claude/settings.json` `hooks` object; do not overwrite other hooks:
 

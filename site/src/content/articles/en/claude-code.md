@@ -32,7 +32,7 @@ caveats: "Keep secrets out of prompts; encode hard no-gos in rules files and hoo
 
 ## Conclusion
 
-Use **Claude Code** as your primary interactive repository agent whenever a change spans multiple files, needs codebase exploration before editing, or relies on deterministic lifecycle hooks (`PreToolUse`, `PostToolUse`, `Stop`) to keep you out of trouble.
+Use **Claude Code** as your primary interactive repository agent whenever a change spans multiple files, needs codebase exploration before editing, or needs lifecycle hooks: `PreToolUse` to reject a call before it executes, `PostToolUse` for checks after it has run, and `Stop` to check completion conditions.
 
 > [!FLOW] Repo-local session loop
 > 1. **Frame & plan** — State the slice goal, file boundaries, and verify command; ask for a plan first.

@@ -2,11 +2,12 @@
 /**
  * Pre-build sanity checks (full schema runs via Astro content collections).
  */
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { readInventory } from '../src/lib/inventory.mjs';
+const inventory = await readInventory();
 
 const articlesRoot = path.resolve('src/content/articles');
-const changelogRoot = path.resolve('src/content/changelog');
 const requiredTools = ['claude-code', 'codex', 'grok-build'];
 const stagesNeeded = new Set(['research', 'build', 'sell']);
 
@@ -24,42 +25,11 @@ async function walk(dir) {
   return out;
 }
 
-function frontmatter(raw) {
-  if (!raw.startsWith('---')) return {};
-  const end = raw.indexOf('\n---', 3);
-  const block = raw.slice(3, end).trim();
-  const data = {};
-  let listKey = null;
-  for (const line of block.split('\n')) {
-    if (/^\s+-\s+/.test(line) && listKey) {
-      continue;
-    }
-    const m = line.match(/^([A-Za-z]+):\s*(.*)$/);
-    if (m) {
-      listKey = null;
-      let v = m[2].replace(/^"|"$/g, '');
-      if (v.startsWith('[') && v.endsWith(']')) {
-        data[m[1]] = v
-          .slice(1, -1)
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-      } else if (v === '') {
-        listKey = m[1];
-        data[m[1]] = [];
-      } else {
-        data[m[1]] = v;
-      }
-    }
-  }
-  return data;
-}
 
 const files = await walk(articlesRoot);
 const published = [];
 for (const f of files) {
-  const raw = await readFile(f, 'utf8');
-  const fm = frontmatter(raw);
+  const fm = inventory.articles.find((a) => a.file === f).data;
   fm.__file = f;
   if (fm.status === 'published' || fm.status === 'deprecated') published.push(fm);
 }
@@ -105,61 +75,7 @@ if (playbooks.length < 2) {
   process.exit(1);
 }
 
-const changelogFiles = await walk(changelogRoot);
-const affected = new Set();
-const publicPaths = new Set([
-  '/en/',
-  '/en/stack/',
-  '/en/research/',
-  '/en/build/',
-  '/en/sell/',
-  '/en/about/',
-  '/en/changelog/',
-  '/en/playbooks/',
-  '/en/hardware/',
-  '/en/anti-patterns/',
-  '/en/rss.xml',
-  '/en/search-index.json',
-  '/zh/',
-  '/zh/about/',
-  '/zh/stack/',
-  '/zh/research/',
-  '/zh/build/',
-  '/zh/sell/',
-  '/zh/playbooks/',
-  '/zh/hardware/',
-  '/zh/anti-patterns/',
-  '/zh/changelog/',
-  '/zh/search-index.json',
-]);
-for (const p of enPublished) {
-  publicPaths.add(`/en/articles/${p.slug}/`);
-}
-for (const p of zhPublished) {
-  publicPaths.add(`/zh/articles/${p.slug}/`);
-}
-
-for (const f of changelogFiles) {
-  const raw = await readFile(f, 'utf8');
-  if (!raw.includes('status: published')) continue;
-  const re = /^\s+-\s+(\/en\/\S+|\/zh\/\S+)/gm;
-  let m;
-  while ((m = re.exec(raw))) {
-    affected.add(m[1]);
-  }
-}
-
-for (const p of affected) {
-  if (!publicPaths.has(p)) {
-    // allow anchors stripped
-    const base = p.split('#')[0];
-    if (!publicPaths.has(base)) {
-      console.error(`Changelog affectedPages missing in revision: ${p}`);
-      process.exit(1);
-    }
-  }
-}
-
+// Final-output link and anchor validation runs after Astro renders, not against a guessed route set.
 console.log(
   `validate ok: ${published.length} public articles (${enPublished.length} en / ${zhPublished.length} zh), ${enToolCards.length} en + ${zhToolCards.length} zh stack cards, ${playbooks.length} playbooks`,
 );

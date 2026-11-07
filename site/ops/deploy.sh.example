@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
-# Example deploy: build locally, rsync a self-contained release, atomically flip `current`.
-# Do not embed credentials. Pass host via env when Fan authorizes deploy.
+# EXAMPLE ONLY. No rebuild, credentials, or live infrastructure configuration here.
 set -euo pipefail
-
 ROOT="${ROOT:-/srv/opcvibestack}"
-RELEASE_ID="${RELEASE_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$(git rev-parse --short HEAD 2>/dev/null || echo local)}"
-DIST_DIR="${DIST_DIR:-./dist}"
-REMOTE="${REMOTE:?Set REMOTE like user@host}"
-
-npm run build
-ssh "$REMOTE" "mkdir -p '$ROOT/releases/$RELEASE_ID' '$ROOT/deployment-records'"
-rsync -az --delete "$DIST_DIR/" "$REMOTE:$ROOT/releases/$RELEASE_ID/"
-ssh "$REMOTE" "ln -sfn '$ROOT/releases/$RELEASE_ID' '$ROOT/current.new' && mv -Tf '$ROOT/current.new' '$ROOT/current'"
-echo "Activated $RELEASE_ID on $REMOTE"
+RELEASE_ID="${RELEASE_ID:?Set a fresh immutable release ID}"
+ARTIFACT_DIR="${ARTIFACT_DIR:?Package a verified artifact first}"
+REMOTE="${REMOTE:?Set user@host only when deployment is authorized}"
+PROBE_ORIGIN="${PROBE_ORIGIN:?Set the origin serving current, e.g. https://example.com}"
+[[ "$ROOT" =~ ^/[a-zA-Z0-9_/-]+$ && "$ROOT" != / && "$ROOT" != */../* && "$ROOT" != */.. ]] || exit 64
+[[ "$RELEASE_ID" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$ ]] || exit 64
+[[ "$REMOTE" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.@-]*$ ]] || exit 64
+[[ "$PROBE_ORIGIN" =~ ^https?://[a-zA-Z0-9.:-]+$ ]] || exit 64
+[[ -d "$ARTIFACT_DIR" && -f "$ARTIFACT_DIR/release.json" ]] || exit 64
+helper="$(dirname "$0")/activate-release.sh.example"
+command="$(python3 - "$helper" "$ROOT" "$RELEASE_ID" "$PROBE_ORIGIN" <<'PYTHON'
+import pathlib, shlex, sys
+print(shlex.join(['bash', '-c', pathlib.Path(sys.argv[1]).read_text(), '--', *sys.argv[2:]]))
+PYTHON
+)"
+tar -czf - -C "$ARTIFACT_DIR" . | ssh "$REMOTE" "$command"
+echo "Activated verified artifact $RELEASE_ID on $REMOTE"

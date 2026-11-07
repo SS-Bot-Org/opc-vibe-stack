@@ -15,10 +15,6 @@ const { entry, ogImage } = Astro.props;
 const d = entry.data;
 const locale = d.locale;
 const path = `/${locale}/articles/${d.slug}/`;
-const alternateLinks = [
-  { locale: 'en', href: `/en/articles/${d.slug}/` },
-  { locale: 'zh', href: `/zh/articles/${d.slug}/` },
-];
 const resolvedOg =
   ogImage ??
   (d.slug === '48h-mvp-agent-stack'
@@ -36,7 +32,6 @@ const applicableLabel = locale === 'zh' ? '适用' : 'Applicable';
   noindex={d.status === 'deprecated'}
   locale={locale}
   ogImage={resolvedOg}
-  alternateLinks={alternateLinks}
 >
   <article>
     <p class="meta">

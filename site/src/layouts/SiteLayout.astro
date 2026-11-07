@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { readInventory, alternateRoutes } from '../lib/inventory.mjs';
 import Header from '../components/Header.astro';
 import { site, type Locale } from '../data/site';
 import { absoluteUrl, htmlLang } from '../lib/routes';
@@ -13,7 +14,6 @@ interface Props {
   noindex?: boolean;
   locale?: Locale | string;
   ogImage?: string;
-  alternateLinks?: { locale: string; href: string }[];
 }
 
 const {
@@ -24,7 +24,6 @@ const {
   noindex = false,
   locale: localeProp,
   ogImage = site.ogImagePath,
-  alternateLinks = [],
 } = Astro.props;
 
 const locale = (localeProp ?? detectLocaleFromPath(Astro.url.pathname)) as Locale | string;
@@ -35,6 +34,9 @@ const fullTitle = title === site.name ? title : `${title} · ${site.name}`;
 const canonical = absoluteUrl(path);
 const ogImageAbs = absoluteUrl(ogImage);
 const lang = htmlLang(locale);
+const { routes } = await readInventory();
+const alternateLinks = noindex || !routes.has(Astro.url.pathname) ? [] : alternateRoutes(routes, Astro.url.pathname);
+
 ---
 <!doctype html>
 <html lang={lang}>

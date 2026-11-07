@@ -22,6 +22,8 @@ function isCurrent(href: string): boolean {
 <header class="site-header">
   <div class="site-header__inner">
     <a class="brand" href={home}>{site.name}</a>
+    <details class="header-nav" open data-header-nav>
+      <summary aria-expanded="true">{locale === 'zh' ? '导航' : 'Menu'}</summary>
     <nav aria-label={ui.primaryNav}>
       <ul class="nav">
         {nav.map((item) => (
@@ -33,10 +35,26 @@ function isCurrent(href: string): boolean {
         ))}
       </ul>
     </nav>
+    </details>
     <div class="header-tools">
-      <SearchControl locale={locale === 'zh' ? 'zh' : 'en'} />
+      <details class="header-search" open data-header-search>
+        <summary aria-expanded="true">{locale === 'zh' ? '搜索' : 'Search'}</summary>
+        <SearchControl locale={locale === 'zh' ? 'zh' : 'en'} />
+      </details>
       <ThemeToggle locale={locale} />
       <LocaleSwitcher currentPath={currentPath} locale={locale} />
     </div>
   </div>
 </header>
+
+<script>
+  const media = window.matchMedia('(max-width: 799px)');
+  const disclosures = document.querySelectorAll<HTMLDetailsElement>('[data-header-nav], [data-header-search]');
+  function sync() { disclosures.forEach((el) => { el.open = !media.matches; el.querySelector('summary')?.setAttribute('aria-expanded', String(el.open)); }); }
+  sync();
+  media.addEventListener('change', sync);
+  disclosures.forEach((el) => el.addEventListener('toggle', () => {
+    el.querySelector('summary')?.setAttribute('aria-expanded', String(el.open));
+    if (media.matches && el.open) disclosures.forEach((other) => { if (other !== el) other.open = false; });
+  }));
+</script>

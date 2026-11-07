@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code + Codex + Grok Build / xAI 文档截至 2026-11；计时开跑前请再核对 CLI 名称"
-updated: "2026-11-06"
+updated: "2026-11-07"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -20,7 +20,7 @@ publicSources:
     url: "https://developers.openai.com/codex"
     kind: docs
   - title: "xAI documentation"
-    url: "https://docs.x.ai/"
+    url: "https://docs.x.ai/build/overview"
     kind: docs
   - title: "Spec Kit quickstart"
     url: "https://github.github.com/spec-kit/quickstart.html"
@@ -89,3 +89,33 @@ tags: [playbook, mvp, toolchain, timebox]
 ## 来源
 
 见 frontmatter `publicSources`。工具分工：[Claude Code](/zh/articles/claude-code/)、[Codex](/zh/articles/codex/)、[Grok Build](/zh/articles/grok-build/)。规格先行配套：[先写规格](/zh/articles/spec-first-agent-loop/)。
+
+
+## 实例：让带坏链接的内容版本构建失败
+
+使用 [OPC Vibe Stack 仓库](https://github.com/SS-Bot-Org/opc-vibe-stack) 作为小型内容 MVP 演示。可运行的用例位于 `site/tests/content.test.mjs`：复制临时站点、修改带引号的 YAML 链接、执行**完整构建**，并断言非零退出。不会修改真实文章，也不会发布。
+
+可复制给 coding agent 的任务模板：
+
+```text
+目标：阻止包含不存在的更新日志目标的版本发布。
+范围：YAML 解析、共享内容契约、最终产物校验、回归测试。
+非目标：新增文章、部署、抓取外部链接、改变证据标签。
+复现：在临时副本中，把已发布更新日志 affectedPages 中的
+/en/playbooks/ 改为带引号的 "/en/does-not-exist/"。
+验收：完整 npm run build 非零退出，并报告 "missing output"；
+回归测试因为预期这个失败而零退出。
+安全边界：不动真实源码；不部署、不探测生产环境。
+```
+
+检出仓库后，使用 Node.js ≥22.23.4 运行：
+
+```bash
+cd site
+npm ci
+node --test --test-name-pattern='quoted nonexistent changelog link' tests/content.test.mjs
+```
+
+预期：选中的 `FULL npm run build rejects quoted nonexistent changelog link` 测试通过。内部构建应故意失败，测试运行器自身退出码为 **0**。完整本地门禁为 `npm run check && npm test && npm run build`。
+
+本地复现记录：2026-11-07，Linux，Node 22.23.4。这里只验证内容发布的失败用例，不代表 agent 质量、收入、浏览器布局或生产部署已经验证。不会抓取外部链接。全文证据标签仍为 documentation-backed；一个本地测试实例不把其余建议自动升级为 tested。

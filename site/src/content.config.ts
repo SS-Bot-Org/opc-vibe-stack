@@ -1,92 +1,27 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { readInventory } from './lib/inventory.mjs';
+import { articleSchema, changelogSchema, loaderId, assertConditional } from './lib/content-schema.mjs';
 
-const evidenceSchema = z.enum(['tested', 'documentation-backed', 'unverified']);
-const sourceKindSchema = z.enum(['x', 'docs', 'blog', 'other']);
-const publicSourceSchema = z.object({
-  title: z.string().min(1),
-  url: z.string().url().refine((u) => u.startsWith('http://') || u.startsWith('https://'), {
-    message: 'publicSources.url must be http(s)',
-  }),
-  kind: sourceKindSchema,
-});
-const briefingSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  note: z.string().optional(),
-});
-
-function localeSlugId({ entry, data }: { entry: string; data: Record<string, unknown> }) {
-  const locale =
-    (typeof data.locale === 'string' && data.locale) ||
-    (entry.includes('/zh/') || entry.startsWith('zh/') ? 'zh' : 'en');
-  const slugFromData = typeof data.slug === 'string' ? data.slug : '';
-  const slugFromPath = entry.split('/').pop()?.replace(/\.mdx?$/, '') || entry;
-  const slug = slugFromData || slugFromPath;
-  return `${locale}/${slug}`;
+function validatedGlob(options: Parameters<typeof glob>[0]) {
+  const loader = glob(options);
+  return { ...loader, async load(context: Parameters<typeof loader.load>[0]) {
+    await readInventory(); // Reject duplicate identities before glob can overwrite an entry.
+    return loader.load(context);
+  } };
 }
 
 const articles = defineCollection({
-  loader: glob({
-    pattern: '**/{en,zh}/*.md',
-    base: './src/content/articles',
-    generateId: localeSlugId,
-  }),
-  schema: z.object({
-    title: z.string().min(1),
-    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-    summary: z.string().min(1).max(160),
-    locale: z.enum(['en', 'zh']).default('en'),
-    category: z.enum(['stack', 'guide', 'checklist', 'playbook', 'alert']),
-    stage: z.enum(['research', 'build', 'sell', 'cross']),
-    tools: z.array(z.string()).default([]),
-    priority: z.enum(['P0', 'P1', 'P2']),
-    status: z.enum(['draft', 'published', 'deprecated']),
-    evidence: evidenceSchema,
-    applicableToolsVersions: z.string().min(1),
-    updated: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    internalBriefing: z.array(briefingSchema).default([]),
-    publicSources: z.array(publicSourceSchema).default([]),
-    tags: z.array(z.string()).default([]),
-    notice: z
-      .object({
-        text: z.string().min(1),
-        relatedSlugs: z.array(z.string()).default([]),
-      })
-      .optional(),
-    toolId: z.string().optional(),
-    toolAvailability: z.enum(['active', 'warning', 'deprecated']).optional(),
-    bestFor: z.string().optional(),
-    poorFit: z.string().optional(),
-    caveats: z.string().optional(),
+  loader: validatedGlob({ pattern: '**/{en,zh}/*.md', base: './src/content/articles',
+    generateId: ({ entry, data }) => loaderId(entry, data) }),
+  schema: articleSchema.superRefine((data, ctx) => {
+    try { assertConditional(data, 'article'); }
+    catch (error) { ctx.addIssue({ code: 'custom', message: String(error) }); }
   }),
 });
-
 const changelog = defineCollection({
-  loader: glob({
-    pattern: '**/{en,zh}/*.md',
-    base: './src/content/changelog',
-    generateId: localeSlugId,
-  }),
-  schema: z.object({
-    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    title: z.string().min(1),
-    summary: z.string().min(1).max(200),
-    locale: z.enum(['en', 'zh']).default('en'),
-    status: z.enum(['draft', 'published']),
-    changes: z
-      .array(
-        z.object({
-          type: z.enum(['added', 'revised', 'deprecated', 'alert']),
-          text: z.string().min(1),
-          affectedPages: z.array(z.string().min(1)).min(1),
-          evidence: evidenceSchema,
-        }),
-      )
-      .min(1),
-    internalBriefing: z.array(briefingSchema).default([]),
-    publicSources: z.array(publicSourceSchema).default([]),
-  }),
+  loader: validatedGlob({ pattern: '**/{en,zh}/*.md', base: './src/content/changelog',
+    generateId: ({ entry, data }) => loaderId(entry, data) }),
+  schema: changelogSchema,
 });
-
 export const collections = { articles, changelog };

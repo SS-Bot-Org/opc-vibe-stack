@@ -457,3 +457,20 @@ html[data-theme='dark'] .theme-toggle__icon--to-dark {
 html[data-theme='dark'] .theme-toggle__icon--to-light {
   display: inline;
 }
+
+/* Native disclosures retain navigation/search access without JavaScript. */
+.header-nav summary, .header-search summary { cursor: pointer; padding: .35rem; }
+.primary-cta { display: inline-block; padding: .7rem 1rem; background: var(--accent); color: var(--surface); border-radius: .4rem; font-weight: 700; }
+@media (min-width: 800px) {
+  .header-nav summary, .header-search summary { display: none; }
+}
+@media (max-width: 799px) {
+  .site-header__inner { gap: .3rem .7rem; padding: .45rem 0; }
+  .brand { flex: 1; }
+  .header-nav { order: 2; }
+  .header-nav nav { position: absolute; left: 0; right: 0; padding: 1rem; background: var(--surface); border-bottom: 1px solid var(--border); max-height: 60vh; overflow: auto; }
+  .header-tools { order: 3; width: 100%; gap: .6rem; justify-content: flex-end; }
+  .header-search { margin-right: auto; }
+  .header-search > .search { position: absolute; left: 1rem; right: 1rem; width: auto; padding: .5rem; background: var(--surface); border: 1px solid var(--border); }
+  .header-search .search__input { width: 100%; }
+}

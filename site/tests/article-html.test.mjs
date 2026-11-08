@@ -64,3 +64,21 @@ test('GFM task lists become interactive accessible checklists without nesting li
   assert.equal(attr(labels[0], 'for'), 'opc-check-1');
   assert.equal(attr(inputs[1], 'aria-labelledby'), 'opc-check-2-label');
 });
+
+test('mixed task/plain lists retain native list order, nested prose, formatting and links', () => {
+  for (const locale of ['en', 'zh']) {
+    const source = '<ul class="contains-task-list"><li>Before <em>all</em> tasks</li><li class="task-list-item"><p><input type="checkbox" disabled> Verify <strong>artifact</strong></p><p>Keep this explanation.</p></li><li>Keep <a href="/en/stack/">previous release</a><ul><li>Nested recovery details</li></ul></li><li class="task-list-item"><input type="checkbox" disabled checked> Confirm manifest</li></ul>';
+    const doc = parseFragment(transformArticleHtml(source, { locale }));
+    const list = elements(doc, (n) => n.tagName === 'ul')[0];
+    assert.ok(list, 'a mixed list keeps its native list semantics');
+    const items = list.childNodes.filter((n) => n.tagName === 'li');
+    assert.deepEqual(items.map((item) => text(item).trim()), ['Before all tasks', 'Verify artifactKeep this explanation.', 'Keep previous releaseNested recovery details', 'Confirm manifest']);
+    assert.equal(elements(doc, (n) => n.tagName === 'strong').length, 1);
+    assert.equal(elements(doc, (n) => n.tagName === 'em').length, 1);
+    assert.equal(attr(elements(doc, (n) => n.tagName === 'a')[0], 'href'), '/en/stack/');
+    assert.equal(elements(doc, (n) => n.tagName === 'input').length, 2);
+    assert.equal(elements(doc, (n) => attr(n, 'data-checklist') !== undefined).length, 0);
+    assert.equal(elements(doc, (n) => n.tagName === 'label').length, 0);
+    assert.equal(text(doc).split('Nested recovery details').length - 1, 1);
+  }
+});

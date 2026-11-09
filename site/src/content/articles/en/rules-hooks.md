@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP; Codex config.toml & mcp_servers — confirm exact syntax for your installed CLI version"
-updated: "2026-11-08"
+updated: "2026-11-09"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -78,6 +78,15 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 > If breaking a rule would leak secrets, corrupt migrations, or ship broken links, **never** leave that rule in `AGENTS.md` alone. Pair the prose rule with a permission rule (`permissions.deny` / `ask`), a fast lifecycle hook (`PreToolUse` / `PostToolUse` / `Stop`), or a required build gate that exits nonzero.
 
 ## Five-layer agent control plane
+
+<figure class="article-figure">
+  <div class="theme-diagram" role="img" aria-label="Five-layer agent control plane: Rules, Skills, Permissions, Hooks, and CI gates from advisory to enforced.">
+    <img class="theme-diagram__light" src="/illustrations/rules-hooks/five-layer-control.light.svg" alt="" data-decorative="true" width="720" height="420" />
+    <img class="theme-diagram__dark" src="/illustrations/rules-hooks/five-layer-control.dark.svg" alt="" data-decorative="true" width="720" height="420" />
+  </div>
+  <figcaption>Five layers from advisory rules and skills, through tool-enforced permissions (not a sandbox), to deterministic hooks and CI gates. Labels match the table below.</figcaption>
+</figure>
+
 
 | Layer | Enforced? | When loaded | What belongs here |
 |---|---|---|---|

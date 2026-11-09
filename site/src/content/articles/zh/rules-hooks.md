@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
-updated: "2026-11-08"
+updated: "2026-11-09"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -78,6 +78,15 @@ tags: [build, hooks, skills, mcp, safety]
 > 凡是一旦违规就会泄露密钥、改坏数据库迁移或发出死链的底线规则，**绝不能**只写在 `AGENTS.md` 里。必须同时配上权限规则（`permissions.deny` / `ask`）、生命周期 hook（`PreToolUse` / `PostToolUse` / `Stop`）或返回非零退出码的构建门禁。
 
 ## 五层 Agent 控制面分工
+
+<figure class="article-figure">
+  <div class="theme-diagram" role="img" aria-label="五层 Agent 控制面：Rules、Skills、Permissions、Hooks、CI，从软建议到强制执行。">
+    <img class="theme-diagram__light" src="/illustrations/rules-hooks/five-layer-control.light.svg" alt="" data-decorative="true" width="720" height="420" />
+    <img class="theme-diagram__dark" src="/illustrations/rules-hooks/five-layer-control.dark.svg" alt="" data-decorative="true" width="720" height="420" />
+  </div>
+  <figcaption>五层结构：从软建议的规则与技能，经工具强制的权限规则（不是沙箱），到确定性的 hooks 与 CI 门禁。图中英文短标签与下表一致，便于双语对照。</figcaption>
+</figure>
+
 
 | 控制层 | 是否硬强制？ | 加载时机 | 该放什么内容 |
 |---|---|---|---|

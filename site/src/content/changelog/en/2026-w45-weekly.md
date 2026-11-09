@@ -10,18 +10,23 @@ changes:
     text: "Added a step and template for keeping AGENTS.md as the one rules file: CLAUDE.md starts with an @AGENTS.md import (or is omitted, since Claude Code can read AGENTS.md directly), with the symlink option and its Windows caveat."
     affectedPages:
       - /en/articles/rules-hooks/
+      - /zh/articles/rules-hooks/
       - /en/articles/claude-code/
+      - /zh/articles/claude-code/
     evidence: documentation-backed
   - type: revised
     text: "Added permission rules (permissions.deny / ask) as an enforced layer between rules files and hooks, including the documented limit that Bash rules match command text and are not a sandbox."
     affectedPages:
       - /en/articles/rules-hooks/
+      - /zh/articles/rules-hooks/
       - /en/articles/claude-code/
+      - /zh/articles/claude-code/
     evidence: documentation-backed
   - type: revised
     text: "Cited Anthropic's under-200-lines CLAUDE.md target and that imports don't cut context cost; the SKILL.md template now uses disable-model-invocation: true for a skill with side effects, with a note on context: fork."
     affectedPages:
       - /en/articles/rules-hooks/
+      - /zh/articles/rules-hooks/
     evidence: documentation-backed
 internalBriefing:
   - date: "2026-11-07"

@@ -1,7 +1,7 @@
 ---
 title: "Rules files + hooks: don’t rely on AGENTS.md alone"
 slug: rules-hooks
-summary: "Put conventions in AGENTS.md/CLAUDE.md, repeatable jobs in SKILL.md, hard blocks in hooks/CI, and MCP per tool."
+summary: "Put conventions in AGENTS.md/CLAUDE.md, repeatable jobs in SKILL.md, no-gos in permissions.deny/ask and hooks/CI, and MCP per tool."
 locale: en
 category: checklist
 stage: build
@@ -64,19 +64,20 @@ tags: [build, hooks, skills, mcp, safety]
 
 ## Conclusion
 
-Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but models still forget prose under long context**. Separate your agent control plane into four clean layers: always-on repo context in rules files, repeatable multi-step jobs in `SKILL.md`, deterministic enforcement in **lifecycle hooks + CI**, and per-tool configuration files when sharing an MCP server.
+Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but models still forget prose under long context**. Separate your agent control plane into five clean layers: always-on repo context in rules files, repeatable multi-step jobs in `SKILL.md`, tool-enforced **permission rules** (`permissions.deny` / `ask`) between prose rules and hooks — not a sandbox — then deterministic **lifecycle hooks**, and **CI** build gates. Configure shared MCP servers in each tool's native config file.
 
-> [!FLOW] Four-layer agent control pipeline
+> [!FLOW] Five-layer agent control pipeline
 >
 > 1. **Rules (`AGENTS.md` / `CLAUDE.md`)** — Load compact repo map, verify command, and coding conventions every session.
 > 2. **Skills (`SKILL.md`)** — Pull multi-step workflows on demand without bloating baseline context.
-> 3. **Hooks (`PreToolUse` / `PostToolUse`)** — Use `PreToolUse` to reject a matched call before execution; use `PostToolUse` for checks after it has already run.
-> 4. **CI gates (`npm run check && npm test && npm run build`)** — Run typecheck, regression tests, schema and output checks before merge or deploy.
+> 3. **Permission rules (`permissions.deny` / `ask`)** — Enforced by the tool on every call (deny `.env*` reads, ask before `git push`); not a sandbox.
+> 4. **Hooks (`PreToolUse` / `PostToolUse`)** — Use `PreToolUse` to reject a matched call before execution; use `PostToolUse` for checks after it has already run.
+> 5. **CI gates (`npm run check && npm test && npm run build`)** — Run typecheck, regression tests, schema and output checks before merge or deploy.
 
-> [!IMPORTANT] Prose advises; exit codes enforce
-> If breaking a rule would leak secrets, corrupt migrations, or ship broken links, **never** leave that rule in `AGENTS.md` alone. Pair the prose rule with a fast lifecycle hook (`PreToolUse` / `PostToolUse` / `Stop`) or a required build gate that exits nonzero.
+> [!IMPORTANT] Prose advises; permissions, hooks, and exit codes enforce
+> If breaking a rule would leak secrets, corrupt migrations, or ship broken links, **never** leave that rule in `AGENTS.md` alone. Pair the prose rule with a permission rule (`permissions.deny` / `ask`), a fast lifecycle hook (`PreToolUse` / `PostToolUse` / `Stop`), or a required build gate that exits nonzero.
 
-## Four-layer agent control plane
+## Five-layer agent control plane
 
 | Layer | Enforced? | When loaded | What belongs here |
 |---|---|---|---|

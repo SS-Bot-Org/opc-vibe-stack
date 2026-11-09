@@ -1,7 +1,7 @@
 ---
 title: "规则文件 + hooks：别只靠 AGENTS.md"
 slug: rules-hooks
-summary: "常规约定放 AGENTS.md/CLAUDE.md，标准作业放 SKILL.md，硬红线交 hooks/CI 拦截，MCP 按工具各配。"
+summary: "常规约定放 AGENTS.md/CLAUDE.md，标准作业放 SKILL.md，硬红线交 permissions.deny/ask 与 hooks/CI 拦截，MCP 按工具各配。"
 locale: zh
 category: checklist
 stage: build
@@ -64,19 +64,20 @@ tags: [build, hooks, skills, mcp, safety]
 
 ## 结论
 
-自然语言规则文件（`AGENTS.md`、`CLAUDE.md`）能校准默认习惯，**但长上下文下模型依然会遗忘文字叮嘱**。把 agent 控制面拆成职责分明的四层：常驻上下文放规则文件、可复用多步作业抽成 `SKILL.md`、绝不能失守的红线交给 **生命周期 hooks + CI** 强制拦截、共用 MCP 服务器则按各工具原生格式分别配置。
+自然语言规则文件（`AGENTS.md`、`CLAUDE.md`）能校准默认习惯，**但长上下文下模型依然会遗忘文字叮嘱**。把 agent 控制面拆成职责分明的五层：常驻上下文放规则文件、可复用多步作业抽成 `SKILL.md`、在文字规则与 hooks 之间用工具强制执行的 **权限规则**（`permissions.deny` / `ask`，不是沙箱）、再交给确定性的 **生命周期 hooks**，最后由 **CI** 构建门禁兜底。共用 MCP 服务器则按各工具原生格式分别配置。
 
-> [!FLOW] 四层 Agent 控制与拦截管线
+> [!FLOW] 五层 Agent 控制与拦截管线
 >
 > 1. **常驻规则（`AGENTS.md` / `CLAUDE.md`）** — 每次会话加载精简目录导航、验证命令与代码风格约定。
 > 2. **按需技能（`SKILL.md`）** — 把多步重复SOP按需挂载，避免撑爆日常上下文窗口。
-> 3. **生命周期 Hooks（`PreToolUse` / `PostToolUse`）** — `PreToolUse` 在匹配调用执行前拒绝；`PostToolUse` 只做调用成功后的检查，不能阻止已发生的读写。
-> 4. **CI 终审门禁（`npm run check && npm test && npm run build`）** — 合并或部署前分别执行类型检查、回归测试、schema 与产物校验。
+> 3. **权限规则（`permissions.deny` / `ask`）** — 由工具在每次调用时强制执行（拒绝读取 `.env*`、`git push` 前询问）；不是沙箱。
+> 4. **生命周期 Hooks（`PreToolUse` / `PostToolUse`）** — `PreToolUse` 在匹配调用执行前拒绝；`PostToolUse` 只做调用成功后的检查，不能阻止已发生的读写。
+> 5. **CI 终审门禁（`npm run check && npm test && npm run build`）** — 合并或部署前分别执行类型检查、回归测试、schema 与产物校验。
 
-> [!IMPORTANT] 文字只负责提醒，退出码才负责执法
-> 凡是一旦违规就会泄露密钥、改坏数据库迁移或发出死链的底线规则，**绝不能**只写在 `AGENTS.md` 里。必须同时配上一条生命周期 hook（`PreToolUse` / `PostToolUse` / `Stop`）或返回非零退出码的构建门禁。
+> [!IMPORTANT] 文字只负责提醒；权限规则、hooks 与退出码才负责执法
+> 凡是一旦违规就会泄露密钥、改坏数据库迁移或发出死链的底线规则，**绝不能**只写在 `AGENTS.md` 里。必须同时配上权限规则（`permissions.deny` / `ask`）、生命周期 hook（`PreToolUse` / `PostToolUse` / `Stop`）或返回非零退出码的构建门禁。
 
-## 四层 Agent 控制面分工
+## 五层 Agent 控制面分工
 
 | 控制层 | 是否硬强制？ | 加载时机 | 该放什么内容 |
 |---|---|---|---|

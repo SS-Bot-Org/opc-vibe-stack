@@ -146,8 +146,9 @@ disable-model-invocation: true  # 会改内容且可能发布；仅通过 /weekl
 对 `site/src/lib/` 下的改动使用计划模式。
 ```
 
+保存为 `.claude/settings.json` — 由 Claude Code 强制执行，与提示词无关：
+
 ```json
-// .claude/settings.json — 由 Claude Code 强制执行，与提示词无关
 {
   "permissions": {
     "deny": ["Read(./.env)", "Read(./.env.*)", "Edit(./.env)", "Edit(./.env.*)"],
@@ -158,8 +159,9 @@ disable-model-invocation: true  # 会改内容且可能发布；仅通过 /weekl
 
 ### 3. 同一 MCP 服务器在不同工具中的原生配置（零明文密钥）
 
+Claude Code — 项目根目录 `.mcp.json`（仅引用环境变量，严禁提交真实密钥）：
+
 ```json
-// Claude Code — 项目根目录 .mcp.json（仅引用环境变量，严禁提交真实密钥）
 {
   "mcpServers": {
     "docs-lookup": {

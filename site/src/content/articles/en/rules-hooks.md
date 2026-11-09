@@ -146,8 +146,9 @@ disable-model-invocation: true  # edits content and may publish; run only via /w
 Use plan mode for changes under `site/src/lib/`.
 ```
 
+Save as `.claude/settings.json` — enforced by Claude Code regardless of prompt text:
+
 ```json
-// .claude/settings.json — enforced by Claude Code regardless of prompt text
 {
   "permissions": {
     "deny": ["Read(./.env)", "Read(./.env.*)", "Edit(./.env)", "Edit(./.env.*)"],
@@ -158,8 +159,9 @@ Use plan mode for changes under `site/src/lib/`.
 
 ### 3. Same MCP server, per-tool config dialects (no hardcoded secrets)
 
+Claude Code — project root `.mcp.json` (reference env vars, never commit raw keys):
+
 ```json
-// Claude Code — .mcp.json (project root; reference env vars, never commit raw keys)
 {
   "mcpServers": {
     "docs-lookup": {

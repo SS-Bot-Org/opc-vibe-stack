@@ -517,9 +517,10 @@ html[data-theme='dark'] .source-kind--docs { border-color: #384f75; }
   width: 100%;
   height: auto;
 }
-.theme-diagram__dark { display: none; }
-html[data-theme='dark'] .theme-diagram__light { display: none; }
-html[data-theme='dark'] .theme-diagram__dark { display: block; }
+/* Beat `.article-figure img { display: block }` (0,1,1) — site theme is html[data-theme] (JS applies prefers-color-scheme). */
+.article-figure img.theme-diagram__dark { display: none; }
+html[data-theme='dark'] .article-figure img.theme-diagram__light { display: none; }
+html[data-theme='dark'] .article-figure img.theme-diagram__dark { display: block; }
 
 /* FLOW / callout / table polish */
 .flow-diagram {

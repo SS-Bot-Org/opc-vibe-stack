@@ -2,6 +2,12 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'parse5';
 import { readInventory } from '../src/lib/inventory.mjs';
+import {
+  SITE_ORIGIN,
+  attrsOf,
+  parseSrcset,
+  validateImageRef,
+} from '../src/lib/validate-output-lib.mjs';
 
 const root = path.resolve('dist');
 const files = new Map();
@@ -13,17 +19,6 @@ async function walk(dir) {
   }
 }
 await walk(root);
-
-function attrsOf(node) {
-  return Object.fromEntries((node.attrs || []).map((a) => [a.name, a.value]));
-}
-
-function resolveLocal(urlPath) {
-  const key = decodeURIComponent(urlPath) + (urlPath.endsWith('/') ? 'index.html' : '');
-  if (files.has(key)) return key;
-  if (files.has(decodeURIComponent(urlPath))) return decodeURIComponent(urlPath);
-  return null;
-}
 
 const pages = new Map();
 const imageRefs = [];
@@ -37,8 +32,19 @@ for (const [key, file] of files) {
       ids.add(attrs.id);
     }
     if (attrs.href) links.push(attrs.href);
-    if (node.tagName === 'img' && attrs.src) {
-      imageRefs.push({ from: key, src: attrs.src, alt: attrs.alt, decorative: attrs['data-decorative'] === 'true' });
+    if (node.tagName === 'img') {
+      if (attrs.src) {
+        imageRefs.push({
+          from: key, src: attrs.src, alt: attrs.alt,
+          decorative: attrs['data-decorative'] === 'true',
+        });
+      }
+      for (const candidate of parseSrcset(attrs.srcset)) {
+        imageRefs.push({
+          from: key, src: candidate, alt: attrs.alt,
+          decorative: attrs['data-decorative'] === 'true', fromSrcset: true,
+        });
+      }
     }
     for (const child of node.childNodes || []) visit(child);
   }
@@ -48,8 +54,8 @@ for (const [key, file] of files) {
 
 function check(href, from) {
   const base = from.replace(/index\.html$/, '');
-  const url = new URL(href, 'https://opcvibestack.com' + base);
-  if (url.origin !== 'https://opcvibestack.com') return;
+  const url = new URL(href, SITE_ORIGIN + base);
+  if (url.origin !== SITE_ORIGIN) return;
   const key = decodeURIComponent(url.pathname) + (url.pathname.endsWith('/') ? 'index.html' : '');
   if (!files.has(key)) throw new Error(`${from}: missing output ${href}`);
   if (url.hash && !pages.get(key)?.ids.has(decodeURIComponent(url.hash.slice(1))))
@@ -57,21 +63,7 @@ function check(href, from) {
 }
 
 for (const [key, page] of pages) for (const href of page.links) check(href, key);
-
-for (const img of imageRefs) {
-  if (img.alt === undefined) throw new Error(`${img.from}: img missing alt attribute (${img.src})`);
-  if (!img.decorative && img.alt.trim() === '') {
-    throw new Error(`${img.from}: informative img needs non-empty alt or data-decorative="true" (${img.src})`);
-  }
-  if (/^https?:\/\//i.test(img.src) && !img.src.startsWith('https://opcvibestack.com/')) {
-    throw new Error(`${img.from}: external image hotlink forbidden (${img.src})`);
-  }
-  const base = img.from.replace(/index\.html$/, '');
-  const url = new URL(img.src, 'https://opcvibestack.com' + base);
-  if (url.origin !== 'https://opcvibestack.com') continue;
-  const resolved = resolveLocal(url.pathname);
-  if (!resolved) throw new Error(`${img.from}: missing image ${img.src}`);
-}
+for (const img of imageRefs) validateImageRef(img, files);
 
 const inventory = await readInventory();
 for (const { file, data } of inventory.changelog) {

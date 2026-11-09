@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
-updated: "2026-11-07"
+updated: "2026-11-08"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -18,12 +18,22 @@ internalBriefing:
     note: "Shared SKILL.md across agents"
   - date: "2026-11-05"
     note: "One MCP server, per-tool config files"
+  - date: "2026-11-07"
+    note: "Lean CLAUDE.md; manual-only side-effect skills"
+  - date: "2026-11-08"
+    note: "One shared rules file; permissions enforce, prompts don't"
 publicSources:
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
     kind: docs
   - title: "Hooks reference (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks"
+    kind: docs
+  - title: "How Claude remembers your project (CLAUDE.md, AGENTS.md, imports)"
+    url: "https://code.claude.com/docs/en/memory"
+    kind: docs
+  - title: "Configure permissions (Claude Code)"
+    url: "https://code.claude.com/docs/en/permissions"
     kind: docs
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
@@ -72,6 +82,7 @@ tags: [build, hooks, skills, mcp, safety]
 |---|---|---|---|
 | **`AGENTS.md` / `CLAUDE.md`** | 软建议 | 每次会话常驻 | 目录结构、构建/测试命令、代码风格、核心禁区清单 |
 | **`SKILL.md` 技能目录** | 流程引导 | 任务匹配时按需加载 | 可复用的多步 SOP（如周更入库、发版核查、迁移步骤） |
+| **权限规则（`permissions.deny` / `ask`）** | **由工具强制执行** | 每次工具调用 | 拒绝读取 `.env*`、`git push` 前询问；不是沙箱 |
 | **生命周期 Hooks** | **确定性硬拦截** | 固定工具调用/结束节点 | 拒绝读写受保护文件、跑快速静态检查、拦截未验证收工 |
 | **CI / `npm run build`** | **确定性硬拦截** | 合并前与发版前 | 构建执行 schema 与链接/锚点校验；CI 另行执行类型检查与回归测试 |
 
@@ -79,7 +90,8 @@ tags: [build, hooks, skills, mcp, safety]
 
 | 脆弱的纯文字叮嘱 | 确定性的 Hook / 构建门禁替代方案 |
 |---|---|
-| *「请绝对不要读取或修改 `.env` 和私钥」* | `PreToolUse` hook 拦截命中 `.env*` / `*.pem` 的读写调用，并配合 `.gitignore` |
+| *「请绝对不要读取或修改 `.env` 和私钥」* | `permissions.deny` 规则如 `Read(./.env)` / `Edit(./.env)`，再配 `PreToolUse` hook 覆盖规则表达不了的模式，并配合 `.gitignore` |
+| *在 `CLAUDE.md` 里写「绝对别碰生产」* | 对你实际使用的部署命令配置 `deny` 或 `ask`（例如 `Bash(git push *)`），并把生产凭证放在 agent 够不到的机器外 |
 | *「汇报完成前请务必跑一遍类型检查」* | `Stop` hook 执行 `npm run check`，把失败映射为退出码 `2`，并检查 `stop_hook_active`；编辑后检查不能撤销编辑 |
 | *「翻译文章不要漏配 slug 或写错更新日志链接」* | 由 `scripts/validate.mjs` 与 `scripts/validate-output.mjs` 在构建期自动卡死 |
 
@@ -91,16 +103,17 @@ tags: [build, hooks, skills, mcp, safety]
 
 ## 步骤
 
-1. **给 `AGENTS.md` / `CLAUDE.md` 瘦身。** 常驻规则控制在 80 行以内，只留目录说明、精确命令、编码规范与最高优先级边界。
-2. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上 hook 或构建脚本校验。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
-3. **严控 Hook 耗时。** 高频触发的编辑期 hook 只跑路径白名单或单文件语法检查；全量构建与集成测试放到 `Stop` 阶段或提交前门禁，避免因太慢而自己动手关掉保护。
-4. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。
-5. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
+1. **给 `AGENTS.md` / `CLAUDE.md` 瘦身。** Anthropic 的[记忆文档](https://code.claude.com/docs/en/memory)建议每份 `CLAUDE.md` 控制在 200 行以内，并指出 `@path` 导入能整理文件结构，但**不会**降低上下文占用。我们的目标是约 80 行：目录说明、精确命令、编码规范与最高优先级边界。只针对仓库某一部分的说明，挪到按路径作用域的规则或 skill。
+2. **全工具共用一份规则源文件。** Codex 与多数其他 agent 读 `AGENTS.md`；Claude Code 读 `CLAUDE.md`，若不存在 `CLAUDE.md`，也可直接读 `AGENTS.md`（文档写明自 v2.1.277 起）。若仍保留 `CLAUDE.md`，把首行写成 `@AGENTS.md`，其下只放 Claude 专属备注，避免两份文件漂移。`CLAUDE.md` → `AGENTS.md` 符号链接也能用，但官方文档在有人会在 Windows 上克隆时更推荐 import。跑 `/context all`，确认文件出现在 **Memory files** 下。
+3. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上权限规则、hook 或构建脚本校验。[权限文档](https://code.claude.com/docs/en/permissions)写得很清楚：规则由 Claude Code 强制执行，不是靠模型自觉，`CLAUDE.md` 里的文字改变不了它允许什么。deny 优先于 allow。Bash 规则匹配的是 Claude 写出的命令文本，因此换一种写法（如 `git -C . push`）就能绕过 `Bash(git push *)`；需要真正边界时用沙箱或 `PreToolUse` hook。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
+4. **严控 Hook 耗时。** 高频触发的编辑期 hook 只跑路径白名单或单文件语法检查；全量构建与集成测试放到 `Stop` 阶段或提交前门禁，避免因太慢而自己动手关掉保护。
+5. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。对有副作用的 skill（部署、发布、发送），加上 `disable-model-invocation: true`，只有你输入 `/skill-name` 才会运行；`context: fork` 会在独立子 agent 上下文中跑 skill，适合重搜索类任务。
+6. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
    - **Claude Code：** 项目 `.mcp.json`（或 `claude mcp add --scope project ...`）
    - **Codex：** `~/.codex/config.toml`（或受信任项目配置）中的 `[mcp_servers.<name>]`
    - **Cursor（若辅助使用）：** `.cursor/mcp.json`
    配完后分别在各工具自带的 MCP 状态页确认连通，密钥一律走环境变量引用，严禁明文入库。
-6. **犯错当天闭环。** 每次踩坑复盘后，当天补一行规则、收紧对应 `SKILL.md` 或加一条拦截规则。
+7. **犯错当天闭环。** 每次踩坑复盘后，当天补一行规则、收紧对应 `SKILL.md` 或加一条拦截规则。
 
 ## 可直接复制的实用模板
 
@@ -110,6 +123,7 @@ tags: [build, hooks, skills, mcp, safety]
 ---
 name: weekly-refresh
 description: 执行周日简报到站点的周更流程，核验原文链接与证据标签，并跑通完整静态构建门禁。
+disable-model-invocation: true  # 会改内容且可能发布；仅通过 /weekly-refresh 手动触发
 ---
 
 # 内容周更标准作业（SOP）
@@ -121,7 +135,27 @@ description: 执行周日简报到站点的周更流程，核验原文链接与�
 5. 执行 `cd site && npm run check && npm test && npm run build`，全部零报错后才可收工。
 ```
 
-### 2. 同一 MCP 服务器在不同工具中的原生配置（零明文密钥）
+### 2. 一份共用规则源 + 强制权限规则
+
+```markdown
+<!-- CLAUDE.md — AGENTS.md 仍是全工具唯一规则源 -->
+@AGENTS.md
+
+## 仅 Claude Code
+对 `site/src/lib/` 下的改动使用计划模式。
+```
+
+```json
+// .claude/settings.json — 由 Claude Code 强制执行，与提示词无关
+{
+  "permissions": {
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Edit(./.env)", "Edit(./.env.*)"],
+    "ask": ["Bash(git push *)"]
+  }
+}
+```
+
+### 3. 同一 MCP 服务器在不同工具中的原生配置（零明文密钥）
 
 ```json
 // Claude Code — 项目根目录 .mcp.json（仅引用环境变量，严禁提交真实密钥）
@@ -146,10 +180,12 @@ args = ["-y", "@example/docs-mcp-server"]
 env_vars = ["DOCS_API_TOKEN"]
 ```
 
-### 3. 控制面盘点工作表
+### 4. 控制面盘点工作表
 
 ```text
+单一规则源（AGENTS.md）+ CLAUDE.md import，已用 /context 确认：
 硬性禁区（必须自动报错阻断）：
+权限 deny/ask 规则：
 Hook 触发事件 + 匹配规则（Claude Code / CLI）：
 快速 Hook 校验命令（<15 秒）：
 完整发版门禁命令：
@@ -162,7 +198,7 @@ Hook 触发事件 + 匹配规则（Claude Code / CLI）：
 > [!WARNING] 把第三方 Skills 与 MCP 当成可执行代码审阅
 > 外部 `SKILL.md` 附带脚本以及会抓取外网网页的 MCP 服务器，都可能引入提示词注入或任意命令执行风险。启用前务必通读源码，并对照[安全速查](/zh/articles/security-quickcheck/)做好隔离。
 
-### 4. 把 npm 失败转换为阻断退出码的 Stop 检查
+### 5. 把 npm 失败转换为阻断退出码的 Stop 检查
 
 Claude Code 命令 hook **不是任意非零退出都会阻断**：支持阻断的事件使用退出码 `2`；普通退出码 `1` 且无有效 JSON 决策时通常只是非阻断错误。另一种方式是以退出码 `0` 返回事件专属 JSON 决策（例如 `PreToolUse` 使用 `hookSpecificOutput.permissionDecision: "deny"`；`Stop` 使用顶层 `decision: "block"` 和 `reason`）。详见[退出码与事件参考](https://code.claude.com/docs/en/hooks#exit-code-2-behavior-per-event)。
 
@@ -215,13 +251,15 @@ stdin 中的 `stop_hook_active` 防循环检查遵循[官方指引](https://code
 ## 完成定义
 
 - [ ] `AGENTS.md` / `CLAUDE.md` 精炼清晰，写明了可直接执行的构建、类型检查与测试命令
-- [ ] 每条「绝不能发生」的底线都由生命周期 hook 或非零退出的构建/CI 脚本兜底，而非只靠文字祈祷
+- [ ] `CLAUDE.md` 通过 import 引入 `AGENTS.md`（或不保留 `CLAUDE.md`），保证各工具读到同一份规则
+- [ ] 每条「绝不能发生」的底线都由权限规则、生命周期 hook 或非零退出的构建/CI 脚本兜底，而非只靠文字祈祷
 - [ ] 重复性多步任务已抽成独立 `SKILL.md`，触发描述具体不撞车
 - [ ] 所用的每个 agent 都通过各自原生配置文件连上共享 MCP，且 Git 仓库中零密钥残留
 - [ ] 无关任务切换时主动清空上下文，避免旧指令残留污染
 
 ## 反模式
 
+- **手写维护两份互不同步的 `AGENTS.md` 与 `CLAUDE.md`** —— 必然漂移；用 import 让一份指向另一份。
 - **把 `AGENTS.md` 当成权限防火墙** —— 自然语言只能减少误操作，不能替代文件权限与进程隔离。
 - **每次保存文件都触发耗时 3 分钟的全量测试 hook** —— 卡顿会逼你亲手关掉所有校验；高频 hook 务必控制在 15 秒内。
 - **塞一个包罗万象的「团队开发总纲」巨型 Skill** —— 匹配边界模糊会导致乱触发；坚持一 Skill 一具体活。

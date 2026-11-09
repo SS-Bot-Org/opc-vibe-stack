@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code CLI/agent（Anthropic）；命令与 hooks 配置结构请以最新官方文档为准"
-updated: "2026-11-07"
+updated: "2026-11-08"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -18,6 +18,12 @@ publicSources:
     kind: docs
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
+    kind: docs
+  - title: "How Claude remembers your project (CLAUDE.md, AGENTS.md, imports)"
+    url: "https://code.claude.com/docs/en/memory"
+    kind: docs
+  - title: "Configure permissions (Claude Code)"
+    url: "https://code.claude.com/docs/en/permissions"
     kind: docs
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
@@ -27,7 +33,7 @@ toolId: claude-code
 toolAvailability: active
 bestFor: "仓库内 agent 循环、先计划再实现、用规则/hooks 强制约束。"
 poorFit: "没有验证命令的盲目一次生成；把聊天记忆当成策略。"
-caveats: "密钥勿进提示词；硬性禁区写进规则与 hooks，而不是指望。"
+caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而不是指望文字叮嘱。"
 ---
 
 ## 结论
@@ -58,7 +64,7 @@ caveats: "密钥勿进提示词；硬性禁区写进规则与 hooks，而不是�
 ## 步骤
 
 1. **按官方文档完成安装与登录**——严禁把原始 API 密钥写进仓库文件或直接粘进会话提示词。
-2. **建立精简的项目规则文件**（如同时用 Codex，可让 `CLAUDE.md` 与 `AGENTS.md` 保持一致），控制在 80 行以内：写明产品定位、唯一验证命令、以及硬禁区路径。
+2. **建立精简的项目规则文件**，控制在约 80 行以内（Anthropic 文档目标是 200 行以内）：写明产品定位、唯一验证命令、以及硬禁区路径。若同时使用 Codex，规则以 `AGENTS.md` 为唯一源，`CLAUDE.md` 首行写 `@AGENTS.md`，让两套工具读同一份。禁区路径与命令同时写入 `.claude/settings.json` 的 `permissions.deny` / `ask`——权限规则由 Claude Code 强制执行，`CLAUDE.md` 正文只是建议。
 3. **多文件任务默认「先计划、后落盘」。** 先让 agent 检查相关文件并列出修改清单；在动代码前砍掉多余改动，返工成本最低。
 4. **以验证命令作为唯一完工门槛。** 要求 agent 亲自执行测试/类型检查/构建并汇报真实退出码，不接受口头「应该没问题」。
 5. **把失误当天转成硬护栏。** 一旦 agent 误碰禁区目录或重复犯错，立即补一行清晰规则，或直接升级为生命周期 hook（见[规则文件 + hooks](/zh/articles/rules-hooks/)）。

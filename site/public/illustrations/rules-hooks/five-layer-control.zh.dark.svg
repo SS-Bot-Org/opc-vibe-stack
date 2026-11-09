@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 430" role="img" aria-labelledby="title desc">
+  <title id="title">五层 Agent 控制面</title>
+  <desc id="desc">从软建议的规则与技能，经工具强制的权限规则（不是沙箱），到确定性的 hooks 与 CI 门禁。</desc>
+  <rect width="740" height="430" rx="12" fill="#15171c"/>
+  <text x="28" y="36" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="16" font-weight="700">Agent 控制面</text>
+  <text x="28" y="56" fill="#b0b5c0" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="12">软建议 → 强制执行（权限规则不是沙箱）</text>
+  <rect x="28" y="78" width="684" height="56" rx="8" fill="#222f49" stroke="#98baff" stroke-width="1.5"/>
+  <circle cx="56" cy="106.0" r="14" fill="#98baff" />
+  <text x="56" y="111.0" text-anchor="middle" fill="#111c30" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">1</text>
+  <text x="84" y="102" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="700">常驻规则</text>
+  <text x="84" y="120" fill="#b0b5c0" font-family="'Noto Sans Mono CJK SC','Sarasa Mono SC',ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">AGENTS.md / CLAUDE.md</text>
+  <rect x="532" y="94" width="180" height="24" rx="12" fill="#1d2027" stroke="#98baff" stroke-width="1"/>
+  <text x="622.0" y="110" text-anchor="middle" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="600">软建议</text>
+  <path d="M370.0 135 v8" stroke="#333945" stroke-width="2" stroke-dasharray="3 3"/>
+  <rect x="28" y="144" width="684" height="56" rx="8" fill="#222630" stroke="#555b66" stroke-width="1.5"/>
+  <circle cx="56" cy="172.0" r="14" fill="#98baff" />
+  <text x="56" y="177.0" text-anchor="middle" fill="#111c30" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">2</text>
+  <text x="84" y="168" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="700">按需技能</text>
+  <text x="84" y="186" fill="#b0b5c0" font-family="'Noto Sans Mono CJK SC','Sarasa Mono SC',ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">SKILL.md 技能目录</text>
+  <rect x="532" y="160" width="180" height="24" rx="12" fill="#1d2027" stroke="#555b66" stroke-width="1"/>
+  <text x="622.0" y="176" text-anchor="middle" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="600">按需</text>
+  <path d="M370.0 201 v8" stroke="#333945" stroke-width="2" stroke-dasharray="3 3"/>
+  <rect x="28" y="210" width="684" height="56" rx="8" fill="#1e3027" stroke="#5a9a6e" stroke-width="1.5"/>
+  <circle cx="56" cy="238.0" r="14" fill="#98baff" />
+  <text x="56" y="243.0" text-anchor="middle" fill="#111c30" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">3</text>
+  <text x="84" y="234" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="700">权限规则</text>
+  <text x="84" y="252" fill="#b0b5c0" font-family="'Noto Sans Mono CJK SC','Sarasa Mono SC',ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">deny / ask — 不是沙箱</text>
+  <rect x="532" y="226" width="180" height="24" rx="12" fill="#1e3027" stroke="#5a9a6e" stroke-width="1"/>
+  <text x="622.0" y="242" text-anchor="middle" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="600">工具强制</text>
+  <path d="M370.0 267 v8" stroke="#333945" stroke-width="2" stroke-dasharray="3 3"/>
+  <rect x="28" y="276" width="684" height="56" rx="8" fill="#352c1c" stroke="#c9a227" stroke-width="1.5"/>
+  <circle cx="56" cy="304.0" r="14" fill="#98baff" />
+  <text x="56" y="309.0" text-anchor="middle" fill="#111c30" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">4</text>
+  <text x="84" y="300" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="700">生命周期 Hooks</text>
+  <text x="84" y="318" fill="#b0b5c0" font-family="'Noto Sans Mono CJK SC','Sarasa Mono SC',ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">PreToolUse · PostToolUse · Stop</text>
+  <rect x="532" y="292" width="180" height="24" rx="12" fill="#352c1c" stroke="#c9a227" stroke-width="1"/>
+  <text x="622.0" y="308" text-anchor="middle" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="600">确定性</text>
+  <path d="M370.0 333 v8" stroke="#333945" stroke-width="2" stroke-dasharray="3 3"/>
+  <rect x="28" y="342" width="684" height="56" rx="8" fill="#3a2025" stroke="#d96b6b" stroke-width="1.5"/>
+  <circle cx="56" cy="370.0" r="14" fill="#98baff" />
+  <text x="56" y="375.0" text-anchor="middle" fill="#111c30" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="13" font-weight="700">5</text>
+  <text x="84" y="366" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="15" font-weight="700">CI 终审门禁</text>
+  <text x="84" y="384" fill="#b0b5c0" font-family="'Noto Sans Mono CJK SC','Sarasa Mono SC',ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11">check · test · build</text>
+  <rect x="532" y="358" width="180" height="24" rx="12" fill="#3a2025" stroke="#d96b6b" stroke-width="1"/>
+  <text x="622.0" y="374" text-anchor="middle" fill="#eeeff3" font-family="'PingFang SC','Hiragino Sans GB','Noto Sans CJK SC','Microsoft YaHei',ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="600">合并前</text>
+</svg>

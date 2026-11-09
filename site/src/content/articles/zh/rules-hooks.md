@@ -80,11 +80,11 @@ tags: [build, hooks, skills, mcp, safety]
 ## 五层 Agent 控制面分工
 
 <figure class="article-figure">
-  <div class="theme-diagram" role="img" aria-label="五层 Agent 控制面：Rules、Skills、Permissions、Hooks、CI，从软建议到强制执行。">
-    <img class="theme-diagram__light" src="/illustrations/rules-hooks/five-layer-control.light.svg" alt="" data-decorative="true" width="720" height="420" />
-    <img class="theme-diagram__dark" src="/illustrations/rules-hooks/five-layer-control.dark.svg" alt="" data-decorative="true" width="720" height="420" />
+  <div class="theme-diagram" role="img" aria-label="五层 Agent 控制面：常驻规则、按需技能、权限规则、生命周期 Hooks、CI 终审门禁，从软建议到强制执行。">
+    <img class="theme-diagram__light" src="/illustrations/rules-hooks/five-layer-control.zh.light.svg" alt="" data-decorative="true" width="740" height="430" />
+    <img class="theme-diagram__dark" src="/illustrations/rules-hooks/five-layer-control.zh.dark.svg" alt="" data-decorative="true" width="740" height="430" />
   </div>
-  <figcaption>五层结构：从软建议的规则与技能，经工具强制的权限规则（不是沙箱），到确定性的 hooks 与 CI 门禁。图中英文短标签与下表一致，便于双语对照。</figcaption>
+  <figcaption>五层结构：从软建议的规则与技能，经工具强制的权限规则（不是沙箱），到确定性的 hooks 与 CI 门禁。图中中文标签与下表一致；代码标识符保持原文。</figcaption>
 </figure>
 
 

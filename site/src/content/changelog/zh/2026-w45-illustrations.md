@@ -7,7 +7,7 @@ locale: zh
 status: published
 changes:
   - type: added
-    text: "新增主题感知的五层 Agent 控制面 SVG（EN/ZH 共用资源），并在 rules-hooks 文中配双语说明。"
+    text: "新增主题感知的五层 Agent 控制面 SVG：英文页用英文亮/暗图，中文页用中文标注亮/暗图，并在 rules-hooks 配本地说明。"
     affectedPages:
       - /zh/articles/rules-hooks/
       - /en/articles/rules-hooks/

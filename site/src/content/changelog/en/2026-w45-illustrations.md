@@ -7,7 +7,7 @@ locale: en
 status: published
 changes:
   - type: added
-    text: "Added a theme-aware five-layer agent control-plane SVG (shared EN/ZH assets) with bilingual captions on the rules-hooks article."
+    text: "Added theme-aware five-layer agent control-plane SVGs: English light/dark assets for EN, Chinese-labelled light/dark assets for ZH, with locale captions on rules-hooks."
     affectedPages:
       - /en/articles/rules-hooks/
       - /zh/articles/rules-hooks/

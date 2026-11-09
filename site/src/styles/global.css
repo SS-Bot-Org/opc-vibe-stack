@@ -483,3 +483,64 @@ html[data-theme='dark'] .source-kind--docs { border-color: #384f75; }
   html { scroll-behavior: auto; }
   .checklist__item { transition: none; }
 }
+
+
+/* Article figures & theme-aware diagrams */
+.article-figure {
+  margin: 28px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  max-inline-size: none;
+}
+.article-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--bg);
+}
+.article-figure figcaption {
+  margin: 12px 4px 2px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+  max-inline-size: 72ch;
+}
+.theme-diagram {
+  position: relative;
+  display: block;
+}
+.theme-diagram__light,
+.theme-diagram__dark {
+  width: 100%;
+  height: auto;
+}
+/* Beat `.article-figure img { display: block }` (0,1,1) — site theme is html[data-theme] (JS applies prefers-color-scheme). */
+.article-figure img.theme-diagram__dark { display: none; }
+html[data-theme='dark'] .article-figure img.theme-diagram__light { display: none; }
+html[data-theme='dark'] .article-figure img.theme-diagram__dark { display: block; }
+
+/* FLOW / callout / table polish */
+.flow-diagram {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 80%, transparent);
+}
+.flow-diagram__steps > li {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 35%, transparent);
+}
+.callout {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 70%, transparent);
+}
+.prose .table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-block: 1px solid var(--border);
+  background: var(--surface);
+}
+.prose .table-wrap table {
+  margin: 0;
+}
+.prose table thead th {
+  box-shadow: inset 0 -1px 0 var(--border);
+}

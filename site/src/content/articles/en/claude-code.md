@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code CLI/agent (Anthropic); confirm current commands and hook schema against live vendor docs"
-updated: "2026-11-07"
+updated: "2026-11-08"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -18,6 +18,12 @@ publicSources:
     kind: docs
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
+    kind: docs
+  - title: "How Claude remembers your project (CLAUDE.md, AGENTS.md, imports)"
+    url: "https://code.claude.com/docs/en/memory"
+    kind: docs
+  - title: "Configure permissions (Claude Code)"
+    url: "https://code.claude.com/docs/en/permissions"
     kind: docs
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
@@ -27,7 +33,7 @@ toolId: claude-code
 toolAvailability: active
 bestFor: "Repo-local agent loops, plan-then-implement sessions, and rules/hooks enforcement."
 poorFit: "Blind one-shot generation without a verification command; treating chat memory as policy."
-caveats: "Keep secrets out of prompts; encode hard no-gos in rules files and hooks, not hopes."
+caveats: "Keep secrets out of prompts; encode hard no-gos in permission rules and hooks, not prose."
 ---
 
 ## Conclusion
@@ -58,7 +64,7 @@ Use **Claude Code** as your primary interactive repository agent whenever a chan
 ## Steps
 
 1. **Install and verify authentication** against the official Claude Code documentation—never paste raw API keys into project files or chat prompts.
-2. **Create a concise project rules file** (`CLAUDE.md` alongside `AGENTS.md` if you also run Codex) under ~80 lines: state what the product is, the exact verify command, and hard forbidden paths.
+2. **Create a concise project rules file** under ~80 lines (Anthropic's docs target under 200): state what the product is, the exact verify command, and hard forbidden paths. If you also run Codex, keep the rules in `AGENTS.md` and start `CLAUDE.md` with `@AGENTS.md` so both tools read one file. Put forbidden paths and commands in `permissions.deny` / `ask` in `.claude/settings.json` as well, since permission rules are enforced by Claude Code while `CLAUDE.md` text is only advice.
 3. **Default to plan-first on multi-file work.** Ask the agent to inspect affected files and list proposed edits before touching disk; reject scope creep early while changes cost zero tokens to undo.
 4. **Gate completion on your verify command.** Require the agent to run your test/typecheck/build command and report actual exit status rather than assuming edits work.
 5. **Turn mistakes into durable guardrails.** If the agent touches a forbidden directory or repeats a bad pattern, add a concise rule or move the constraint into a lifecycle hook ([Rules files + hooks](/en/articles/rules-hooks/)) the same day.

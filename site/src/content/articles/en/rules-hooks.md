@@ -1,7 +1,7 @@
 ---
 title: "Rules files + hooks: don’t rely on AGENTS.md alone"
 slug: rules-hooks
-summary: "Put conventions in AGENTS.md/CLAUDE.md, repeatable jobs in SKILL.md, hard blocks in hooks/CI, and MCP per tool."
+summary: "Put conventions in AGENTS.md/CLAUDE.md, repeatable jobs in SKILL.md, no-gos in permissions.deny/ask and hooks/CI, and MCP per tool."
 locale: en
 category: checklist
 stage: build
@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP; Codex config.toml & mcp_servers — confirm exact syntax for your installed CLI version"
-updated: "2026-11-07"
+updated: "2026-11-08"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -18,12 +18,22 @@ internalBriefing:
     note: "Shared SKILL.md across agents"
   - date: "2026-11-05"
     note: "One MCP server, per-tool config files"
+  - date: "2026-11-07"
+    note: "Lean CLAUDE.md; manual-only side-effect skills"
+  - date: "2026-11-08"
+    note: "One shared rules file; permissions enforce, prompts don't"
 publicSources:
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
     kind: docs
   - title: "Hooks reference (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks"
+    kind: docs
+  - title: "How Claude remembers your project (CLAUDE.md, AGENTS.md, imports)"
+    url: "https://code.claude.com/docs/en/memory"
+    kind: docs
+  - title: "Configure permissions (Claude Code)"
+    url: "https://code.claude.com/docs/en/permissions"
     kind: docs
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
@@ -54,24 +64,26 @@ tags: [build, hooks, skills, mcp, safety]
 
 ## Conclusion
 
-Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but models still forget prose under long context**. Separate your agent control plane into four clean layers: always-on repo context in rules files, repeatable multi-step jobs in `SKILL.md`, deterministic enforcement in **lifecycle hooks + CI**, and per-tool configuration files when sharing an MCP server.
+Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but models still forget prose under long context**. Separate your agent control plane into five clean layers: always-on repo context in rules files, repeatable multi-step jobs in `SKILL.md`, tool-enforced **permission rules** (`permissions.deny` / `ask`) between prose rules and hooks — not a sandbox — then deterministic **lifecycle hooks**, and **CI** build gates. Configure shared MCP servers in each tool's native config file.
 
-> [!FLOW] Four-layer agent control pipeline
+> [!FLOW] Five-layer agent control pipeline
 >
 > 1. **Rules (`AGENTS.md` / `CLAUDE.md`)** — Load compact repo map, verify command, and coding conventions every session.
 > 2. **Skills (`SKILL.md`)** — Pull multi-step workflows on demand without bloating baseline context.
-> 3. **Hooks (`PreToolUse` / `PostToolUse`)** — Use `PreToolUse` to reject a matched call before execution; use `PostToolUse` for checks after it has already run.
-> 4. **CI gates (`npm run check && npm test && npm run build`)** — Run typecheck, regression tests, schema and output checks before merge or deploy.
+> 3. **Permission rules (`permissions.deny` / `ask`)** — Enforced by the tool on every call (deny `.env*` reads, ask before `git push`); not a sandbox.
+> 4. **Hooks (`PreToolUse` / `PostToolUse`)** — Use `PreToolUse` to reject a matched call before execution; use `PostToolUse` for checks after it has already run.
+> 5. **CI gates (`npm run check && npm test && npm run build`)** — Run typecheck, regression tests, schema and output checks before merge or deploy.
 
-> [!IMPORTANT] Prose advises; exit codes enforce
-> If breaking a rule would leak secrets, corrupt migrations, or ship broken links, **never** leave that rule in `AGENTS.md` alone. Pair the prose rule with a fast lifecycle hook (`PreToolUse` / `PostToolUse` / `Stop`) or a required build gate that exits nonzero.
+> [!IMPORTANT] Prose advises; permissions, hooks, and exit codes enforce
+> If breaking a rule would leak secrets, corrupt migrations, or ship broken links, **never** leave that rule in `AGENTS.md` alone. Pair the prose rule with a permission rule (`permissions.deny` / `ask`), a fast lifecycle hook (`PreToolUse` / `PostToolUse` / `Stop`), or a required build gate that exits nonzero.
 
-## Four-layer agent control plane
+## Five-layer agent control plane
 
 | Layer | Enforced? | When loaded | What belongs here |
 |---|---|---|---|
 | **`AGENTS.md` / `CLAUDE.md`** | Advisory | Every session | Repo map, build/test commands, coding conventions, short boundary list |
 | **`SKILL.md` folders** | Advisory workflow | On-demand when task matches | Repeatable SOPs (weekly content ingest, release check, schema migration checklist) |
+| **Permission rules (`permissions.deny` / `ask`)** | **Enforced by the tool** | Every tool call | Deny reads of `.env*`, prompt before `git push`; not a sandbox |
 | **Lifecycle hooks** | **Deterministic** | Fixed tool/turn events | Blocking edits to protected paths, running fast format/lint checks, gating `Stop` |
 | **CI / `npm run build`** | **Deterministic** | Pre-merge & pre-deploy | Build checks schema and links/anchors; CI separately runs typecheck and regression tests |
 
@@ -79,7 +91,8 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 
 | Fragile prose-only rule | Deterministic hook / build replacement |
 |---|---|
-| *“Please never edit `.env` or production deploy keys”* | `PreToolUse` hook denies file reads/writes matching `.env*` or `*.pem`, plus `.gitignore` |
+| *“Please never edit `.env` or production deploy keys”* | `permissions.deny` rules such as `Read(./.env)` / `Edit(./.env)`, a `PreToolUse` hook for patterns the rules can't express, plus `.gitignore` |
+| *“Never touch production”* in `CLAUDE.md` | `deny` or `ask` rules for the deploy commands you actually use (for example `Bash(git push *)`), and keep production credentials off the agent's machine |
 | *“Always run `npm run check` before saying you’re done”* | `Stop` hook runs `npm run check`, maps failures to exit `2`, and guards `stop_hook_active`; post-edit checks cannot undo an edit |
 | *“Don’t break translated slugs or changelog page links”* | `scripts/validate.mjs` + `scripts/validate-output.mjs` fail `npm run build` automatically |
 
@@ -91,16 +104,17 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 
 ## Steps
 
-1. **Audit your `AGENTS.md` / `CLAUDE.md` and cut bloat.** Keep always-on instructions under ~80 lines: directory layout, exact commands, code style, and top boundaries.
-2. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a hook or build-script check. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
-3. **Keep hook commands fast.** Run targeted lint/type/path checks inside edit hooks; leave heavy full-repo integration suites for `Stop` or pre-push/CI so you never disable hooks out of impatience.
-4. **Extract recurring playbooks into `SKILL.md` folders.** Follow the [Agent Skills](https://agentskills.io/) structure (`SKILL.md` with YAML `name` + `description` + step-by-step instructions). Claude Code loads project skills from `.claude/skills/<skill-name>/SKILL.md`; verify exact skill directory paths in each tool’s current docs before symlinking across tools.
-5. **Configure shared MCP servers once per tool—in each tool’s native dialect.** One MCP server can serve Claude Code, Codex, and Cursor, **but there is no single universal config file**:
+1. **Audit your `AGENTS.md` / `CLAUDE.md` and cut bloat.** Anthropic's [memory docs](https://code.claude.com/docs/en/memory) target under 200 lines per `CLAUDE.md` and note that `@path` imports organize a file but don't reduce its context cost. We aim for ~80 lines: directory layout, exact commands, code style, and top boundaries. Move instructions for one part of the codebase into path-scoped rules or a skill.
+2. **Keep one rules file for every tool.** Codex and most other agents read `AGENTS.md`; Claude Code reads `CLAUDE.md` and, if no `CLAUDE.md` exists, can read `AGENTS.md` directly (v2.1.277 or later per the docs). If you also keep a `CLAUDE.md`, make its first line `@AGENTS.md` and put only Claude-specific notes below it, so the two files never drift. A `CLAUDE.md` → `AGENTS.md` symlink also works, but the docs recommend the import if anyone clones on Windows. Run `/context all` and confirm the file appears under **Memory files**.
+3. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a permission rule, hook, or build-script check. The [permissions docs](https://code.claude.com/docs/en/permissions) are explicit: rules are enforced by Claude Code, not the model, and instructions in `CLAUDE.md` don't change what it allows. Deny rules win over allow rules. Bash rules match the command text Claude writes, so a push written another way (`git -C . push`) slips past `Bash(git push *)`; use sandboxing or a `PreToolUse` hook when you need a real boundary. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
+4. **Keep hook commands fast.** Run targeted lint/type/path checks inside edit hooks; leave heavy full-repo integration suites for `Stop` or pre-push/CI so you never disable hooks out of impatience.
+5. **Extract recurring playbooks into `SKILL.md` folders.** Follow the [Agent Skills](https://agentskills.io/) structure (`SKILL.md` with YAML `name` + `description` + step-by-step instructions). Claude Code loads project skills from `.claude/skills/<skill-name>/SKILL.md`; verify exact skill directory paths in each tool’s current docs before symlinking across tools. For skills with side effects (deploy, publish, send), add `disable-model-invocation: true` so the skill runs only when you type `/skill-name`; `context: fork` runs a skill in its own subagent context, which suits heavy search jobs.
+6. **Configure shared MCP servers once per tool—in each tool’s native dialect.** One MCP server can serve Claude Code, Codex, and Cursor, **but there is no single universal config file**:
    - **Claude Code:** project `.mcp.json` (or `claude mcp add --scope project ...`)
    - **Codex:** `[mcp_servers.<name>]` in `~/.codex/config.toml` (or trusted project `.codex/config.toml`)
    - **Cursor (if used):** `.cursor/mcp.json`
    Confirm connection health inside each tool’s own MCP status view, and keep API tokens in environment variables—never committed plaintext.
-6. **Log agent mistakes the day they happen.** Append a one-line rule or tighten the relevant `SKILL.md` / hook immediately after any post-mortem.
+7. **Log agent mistakes the day they happen.** Append a one-line rule or tighten the relevant `SKILL.md` / hook immediately after any post-mortem.
 
 ## Starter templates
 
@@ -110,6 +124,7 @@ Markdown rules files (`AGENTS.md`, `CLAUDE.md`) shape default habits, **but mode
 ---
 name: weekly-refresh
 description: Run the Sunday briefing-to-site refresh, verify sources and evidence labels, and validate the static build.
+disable-model-invocation: true  # edits content and may publish; run only via /weekly-refresh
 ---
 
 # Weekly Refresh SOP
@@ -121,10 +136,32 @@ description: Run the Sunday briefing-to-site refresh, verify sources and evidenc
 5. Run `cd site && npm run check && npm test && npm run build` and fix all failures before finishing.
 ```
 
-### 2. Same MCP server, per-tool config dialects (no hardcoded secrets)
+### 2. One shared rules file plus enforced permissions
+
+```markdown
+<!-- CLAUDE.md — AGENTS.md stays the single source for every tool -->
+@AGENTS.md
+
+## Claude Code only
+Use plan mode for changes under `site/src/lib/`.
+```
+
+Save as `.claude/settings.json` — enforced by Claude Code regardless of prompt text:
 
 ```json
-// Claude Code — .mcp.json (project root; reference env vars, never commit raw keys)
+{
+  "permissions": {
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Edit(./.env)", "Edit(./.env.*)"],
+    "ask": ["Bash(git push *)"]
+  }
+}
+```
+
+### 3. Same MCP server, per-tool config dialects (no hardcoded secrets)
+
+Claude Code — project root `.mcp.json` (reference env vars, never commit raw keys):
+
+```json
 {
   "mcpServers": {
     "docs-lookup": {
@@ -146,10 +183,12 @@ args = ["-y", "@example/docs-mcp-server"]
 env_vars = ["DOCS_API_TOKEN"]
 ```
 
-### 3. Control-plane setup worksheet
+### 4. Control-plane setup worksheet
 
 ```text
+Single rules source (AGENTS.md) + CLAUDE.md import confirmed via /context:
 Hard no-gos (must fail deterministically):
+Permission deny/ask rules:
 Hook event + matcher (Claude Code / CLI):
 Fast hook command (<15s):
 Full release gate command:
@@ -162,7 +201,7 @@ Shared MCP server(s) + trust review date:
 > [!WARNING] Treat skills and MCP servers like production dependencies
 > Community `SKILL.md` scripts and MCP servers that fetch untrusted web content can introduce prompt injection or arbitrary command execution. Read every script before enabling it, and review [Security quickcheck](/en/articles/security-quickcheck/).
 
-### 4. A Stop check that translates npm failure into a blocking exit
+### 5. A Stop check that translates npm failure into a blocking exit
 
 Claude Code command hooks do **not** treat every nonzero exit as a block: exit `2` is the blocking signal on supported events; ordinary exit `1` without a valid JSON decision is generally a non-blocking error. Alternatively, return the event-specific JSON decision with exit `0` (for example, `PreToolUse` uses `hookSpecificOutput.permissionDecision: "deny"`; `Stop` uses top-level `decision: "block"` plus `reason`). See the [exit-code/event reference](https://code.claude.com/docs/en/hooks#exit-code-2-behavior-per-event).
 
@@ -215,13 +254,15 @@ The stdin `stop_hook_active` guard follows the [official loop-prevention guidanc
 ## Definition of done
 
 - [ ] `AGENTS.md` / `CLAUDE.md` is concise and states exact build, check, and test commands
-- [ ] Every “must never happen” rule is enforced by a lifecycle hook or nonzero build/CI check—not prose alone
+- [ ] `CLAUDE.md` imports `AGENTS.md` (or is absent) so every tool reads the same rules
+- [ ] Every “must never happen” rule is enforced by a permission rule, lifecycle hook, or nonzero build/CI check—not prose alone
 - [ ] Repeated multi-step workflows are extracted into `SKILL.md` folders with clear trigger descriptions
 - [ ] Each coding agent connects to any shared MCP server via its own native config file without secrets in Git
 - [ ] Context is cleared between unrelated tasks so stale session overrides do not linger
 
 ## Anti-patterns
 
+- **Maintaining `AGENTS.md` and `CLAUDE.md` as two hand-edited copies** — they drift; import one from the other.
 - **Treating `AGENTS.md` as a security boundary** — prose instructions reduce accidents, they cannot guarantee access control.
 - **Putting a 3-minute test suite on every file-write hook** — slow hooks train you to bypass all hooks; keep per-edit hooks sub-15 seconds.
 - **One catch-all `how-we-code` skill** — vague skill descriptions trigger unpredictably; scope one concrete job per skill.

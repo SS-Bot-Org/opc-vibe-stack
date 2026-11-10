@@ -522,6 +522,26 @@ html[data-theme='dark'] .source-kind--docs { border-color: #384f75; }
 html[data-theme='dark'] .article-figure img.theme-diagram__light { display: none; }
 html[data-theme='dark'] .article-figure img.theme-diagram__dark { display: block; }
 
+/* Compact editorial diagrams keep labels readable instead of shrinking wide charts. */
+.article-figure--overview {
+  padding: clamp(12px, 3vw, 22px);
+}
+.article-figure--overview .theme-diagram {
+  max-inline-size: 420px;
+  margin-inline: auto;
+}
+.article-figure--overview figcaption {
+  margin: 18px auto 2px;
+  max-inline-size: 60ch;
+}
+.article-figure--overview figcaption strong {
+  display: block;
+  margin-block-end: 5px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
 /* FLOW / callout / table polish */
 .flow-diagram {
   box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 80%, transparent);

@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code + Codex + Grok Build / xAI 文档截至 2026-11；计时开跑前请再核对 CLI 名称"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -32,6 +32,19 @@ tags: [playbook, mvp, toolchain, timebox]
 
 在 **48 小时**内交付一个足够薄、但陌生人可直接试用的 MVP：写清验收标准、跑通一条由 agent 实现的垂直切片、守住一条稳定退出 `0` 的验证命令，并发布一个无需你在旁解释就能走完的公开演示 URL。仓库内编码交给 [Claude Code](/zh/articles/claude-code/) 或 [Codex](/zh/articles/codex/)，最后一公里演示与落地页交给 [Grok Build](/zh/articles/grok-build/)（或你已文档化的上线方案），一旦时钟触达区块边界就果断砍范围。
 
+## 启动计时之前
+
+这是建议的范围预算，不是“48 小时必能完成”的承诺。只选一种用户和一个任务。计时前先准备可用的开发环境与发布途径，不要把冲刺用来同时试用三个陌生代理。
+
+**示例切片：** 输入一组 URL，输出坏链接。第一天的证据是一份输入、一个结果页面，以及包含已知坏链接的检查；第二天的证据是可访问的演示和陌生人独立完成同一任务。
+
+- **第 4 小时：** 留下一页规格与最多五项任务；若还没有可验收结果，缩减为只演示一个任务。
+- **第 28 小时：** 只保留已跑通的路径。模拟数据必须标明是演示，不能当作真实集成宣传。
+- **第 40 小时：** 冻结功能，排练实际演示。必须登录的产品使用预发或测试账号，不要为了免登录暴露客户数据。
+- **第 48 小时：** 只有主操作、检查与恢复路径全部通过才发布；否则记录阻塞项并保持私有。截止时间不能覆盖失败的发布门禁。
+
+把任务单、检查输出、演示地址和已知限制放在一起。使用一个合适的代理也能完成；文中的工具分工是可选交接方式。
+
 > [!FLOW] 48 小时三工具 MVP 流水线
 >
 > 1. **第 0–4 小时：规格与冻结** — 打开任何 agent 之前先写一页纸，锁定用户痛点、非目标与 ≤5 个任务。
@@ -40,6 +53,14 @@ tags: [playbook, mvp, toolchain, timebox]
 > 4. **第 40–48 小时：缓冲与封版** — 只修阻塞缺陷，人工审阅鉴权与依赖 diff，正式发出公开链接。
 
 ## 48 小时时限与砍范围门禁
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="48 小时交付跑道">
+    <img class="theme-diagram__light" src="/illustrations/48h-mvp-agent-stack/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="610" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/48h-mvp-agent-stack/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="610" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>48 小时交付跑道</strong> 色条按实际时间占比分配：4 小时明确范围、24 小时构建、12 小时打通演示、8 小时修复阻塞问题。每到截止点就砍范围，不延长交付时间。</figcaption>
+</figure>
 
 | 时间区块 | 小时 | 主责角色 | 必须交付物 | 到点砍范围触发器 |
 |---|---|---|---|---|
@@ -74,6 +95,9 @@ tags: [playbook, mvp, toolchain, timebox]
 5. **第 28–36 小时（打通公开路径）：** 把「首页价值主张 → 真实演示证明 → 主 CTA」部署到真实 URL。只要产品形态允许，优先采用纯静态或免登录预览。
 6. **第 36–40 小时（固化 90 秒演示）：** 参照[上线 / 演示清单](/zh/articles/ship-demo-checklist/)，在桌面与手机无痕窗口完整走通一遍线上 URL。
 7. **第 40–48 小时（封版与加固）：** 只修坏链、含糊文案或阻塞级 bug。对外发链接前跑一遍[安全速查](/zh/articles/security-quickcheck/)核查依赖与密钥边界。
+
+> [!NOTE] 先替换项目专属配置
+> 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
 
 ## 可直接复制的 48 小时作战单模板（`mvp-48h.md`）
 

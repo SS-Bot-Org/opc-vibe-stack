@@ -20,3 +20,10 @@
 - Concept SVG: about **≤ 60 KB** each.
 
 Validators: `site/scripts/validate-output.mjs` (built `img[src]` resolve + alt rules) and `site/tests/illustrations.test.mjs`.
+
+## Article overview diagrams
+
+- The nine additional guides use `overview.light.svg` / `overview.dark.svg` and matching `overview.zh.*.svg` files. Their 420-unit canvas keeps labels legible in narrow article columns.
+- Regenerate these assets from `site/` with `node scripts/generate-article-illustrations.mjs`. The generator contains the English/Chinese labels, layouts, and theme palettes; it does not overwrite the original rules/hooks diagram.
+- Use `article-figure article-figure--overview` with the existing theme-diagram markup, explicit image dimensions, lazy loading, a localized accessible name, and an explanatory caption. Keep the adjacent tables and steps as the detailed text equivalent.
+- These are editorial summaries of existing guidance, not product screenshots or fresh validation of vendor claims. Presentation-only changes do not advance article freshness dates or evidence levels.

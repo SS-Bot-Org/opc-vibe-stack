@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Any stack agent plus your static/staging host; optional agent-screenplay MCP/CLI (Node 20+) for scripted recordings"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-04"
     note: "Agent-made demo / screen recording tools"
@@ -34,6 +34,19 @@ tags: [sell, launch, demo]
 
 “Tests green on `main`” is not shipped. Shipped means a cold stranger lands on your public URL, understands who the product is for in 10 seconds, watches or clicks through a **≤90-second happy path**, and completes the primary CTA without you explaining it on a call.
 
+CTA means the primary call to action: the button or link that starts the user’s intended task.
+
+## Run this acceptance test with one new visitor
+
+Use staging with synthetic data. Ask a peer who has not seen the product to open the page without a walkthrough. A recording is optional; an actual successful task is required.
+
+1. Ask them to state the target user and expected outcome after reading the first screen. Record their words instead of explaining the answer.
+2. Give them one representative input. Observe whether they find the CTA, complete the action, and recognize the result without help.
+3. Repeat at 390px width. Use keyboard navigation to reach the CTA, trigger one invalid input or empty state, and recover to the starting page.
+4. Record each failure as **page → action → expected → actual → fix**. Fix the first blocker and repeat that same action before polishing the video.
+
+**Release evidence:** the tested URL/revision, date, viewport, exact task, result, and remaining limitations. If access requires login, use a test account or a clearly labeled recording; never remove necessary access controls for a demo. A successful page load alone does not prove the CTA, purchase, or form submission works.
+
 > [!FLOW] From repo-green to stranger-ready
 > 1. **Draft 5-block page** — Write audience, pain, offer, verifiable proof, and one CTA in order.
 > 2. **Capture ≤90s demo** — Film one real input-to-output path manually or via staging automation.
@@ -42,13 +55,21 @@ tags: [sell, launch, demo]
 
 ## Five-block landing page blueprint
 
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="A visitor-first page blueprint">
+    <img class="theme-diagram__light" src="/illustrations/ship-demo-checklist/overview.light.svg" alt="" data-decorative="true" width="420" height="664" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/ship-demo-checklist/overview.dark.svg" alt="" data-decorative="true" width="420" height="664" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>A visitor-first page blueprint</strong> This conceptual wireframe maps five buyer questions to five page sections. The demo strip follows the article’s 10 / 35 / 25 / 20-second storyboard: problem, workflow, result, and call to action. It is not a captured product interface.</figcaption>
+</figure>
+
 Structure your landing page top-to-bottom so every scroll answers the buyer’s next objection:
 
 | Block | Copy job | Pass / fail stranger check |
 |---|---|---|
 | **1. Who + one-line offer** | Name the exact builder/buyer and concrete outcome | Reader states what you sell in ≤10 seconds |
 | **2. Status-quo pain** | Contrast the manual/scattered headache vs your workflow | Target user recognizes their current friction |
-| **3. ≤90s happy-path demo** | Show real product input → output (video or live sandbox) | Zero login wall required just to see how it works |
+| **3. ≤90s happy-path demo** | Show real product input → output (video or live sandbox) | Use synthetic data or a labeled recording; preserve necessary access controls |
 | **4. Honest proof** | Link live repo, docs, sample output, or labeled benchmarks | Zero fabricated user counts or fake logos |
 | **5. Primary CTA & pricing/start** | One clear action (`Start`, `Install`, `Buy`, or `Waitlist`) | Visitor knows cost and immediate next step |
 
@@ -80,6 +101,9 @@ Keep launch demos ruthlessly focused on **one** job—skip account creation, set
 
 > [!WARNING] Never point automated demo agents at live customer accounts
 > Automated browser/desktop scenario runners click buttons and submit forms for real. Run `agent-screenplay` (or any browser MCP) strictly against `localhost` or an isolated staging environment with mock billing and disabled outbound email—never against production Stripe, live webhooks, or real user data.
+
+> [!NOTE] Optional recorder setup changes your environment
+> The [agent-screenplay README](https://github.com/gmpetrov/agent-screenplay) says `init` downloads Chromium, adds MCP configuration for detected agents, and installs its guide. Review those changes and restart the agent afterward. Manual screen recording is sufficient for this checklist; you do not need to install it to test the visitor journey.
 
 ## Copy-pasteable launch & demo worksheet
 

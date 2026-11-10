@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 630" role="img" aria-labelledby="title desc">
+<title id="title">把「完成」变成可验证结果</title><desc id="desc">先写清约定，再开始改代码。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#b6becb" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="630" rx="12" fill="#16191e"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#b6becb" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#edf0f5" font-weight="700" text-anchor="start">把「完成」变成可验证结果</text>
+<text x="24" y="96" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">先写清约定，再开始改代码。</text>
+<rect x="24" y="120" width="372" height="160" rx="10" fill="#20252d" stroke="#455061"/>
+<text x="43" y="155" font-size="15" fill="#a4c2ff" font-weight="700" text-anchor="start">01</text>
+<text x="84" y="155" font-size="20" fill="#edf0f5" font-weight="400" text-anchor="start">目标用户与结果</text>
+<path d="M43 170 H376" fill="none" stroke="#455061" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="43" y="203" font-size="15" fill="#a4c2ff" font-weight="700" text-anchor="start">02</text>
+<text x="84" y="203" font-size="20" fill="#edf0f5" font-weight="400" text-anchor="start">范围与明确不做的事</text>
+<path d="M43 218 H376" fill="none" stroke="#455061" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="43" y="251" font-size="15" fill="#a4c2ff" font-weight="700" text-anchor="start">03</text>
+<text x="84" y="251" font-size="20" fill="#edf0f5" font-weight="400" text-anchor="start">验收条件与验证命令</text>
+<path d="M210 281 V311" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="324" width="372" height="85" rx="10" fill="#24314a" stroke="#a4c2ff"/>
+<text x="210" y="358" font-size="21" fill="#edf0f5" font-weight="650" text-anchor="middle">一次只做一个有边界的任务</text>
+<text x="210" y="387" font-size="18" fill="#b6becb" font-weight="400" text-anchor="middle">实现 → 执行检查</text>
+<path d="M210 410 V436 H110 V456" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M210 436 H310 V456" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="468" width="176" height="84" rx="10" fill="#20362a" stroke="#9cd6ae"/>
+<text x="40" y="499" font-size="18" fill="#9cd6ae" font-weight="700" text-anchor="start">通过</text>
+<text x="40" y="528" font-size="17" fill="#edf0f5" font-weight="400" text-anchor="start">审阅并提交</text>
+<rect x="220" y="468" width="176" height="84" rx="10" fill="#3b3020" stroke="#e8c783"/>
+<text x="236" y="499" font-size="18" fill="#e8c783" font-weight="700" text-anchor="start">失败</text>
+<text x="236" y="528" font-size="17" fill="#edf0f5" font-weight="400" text-anchor="start">修复或完善规格</text>
+<text x="210" y="597" font-size="18" fill="#b6becb" font-weight="400" text-anchor="middle">验证通过，才算完成本轮。</text></g>
+</svg>

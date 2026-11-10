@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code CLI/agent (Anthropic); confirm current commands and hook schema against live vendor docs"
-updated: "2026-11-08"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -28,6 +28,9 @@ publicSources:
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
     kind: docs
+  - title: "Claude Code quickstart"
+    url: "https://code.claude.com/docs/en/quickstart"
+    kind: docs
 tags: [stack, build, hooks, workflow]
 toolId: claude-code
 toolAvailability: active
@@ -40,6 +43,17 @@ caveats: "Keep secrets out of prompts; encode hard no-gos in permission rules an
 
 Use **Claude Code** as your primary interactive repository agent whenever a change spans multiple files, needs codebase exploration before editing, or needs lifecycle hooks: `PreToolUse` to reject a call before it executes, `PostToolUse` for checks after it has run, and `Stop` to check completion conditions.
 
+## First run: one small repository change
+
+**Use this when:** you have a repository and a specific bug or behavior change. Keep existing work on its own branch or save it before starting; do not reset a dirty worktree to follow this guide.
+
+1. Install using the [official quickstart](https://code.claude.com/docs/en/quickstart), then run `claude --version` in a new terminal. Open your repository and run `claude`; finish the documented sign-in flow.
+2. Ask: “Read the project instructions and README. Identify the affected files and the existing verification command. Do not edit yet.” Compare its answer with the actual scripts or test configuration.
+3. Run that command yourself to capture the baseline. If it already fails, record the failure before asking for a change.
+4. Use the scoped prompt below for **one** behavior. Ask for the changed files, exact commands run, exit results, and anything untested.
+
+**Keep:** the task brief, focused diff, and verification output. For a UI change, also perform the named user action in the rendered app. If scope expands or a check fails, stop adding features and resolve that issue within the slice. A successful agent reply alone is not acceptance.
+
 > [!FLOW] Repo-local session loop
 > 1. **Frame & plan** — State the slice goal, file boundaries, and verify command; ask for a plan first.
 > 2. **Approve scope** — Trim out-of-scope refactors before any file is edited.
@@ -47,6 +61,14 @@ Use **Claude Code** as your primary interactive repository agent whenever a chan
 > 4. **Codify lessons** — Promote repeated corrections to `CLAUDE.md`, `SKILL.md`, or a blocking hook.
 
 ## When to pick Claude Code vs hand off
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="Hook timing at a glance">
+    <img class="theme-diagram__light" src="/illustrations/claude-code/overview.light.svg" alt="" data-decorative="true" width="420" height="556" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/claude-code/overview.dark.svg" alt="" data-decorative="true" width="420" height="556" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>Hook timing at a glance</strong> PreToolUse can reject a call before execution. PostToolUse checks an action after it succeeds. Stop checks completion conditions. Neither an after-the-fact check nor a completion check can reverse an earlier action.</figcaption>
+</figure>
 
 | Situation | Best owner | Why |
 |---|---|---|
@@ -70,9 +92,12 @@ Use **Claude Code** as your primary interactive repository agent whenever a chan
 5. **Turn mistakes into durable guardrails.** If the agent touches a forbidden directory or repeats a bad pattern, add a concise rule or move the constraint into a lifecycle hook ([Rules files + hooks](/en/articles/rules-hooks/)) the same day.
 6. **Reset context between unrelated slices.** Fresh context prevents stale assumptions from leaking into your next feature.
 
+> [!NOTE] Adapt repository-specific examples
+> `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
+
 ## Starter templates
 
-### Minimal project `CLAUDE.md`
+### Shared project `AGENTS.md` (adapt this repository-specific example)
 
 ```markdown
 # Project Rules
@@ -94,6 +119,12 @@ Static Astro site + validated content collections. Run all commands from `site/`
 - Keep diffs focused on the requested slice; log follow-up ideas instead of refactoring unrelated files
 ```
 
+Keep the shared rules above in `AGENTS.md`. If Claude Code also uses `CLAUDE.md`, start it with the following import rather than maintaining a second copy:
+
+```markdown
+@AGENTS.md
+```
+
 ### Scoped plan-first prompt
 
 ```text
@@ -110,7 +141,7 @@ First step: Inspect the files in scope and give me a 4-bullet implementation pla
 ## Definition of done
 
 - [ ] Claude Code is authenticated without hardcoded keys in the repository or shell history
-- [ ] Repo root (or `CLAUDE.md` / `AGENTS.md`) documents a single verify command that runs in under a minute
+- [ ] Project instructions name the actual quick check and full verification commands, with realistic runtime expectations
 - [ ] Forbidden paths and secret boundaries are stated in rules and backed by hooks or CI checks
 - [ ] Multi-file tasks start with an explicit plan check before code edits begin
 - [ ] You review `git status` and `git diff` (especially lockfiles, auth, and deploy configs) before committing

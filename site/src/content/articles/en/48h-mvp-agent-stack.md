@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code + Codex + Grok Build / xAI docs as of 2026-11; re-check CLI names before a timed run"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -32,6 +32,19 @@ tags: [playbook, mvp, toolchain, timebox]
 
 In **48 hours**, ship one thin, stranger-testable MVP: written acceptance criteria, one agent-built vertical slice, a deterministic verify command that exits `0`, and a public demo URL a cold visitor can use without your narration. Keep repository work inside [Claude Code](/en/articles/claude-code/) or [Codex](/en/articles/codex/), use [Grok Build](/en/articles/grok-build/) (or your documented shipping surface) for the last-mile demo path, and enforce hard scope cuts whenever the wall clock hits a block boundary.
 
+## Before the clock starts
+
+This is a suggested scope budget, not a guarantee of delivery in 48 hours. Pick one audience and one job. Have a working development environment and an available publishing route before starting; do not spend the sprint evaluating three new agents.
+
+**Example slice:** a tool that accepts a list of URLs and reports broken links. Day-one evidence is one input file, one result view, and a check with a known broken URL. Day-two evidence is a reachable demo and a stranger completing that same job.
+
+- **At hour 4:** keep a one-page spec and at most five tasks. If there is no testable outcome, reduce the product to a demo of one job.
+- **At hour 28:** retain only the path that already works. Mark mocked data as a demo; never present a fixture as a real integration.
+- **At hour 40:** freeze features and rehearse the actual demo. Use a staging/test account if the product requires authentication; do not expose customer data just to remove a login screen.
+- **At hour 48:** ship only if the action, checks, and recovery pass. Otherwise record the blocker and keep the build private; the deadline never overrides a failed release gate.
+
+Keep the task brief, check output, demo URL, and known limitations together. One capable agent is sufficient; the named tool roles are optional handoffs.
+
 > [!FLOW] 48-hour three-tool MVP pipeline
 >
 > 1. **Hours 0–4: Spec & Freeze** — Write a one-pager with user pain, non-goals, and ≤5 tasks before opening any agent.
@@ -40,6 +53,14 @@ In **48 hours**, ship one thin, stranger-testable MVP: written acceptance criter
 > 4. **Hours 40–48: Buffer & Freeze** — Fix blockers only, audit auth/dependency diffs, and publish the live URL.
 
 ## Timebox and scope-cut gates
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="The 48-hour runway">
+    <img class="theme-diagram__light" src="/illustrations/48h-mvp-agent-stack/overview.light.svg" alt="" data-decorative="true" width="420" height="610" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/48h-mvp-agent-stack/overview.dark.svg" alt="" data-decorative="true" width="420" height="610" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>The 48-hour runway</strong> The bar shows the actual time allocation: 4 hours to scope, 24 to build, 12 to prepare the demo, and 8 to fix blockers. At each boundary, reduce scope instead of extending the deadline.</figcaption>
+</figure>
 
 | Block | Hours | Primary owner | Required exit artifact | Scope-cut trigger at boundary |
 |---|---|---|---|---|
@@ -74,6 +95,9 @@ In **48 hours**, ship one thin, stranger-testable MVP: written acceptance criter
 5. **Hours 28–36 (Connect the public path):** Expose `Home → Value proof → Primary CTA` on a real URL. Prefer static output or zero-login previews whenever the product allows.
 6. **Hours 36–40 (Script the 90-second demo):** Walk the live URL in a fresh private window on desktop and mobile using the [Ship / demo checklist](/en/articles/ship-demo-checklist/).
 7. **Hours 40–48 (Freeze & harden):** Fix broken links, unclear copy, or failing smoke checks only. Run a final [Security quickcheck](/en/articles/security-quickcheck/) over dependencies and secrets before sharing the link.
+
+> [!NOTE] Adapt repository-specific examples
+> `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
 
 ## Copy-pasteable 48-hour run sheet (`mvp-48h.md`)
 

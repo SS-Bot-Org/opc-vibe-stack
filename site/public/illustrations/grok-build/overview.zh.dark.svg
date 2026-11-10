@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 570" role="img" aria-labelledby="title desc">
+<title id="title">从可用产品到用户行动</title><desc id="desc">每次交接，都留下明确产物。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#b6becb" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="570" rx="12" fill="#16191e"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#b6becb" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#edf0f5" font-weight="700" text-anchor="start">从可用产品到用户行动</text>
+<text x="24" y="96" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">每次交接，都留下明确产物。</text>
+<rect x="24" y="123" width="372" height="86" rx="10" fill="#24314a" stroke="none"/>
+<text x="42" y="148" font-size="14" fill="#a4c2ff" font-weight="700" text-anchor="start">仓库实现</text>
+<text x="42" y="175" font-size="23" fill="#edf0f5" font-weight="650" text-anchor="start">产品已经可用</text>
+<text x="42" y="199" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">已验证的路由与行为</text>
+<path d="M210 211 V228" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="235" width="372" height="86" rx="10" fill="#3b3020" stroke="none"/>
+<text x="42" y="260" font-size="14" fill="#e8c783" font-weight="700" text-anchor="start">上线页面</text>
+<text x="42" y="287" font-size="23" fill="#edf0f5" font-weight="650" text-anchor="start">公开价值主张</text>
+<text x="42" y="311" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">真实证据与一个主要行动</text>
+<path d="M210 323 V340" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="347" width="372" height="86" rx="10" fill="#20362a" stroke="none"/>
+<text x="42" y="372" font-size="14" fill="#9cd6ae" font-weight="700" text-anchor="start">冒烟测试</text>
+<text x="42" y="399" font-size="23" fill="#edf0f5" font-weight="650" text-anchor="start">陌生访客验证</text>
+<text x="42" y="423" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">演示 → 行动 → 错误恢复</text>
+<rect x="24" y="478" width="372" height="70" rx="10" fill="#20362a" stroke="none"/>
+<text x="42" y="507" font-size="18" fill="#9cd6ae" font-weight="650" text-anchor="start">发版权限仍由人掌握。</text>
+<text x="42" y="532" font-size="17" fill="#9cd6ae" font-weight="400" text-anchor="start">凭证 · 部署 · 回滚</text></g>
+</svg>

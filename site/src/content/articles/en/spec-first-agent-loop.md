@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code, Codex, or Grok Build; GitHub Spec Kit when installed; paired with your repo’s verify command"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-01"
     note: "Spec Kit / specify-before-code brief"
@@ -41,7 +41,21 @@ tags: [research, spec, workflow]
 
 ## Conclusion
 
-Most “agent went off the rails” stories are actually underspecified goals. Write the target outcome, file boundaries, non-goals, and verification command **before** any coding agent opens an editor buffer. Whether you adopt GitHub’s **Spec Kit** (`specify → plan → tasks → implement`) or write a 15-line Markdown slice by hand, freezing acceptance criteria upfront is the highest-leverage habit in an OPC workflow.
+An underspecified goal makes an agent change harder to scope and review. Write the target outcome, file boundaries, non-goals, and verification command **before** any coding agent opens an editor buffer. Whether you adopt GitHub’s **Spec Kit** (`specify → plan → tasks → implement`) or write a 15-line Markdown slice by hand, define acceptance criteria upfront so you can judge the result against a written target.
+
+## First exercise: write a check before a prompt
+
+Use plain Markdown first; Spec Kit is optional. In `specs/001-slice.md`, describe **one** behavior already visible in your product. Example: “Searching for a nonexistent term shows an empty-state message and a working Clear action.”
+
+| Input / action | Expected result | How to verify |
+|---|---|---|
+| Search for a known title | Relevant result appears | Named test or browser action |
+| Search for an impossible term | Explicit empty state | Record the text or screenshot |
+| Clear the search | Results disappear; input is usable | Browser action + keyboard check |
+
+Fill in the actual route, files in scope, and existing check command. Run the checks before editing; a missing test is work to add, not permission to invent a passing result. Hand off only the first task. If the desired output is still ambiguous, refine the spec before invoking an implementation workflow.
+
+**Deliverable:** one spec, a small task list, and a reproducible pass/fail result. The `specify → plan → tasks` labels below describe phases, not shell commands. If using Spec Kit, follow its [current quickstart](https://github.github.com/spec-kit/quickstart.html); invoke the installed skills in the agent chat, not your terminal, and review each generated artifact.
 
 > [!FLOW] Specify-before-code slice loop
 > 1. **Constitution / Boundary** — Lock stack rules, forbidden paths, and non-goals once per project.
@@ -50,6 +64,14 @@ Most “agent went off the rails” stories are actually underspecified goals. W
 > 4. **Implement & Converge** — Run one task at a time; commit only when the verify command is green.
 
 ## Vague prompting vs spec-first loop
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="From specification to evidence">
+    <img class="theme-diagram__light" src="/illustrations/spec-first-agent-loop/overview.light.svg" alt="" data-decorative="true" width="420" height="630" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/spec-first-agent-loop/overview.dark.svg" alt="" data-decorative="true" width="420" height="630" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>From specification to evidence</strong> Define the outcome, boundaries, and acceptance check first. Implement one bounded task; a passing check leads to review and commit, while failure sends you back to repair the task or refine the spec.</figcaption>
+</figure>
 
 | Dimension | Vague “vibe” prompt | Spec-first slice loop |
 |---|---|---|
@@ -78,6 +100,9 @@ Most “agent went off the rails” stories are actually underspecified goals. W
 
 > [!NOTE] Evidence boundary on sources
 > The `specify → plan → tasks → implement` workflow is **documentation-backed** via GitHub’s official Spec Kit quickstart. Social star counts, the voice-to-spec pre-pass, and the four-field prompt framing come from briefing-linked X posts—treat any productivity multipliers as **poster-claimed and unverified** until you test them on your own repository.
+
+> [!NOTE] Adapt repository-specific examples
+> `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
 
 ## Copy-pasteable templates
 

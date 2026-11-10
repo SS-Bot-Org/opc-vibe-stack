@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Astro 静态站 + Markdown collections；任选 agent CLI；编辑验证门按本站 SDD"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "Astro content collections"
@@ -29,26 +29,47 @@ tags: [playbook, ops, changelog, timebox, content]
 
 让工程实践站长期保持参考价值，靠的不是日更追热点，而是**严控在 90–120 分钟内的周日维护闭环**：先把输入简报过滤到真正改变实操动作的条目，亲手点开核对每一个一手来源，优先修订既有指南而非盲目新建页面，在[更新日志](/zh/changelog/)中写清真实的 `affectedPages`，跑通构建门禁后用原子 symlink 切换发布。如果当周没有任何实质条目通过过滤，直接提前收工，绝不硬凑更新。
 
+## 第一次实践：只改一处，先在本地预览
+
+选择一篇既有文章，以及一个确实会改变具体操作的一手来源。私下记录来源 URL、变化内容和需要修改的段落；来源打不开或不能支持改动时，暂停该条目。
+
+1. 对已有的两种语言做最小修订。只有操作建议实质变化才改 `updated`，排版调整不改。
+2. 把下方日志骨架以 **draft** 状态保存，替换所有示例日期、主张、路径与来源，核对目标在本次版本中真实存在；检查通过后再发布日志。
+3. 执行仓库检查，在本地预览查看改动文章、语言链接和日志锚点，保存命令输出与实际结果。
+4. 准备待发布版本，只通过单独配置并测试过的流程部署。没有部署流程时，停在可审阅的本地结果，不临时拼凑 SSH 命令。
+
+**无更新也是有效结果：** 私下保存被拒条目和理由。使用本站 Linux 部署示例前，阅读仓库的 `site/ops/DEPLOYMENT-EXAMPLE.md`；它依赖 GNU 工具和 `flock`，不能当作通用 macOS 部署配方。支持不可变版本的静态托管平台，可用原生发布/回滚流程代替 VPS 软链。
+
 > [!FLOW] 周日 90–120 分钟内容刷新管线
 >
-> 1. **过滤筛选（15–25 分钟）** — 只留改变核对清单、工具边界或安全告警的条目；纯新闻一律丢弃。
-> 2. **核源与改写（40–60 分钟）** — 人工打开原始链接，更新双语可执行步骤，保守标注 `evidence`。
-> 3. **日志与门禁（15–25 分钟）** — 编写含真实 `affectedPages` 的 `YYYY-wNN.md`，跑通 `npm run validate && npm run build`。
-> 4. **原子切换与冒烟（10–15 分钟）** — 上传至 `releases/<id>/`、切换 `current` 软链、探测线上路由并留存私有记录。
+> 1. **过滤筛选（15 分钟）** — 只留改变核对清单、工具边界或安全告警的条目；纯新闻一律丢弃。
+> 2. **核源与改写（45 分钟）** — 人工打开原始链接，更新双语可执行步骤，保守标注 `evidence`。
+> 3. **更新日志（10 分钟）** — 编写含真实 `affectedPages` 的 `YYYY-wNN.md`，准备待发布版本。
+> 4. **检查、发布与记录（25 分钟）** — 跑完检查，通过既定流程发布，探测结果并留存私有记录。
 
 ## 时限分配与止损门禁
 
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="内容发布决策树">
+    <img class="theme-diagram__light" src="/illustrations/weekly-content-site-refresh/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="662" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/weekly-content-site-refresh/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="662" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>内容发布决策树</strong> 如果没有条目能改变实际行动，就记录私下的「本周无更新」说明并结束；否则核实来源、修订文章、通过发布检查并执行冒烟测试。保留上一个版本用于回滚。</figcaption>
+</figure>
+
 | 阶段              | 分钟    | 主责角色                                                                       | 通过 / 止损门禁                                                      |
 | ----------------- | ------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| **1. 过滤与映射** | `15–25` | 人类编辑                                                                       | 至少 1 条可执行动作变更留存；若为 0 则立即停止并记录「本周无更新」   |
-| **2. 核源与改写** | `30–45` | 人类 + [Claude Code](/zh/articles/claude-code/) / [Codex](/zh/articles/codex/) | 所有引用 URL 均由人工打开确认；双语可执行章节同步修订                |
-| **3. 证据与提示** | `10–15` | 人类编辑                                                                       | 准确设置 `tested` / `documentation-backed` / `unverified` 与风险限定 |
-| **4. 更新日志**   | `10–15` | Agent + 人类                                                                   | `changes[]` 非空，且每条 `affectedPages` 在本次 `dist/` 中真实存在   |
-| **5. 校验与部署** | `15–25` | CI / 发布脚本                                                                  | `npm run build` 退出 `0`；原子切换软链且线上 HTTP 冒烟全部通过       |
+| **1. 过滤与映射** | `15` | 人类编辑                                                                       | 至少 1 条可执行动作变更留存；若为 0 则立即停止并记录「本周无更新」   |
+| **2. 核源与改写** | `35` | 人类 + [Claude Code](/zh/articles/claude-code/) / [Codex](/zh/articles/codex/) | 所有引用 URL 均由人工打开确认；双语可执行章节同步修订                |
+| **3. 证据与提示** | `10` | 人类编辑                                                                       | 准确设置 `tested` / `documentation-backed` / `unverified` 与风险限定 |
+| **4. 更新日志**   | `10` | Agent + 人类                                                                   | `changes[]` 非空，且每条 `affectedPages` 在本次 `dist/` 中真实存在   |
+| **5. 校验与部署** | `20` | CI / 发布脚本                                                                  | `npm run build` 退出 `0`；原子切换软链且线上 HTTP 冒烟全部通过       |
 | **6. 私有归档**   | `5`     | 人类编辑                                                                       | 在 `dist/` 之外保存发布记录与上一版回滚目标                          |
 
 > [!TIP] 「空窗周」是健康信号，不是失职
 > 如果某周收集到的全是融资新闻、跑分口水战或无法复现的噱头，**在第 1 阶段结束后直接停表**。私下记三行「本周无实质更新」远比为了刷存在感去篡改旧文章的 `updated` 日期诚实得多。
+
+上表预算合计 95 分钟，距 120 分钟上限保留 25 分钟缓冲。如果核源或检查超时，保留草稿并稍后继续，不为赶时间跳过门禁。
 
 ## 简报过滤决策矩阵
 
@@ -81,9 +102,14 @@ tags: [playbook, ops, changelog, timebox, content]
 8. **暂存目录并原子翻转软链：** 把 `dist/` 上传到全新的 `releases/<id>/`，核对权限后原子切换 `current` 软链，并在磁盘保留上一版本以便秒级回滚。
 9. **线上冒烟与私有记录：** 探测关键页面状态码，在 `dist/` 之外记下本次发布摘要。
 
+> [!NOTE] 先替换项目专属配置
+> 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
+
 ## 可直接复制模板
 
 ### 1. 周更日志条目模板（`site/src/content/changelog/zh/YYYY-wNN.md`）
+
+这是示例草稿，不是已经完成的工作记录。替换所有示例主张与日期；确认实际改动与目标路由后，才能从草稿改为发布。
 
 ```yaml
 ---
@@ -92,7 +118,7 @@ date: "2026-11-14"
 title: "第 46 周：收紧 Codex 沙箱参数说明与周日冒烟清单"
 summary: "补充 Codex 只读与工作区写入沙箱边界，并在周更发布清单中加入静态资源缓存头检查。"
 locale: zh
-status: published
+status: draft
 changes:
   - type: revised
     text: "明确无人值守任务启动前的 read-only 与 workspace-write 审批边界。"
@@ -111,7 +137,9 @@ publicSources:
 本周聚焦沙箱权限边界维护，核心三工具栈未新增外部工具。
 ```
 
-### 2. 私有发布 / 空窗周记录（`ops/releases/YYYY-wNN.md`，置于 `dist/` 之外）
+### 2. 私有发布 / 空窗周记录（保存在公开仓库之外）
+
+以下是填写示例，不是真实发布。自己的记录应存于工作区外或明确被 Git 忽略的目录；仅放在 `dist/` 外，并不能防止被提交到 Git。
 
 ```markdown
 # 周更运维记录 — [YYYY-wNN]
@@ -123,7 +151,7 @@ publicSources:
 - **改动文章 slug：** `codex`（en, zh）
 - **更新日志 slug：** `2026-w46`
 - **发布目录与回滚目标：** `releases/20261114-1830`（上一版：`releases/20261107-1715`）
-- **线上冒烟结果：** `/` 302→`/en/`，`/zh/` 200，`/zh/articles/codex/` 200，`/zh/changelog/` 200，`/missing-probe` 404
+- **线上冒烟结果：** `/` 最终进入 `/en/`（记录真实 HTTP 或页面跳转），`/zh/` 200，`/zh/articles/codex/` 200，`/zh/changelog/` 200，`/missing-probe` 404
 ```
 
 ## 完成定义

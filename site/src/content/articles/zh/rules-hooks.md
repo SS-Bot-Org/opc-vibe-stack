@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
-updated: "2026-11-09"
+updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -66,6 +66,17 @@ tags: [build, hooks, skills, mcp, safety]
 
 自然语言规则文件（`AGENTS.md`、`CLAUDE.md`）能校准默认习惯，**但长上下文下模型依然会遗忘文字叮嘱**。把 agent 控制面拆成职责分明的五层：常驻上下文放规则文件、可复用多步作业抽成 `SKILL.md`、在文字规则与 hooks 之间用工具强制执行的 **权限规则**（`permissions.deny` / `ask`，不是沙箱）、再交给确定性的 **生命周期 hooks**，最后由 **CI** 构建门禁兜底。共用 MCP 服务器则按各工具原生格式分别配置。
 
+## 第一个练习：用假数据证明一条规则
+
+使用不含真实秘密的临时测试仓库。创建含一条可识别指令的 `AGENTS.md`，以及只写 `@AGENTS.md` 的 `CLAUDE.md`；新建 `.env.guardrail-demo`，仅放入 `DEMO_VALUE=not-a-secret`。
+
+1. 将下方权限条目合并进已有设置，不覆盖整个文件，也不删除既有规则。
+2. 启动新的 Claude Code 会话，用 `/context all` 查看已加载的记忆文件，用 `/permissions` 查看生效规则。
+3. 要求它通过 **Read 工具**读取假文件。只有工具在内容传给模型前拒绝调用才算通过；模型口头说“不读取”并不能证明权限拦截生效。
+4. 若读取成功，停止并检查路径、配置作用域和已安装版本，不换成生产凭证继续试。记录工具名、规则、版本与实际结果。
+
+这只验证一条访问路径。[Read/Edit 拒绝规则不覆盖所有子进程](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover)：脚本仍可能间接打开文件；`.gitignore` 也不限制读取。真正隔离秘密需要配置合适的沙箱或系统权限，并将凭证放在 agent 无权访问的环境。CI 不能撤销已经发生的泄露。
+
 > [!FLOW] 五层 Agent 控制与拦截管线
 >
 > 1. **常驻规则（`AGENTS.md` / `CLAUDE.md`）** — 每次会话加载精简目录导航、验证命令与代码风格约定。
@@ -114,8 +125,8 @@ tags: [build, hooks, skills, mcp, safety]
 ## 步骤
 
 1. **给 `AGENTS.md` / `CLAUDE.md` 瘦身。** Anthropic 的[记忆文档](https://code.claude.com/docs/en/memory)建议每份 `CLAUDE.md` 控制在 200 行以内，并指出 `@path` 导入能整理文件结构，但**不会**降低上下文占用。我们的目标是约 80 行：目录说明、精确命令、编码规范与最高优先级边界。只针对仓库某一部分的说明，挪到按路径作用域的规则或 skill。
-2. **全工具共用一份规则源文件。** Codex 与多数其他 agent 读 `AGENTS.md`；Claude Code 读 `CLAUDE.md`，若不存在 `CLAUDE.md`，也可直接读 `AGENTS.md`（文档写明自 v2.1.277 起）。若仍保留 `CLAUDE.md`，把首行写成 `@AGENTS.md`，其下只放 Claude 专属备注，避免两份文件漂移。`CLAUDE.md` → `AGENTS.md` 符号链接也能用，但官方文档在有人会在 Windows 上克隆时更推荐 import。跑 `/context all`，确认文件出现在 **Memory files** 下。
-3. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上权限规则、hook 或构建脚本校验。[权限文档](https://code.claude.com/docs/en/permissions)写得很清楚：规则由 Claude Code 强制执行，不是靠模型自觉，`CLAUDE.md` 里的文字改变不了它允许什么。deny 优先于 allow。Bash 规则匹配的是 Claude 写出的命令文本，因此换一种写法（如 `git -C . push`）就能绕过 `Bash(git push *)`；需要真正边界时用沙箱或 `PreToolUse` hook。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
+2. **全工具共用一份规则源文件。** Codex 与多数其他 agent 读 `AGENTS.md`；Claude Code 读 `CLAUDE.md`，在支持的会话中也可直接读 `AGENTS.md`。默认回退取决于工作目录及其上级目录中是否存在 `CLAUDE.md` 或 `CLAUDE.local.md`，还受版本与指令设置影响。若仍保留 `CLAUDE.md`，把首行写成 `@AGENTS.md`，其下只放 Claude 专属备注，避免两份文件漂移。`CLAUDE.md` → `AGENTS.md` 符号链接也能用，但官方文档在有人会在 Windows 上克隆时更推荐 import。跑 `/context all`，确认文件出现在 **Memory files** 下。
+3. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上权限规则、hook 或构建脚本校验。[权限文档](https://code.claude.com/docs/en/permissions)写得很清楚：规则由 Claude Code 强制执行，不是靠模型自觉，`CLAUDE.md` 里的文字改变不了它允许什么。deny 优先于 allow。Bash 规则匹配的是 Claude 写出的命令文本，因此换一种写法（如 `git -C . push`）就能绕过 `Bash(git push *)`；需要文件系统边界时，使用正确配置的沙箱或系统访问权限；`PreToolUse` hook 只覆盖它实际检查到的调用。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
 4. **严控 Hook 耗时。** 高频触发的编辑期 hook 只跑路径白名单或单文件语法检查；全量构建与集成测试放到 `Stop` 阶段或提交前门禁，避免因太慢而自己动手关掉保护。
 5. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。对有副作用的 skill（部署、发布、发送），加上 `disable-model-invocation: true`，只有你输入 `/skill-name` 才会运行；`context: fork` 会在独立子 agent 上下文中跑 skill，适合重搜索类任务。
 6. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
@@ -124,6 +135,9 @@ tags: [build, hooks, skills, mcp, safety]
    - **Cursor（若辅助使用）：** `.cursor/mcp.json`
    配完后分别在各工具自带的 MCP 状态页确认连通，密钥一律走环境变量引用，严禁明文入库。
 7. **犯错当天闭环。** 每次踩坑复盘后，当天补一行规则、收紧对应 `SKILL.md` 或加一条拦截规则。
+
+> [!NOTE] 先替换项目专属配置
+> 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
 
 ## 可直接复制的实用模板
 
@@ -155,7 +169,7 @@ disable-model-invocation: true  # 会改内容且可能发布；仅通过 /weekl
 对 `site/src/lib/` 下的改动使用计划模式。
 ```
 
-保存为 `.claude/settings.json` — 由 Claude Code 强制执行，与提示词无关：
+合并到 `.claude/settings.json` — 规则控制匹配到的工具调用，不覆盖文件访问的所有方式：
 
 ```json
 {
@@ -166,7 +180,9 @@ disable-model-invocation: true  # 会改内容且可能发布；仅通过 /weekl
 }
 ```
 
-### 3. 同一 MCP 服务器在不同工具中的原生配置（零明文密钥）
+### 3. 同一 MCP 服务器在不同工具中的配置骨架
+
+下方 `@example/docs-mcp-server` 和 `DOCS_API_TOKEN` 是占位值，不是安装推荐，不能原样执行。先选择并审阅真实服务器、固定包名与版本，再按其文档替换命令、参数与令牌变量名。不需要外部数据源时，可完全跳过 MCP。
 
 Claude Code — 项目根目录 `.mcp.json`（仅引用环境变量，严禁提交真实密钥）：
 
@@ -263,7 +279,7 @@ stdin 中的 `stop_hook_active` 防循环检查遵循[官方指引](https://code
 ## 完成定义
 
 - [ ] `AGENTS.md` / `CLAUDE.md` 精炼清晰，写明了可直接执行的构建、类型检查与测试命令
-- [ ] `CLAUDE.md` 通过 import 引入 `AGENTS.md`（或不保留 `CLAUDE.md`），保证各工具读到同一份规则
+- [ ] 已逐个工具确认目标指令实际加载；共用文件时优先显式 import
 - [ ] 每条「绝不能发生」的底线都由权限规则、生命周期 hook 或非零退出的构建/CI 脚本兜底，而非只靠文字祈祷
 - [ ] 重复性多步任务已抽成独立 `SKILL.md`，触发描述具体不撞车
 - [ ] 所用的每个 agent 都通过各自原生配置文件连上共享 MCP，且 Git 仓库中零密钥残留

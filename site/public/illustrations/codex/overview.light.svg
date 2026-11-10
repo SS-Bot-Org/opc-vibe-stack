@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 586" role="img" aria-labelledby="title desc">
+<title id="title">Split by file ownership</title><desc id="desc">Parallel work needs independent slices.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#555b66" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="586" rx="12" fill="#fafaf8"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#555b66" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#191b20" font-weight="700" text-anchor="start">Split by file ownership</text>
+<text x="24" y="96" font-size="17" fill="#555b66" font-weight="400" text-anchor="start">Parallel work needs independent slices.</text>
+<rect x="24" y="125" width="176" height="242" rx="10" fill="#eaf6ee" stroke="#286341"/>
+<text x="40" y="157" font-size="16" fill="#286341" font-weight="700" text-anchor="start">PARALLEL</text>
+<rect x="36" y="177" width="152" height="50" rx="6" fill="#ffffff" stroke="none"/>
+<text x="112" y="209" font-size="17" fill="#191b20" font-weight="600" text-anchor="middle">Isolated bugfix</text>
+<rect x="36" y="243" width="152" height="50" rx="6" fill="#ffffff" stroke="none"/>
+<text x="112" y="275" font-size="17" fill="#191b20" font-weight="600" text-anchor="middle">Content slice</text>
+<text x="112" y="344" font-size="17" fill="#286341" font-weight="400" text-anchor="middle">Disjoint files</text>
+<rect x="220" y="125" width="176" height="242" rx="10" fill="#fff6e5" stroke="#805a15"/>
+<text x="236" y="157" font-size="16" fill="#805a15" font-weight="700" text-anchor="start">SEQUENTIAL</text>
+<rect x="232" y="177" width="152" height="50" rx="6" fill="#ffffff" stroke="none"/>
+<text x="308" y="209" font-size="17" fill="#191b20" font-weight="600" text-anchor="middle">Shared schema</text>
+<rect x="232" y="243" width="152" height="50" rx="6" fill="#ffffff" stroke="none"/>
+<text x="308" y="275" font-size="17" fill="#191b20" font-weight="600" text-anchor="middle">Dependencies</text>
+<text x="308" y="344" font-size="17" fill="#805a15" font-weight="400" text-anchor="middle">Shared contracts</text>
+<path d="M112 368 V392 H210 V412" fill="none" stroke="#555b66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M308 368 V392 H210" fill="none" stroke="#cbd0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="24" y="425" width="372" height="90" rx="10" fill="#ffffff" stroke="#cbd0d8"/>
+<text x="210" y="459" font-size="22" fill="#191b20" font-weight="650" text-anchor="middle">Verify each slice</text>
+<text x="210" y="489" font-size="18" fill="#555b66" font-weight="400" text-anchor="middle">Review sensitive diffs</text>
+<text x="210" y="556" font-size="17" fill="#1f4b99" font-weight="600" text-anchor="middle">One task brief → one reviewable diff</text></g>
+</svg>

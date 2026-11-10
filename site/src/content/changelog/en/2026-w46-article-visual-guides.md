@@ -32,4 +32,4 @@ internalBriefing: []
 publicSources: []
 ---
 
-Presentation-only update. Diagram labels summarize the existing article text; original evidence levels and technical freshness dates are unchanged. These are editable concept diagrams, not captured vendor interfaces. Verified on 2026-11-10 in the local browser at 1280px and 390px, in English and Chinese, with both themes. Build checks resolve every image and internal link; asset sizes remain within the illustration budgets.
+This entry covers the illustration changes. Diagram labels summarize the article text and do not raise its evidence level. The accompanying [actionability review](/en/changelog/#2026-w46-actionability-review) substantively revises all ten guides and advances their updated dates to 2026-11-10. These are editable concept diagrams, not captured vendor interfaces. Verified on 2026-11-10 in the local browser at 1280px and 390px, in English and Chinese, with both themes. Build checks resolve every image and internal link; asset sizes remain within the illustration budgets.

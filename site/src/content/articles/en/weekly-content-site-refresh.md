@@ -42,10 +42,12 @@ Choose one existing article and one source that changes a concrete instruction. 
 
 > [!FLOW] 90–120 minute Sunday refresh pipeline
 >
-> 1. **Filter (15m)** — Keep only items that change a real checklist, tool boundary, or risk warning; drop pure news.
-> 2. **Verify & Rewrite (45m)** — Open primary URLs, revise executable steps, and set conservative `evidence` labels.
-> 3. **Changelog (10m)** — Log exact `affectedPages` in `YYYY-wNN.md`; prepare the release candidate.
-> 4. **Gate, Release & Record (25m)** — Run all checks, use the configured release workflow, probe the result, and log privately.
+> 1. **Filter & map (15m)** — Keep only actionable changes; stop if none survive.
+> 2. **Verify & rewrite (35m)** — Open primary sources and revise executable steps across locales.
+> 3. **Evidence & notices (10m)** — Assign accurate evidence labels and risk qualifications.
+> 4. **Changelog (10m)** — Record changes with exact affected-page routes.
+> 5. **Validate & deploy (20m)** — Pass the checks, use the configured release workflow, and run smoke probes.
+> 6. **Private record (5m)** — Save the outcome and rollback target outside the public repository.
 
 ## Timebox and stop gates
 

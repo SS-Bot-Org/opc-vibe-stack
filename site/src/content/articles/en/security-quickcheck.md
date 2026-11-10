@@ -137,7 +137,7 @@ Deploy key scope verified (non-root, path-restricted):
 - [ ] Recorded the scope and result of secret scanning; revoked any exposed credential before addressing tracked files/history
 - [ ] Agent CLIs and MCP configs reference environment variables rather than plaintext tokens in repo files
 - [ ] Production VPS deploy credentials are non-root and scoped strictly to the release directory
-- [ ] You know where to revoke active OAuth sessions and API keys for Claude, OpenAI, xAI, GitHub, and Cloudflare
+- [ ] Recorded the revocation controls and responsible owner for sessions, OAuth grants, API keys, and deployment credentials at each provider you use
 
 ## Anti-patterns
 

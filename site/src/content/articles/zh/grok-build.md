@@ -1,7 +1,7 @@
 ---
 title: "Grok Build"
 slug: grok-build
-summary: "xAI 面向交付与上线闭环的构建 agent，适合在规格明确后快速打磨落地路径、演示体验与主 CTA。"
+summary: "用编码代理完成一处面向用户的页面改动：限定范围、真实证据、验证 CTA，并单独完成发布。"
 locale: zh
 category: stack
 stage: sell
@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Grok Build / xAI 构建工具；具体界面与命令流请以 xAI 最新线上文档为准"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "xAI Build documentation overview"
@@ -19,14 +19,27 @@ publicSources:
 tags: [stack, sell, build, launch]
 toolId: grok-build
 toolAvailability: active
-bestFor: "规格已清晰后的快速上线与演示向构建循环。"
-poorFit: "依赖仅在其他厂商提供的合规工具的深度专有企业流程。"
-caveats: "把 Grok Build 当作 OPC 栈中的一环；需要强仓库策略时仍用 Claude Code/Codex。命令请对照线上文档复查。"
+bestFor: "已有可运行仓库与明确检查时，完成有边界的页面或演示任务。"
+poorFit: "以为开启编码会话就自动具备托管、录屏或生产环境访问能力。"
+caveats: "上线环节是本站建议的分工，不是厂商能力排名；托管和录屏需分别核实。"
 ---
 
 ## 结论
 
-当核心功能切片已经跑通、验收标准写清时，把 **Grok Build** 作为一人公司工具栈的「最后一公里交付节点」：快速打磨面向买家的落地页表达、可交互演示路径与零阻力的主 CTA。
+Grok Build 是编码代理。本指南将它用于核心功能跑通之后的一处用户侧页面改动，这只是可选的工作流安排；Claude Code 或 Codex 也可以执行说明清楚的页面任务。验收实际构建、预览与 CTA 行为，托管和录屏则单独配置。
+
+CTA 指主要行动入口，即让用户开始目标任务的按钮或链接。
+
+## 第一次实践：改进一个已有页面
+
+[官方入门文档](https://docs.x.ai/build/overview)介绍的是在项目目录运行 `grok` 的编码代理。本站把它安排在上线环节，是一种**编辑性分工建议**，不代表它自带托管、视频导出，也不是它优于其他代理的比较结论。
+
+1. 按官方指引安装，打开目标项目目录后运行 `grok`，通过文档所述方式登录。
+2. 提供一个已有页面、主 CTA 的目标地址和项目构建命令。让它先提出明确价值主张的方案，不修改后端、登录、依赖或部署。
+3. 确认一处小范围文案或布局改动后，执行构建，并用项目已有命令打开本地预览。
+4. 在新浏览器会话中点击 CTA，完成目标操作；分别在桌面与 390px 宽度检查成功状态，以及一个失败或空状态。
+
+**保留产物：** 已审阅的 diff、预览地址、简短的通过/失败记录。若账号暂不能使用该 CLI，可以把同一任务单交给现有仓库代理。托管与录屏需要另行确认工具；聊天回答或本地预览不等于产品已经部署。
 
 > [!FLOW] 规格到公开转化的上线闭环
 > 1. **锁定卖点与禁区** — 写清单一目标买家、核心痛点、演示路径与宣传红线。
@@ -36,13 +49,21 @@ caveats: "把 Grok Build 当作 OPC 栈中的一环；需要强仓库策略时�
 
 ## 工具栈接力：仓库深度 vs 上线速度
 
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="从构建到用户的交接图">
+    <img class="theme-diagram__light" src="/illustrations/grok-build/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="570" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/grok-build/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="570" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>从构建到用户的交接图</strong> 从已验证的产品切片交接到真实的公开价值主张，再以陌生访客身份测试演示、主要行动与错误恢复。凭证、部署与回滚仍由人掌握。</figcaption>
+</figure>
+
 独立开发者最常见的两种卡壳：要么在后端抽象里无限内卷，要么发了一个话术浮夸却跑不通的壳子。把两类工作按工具分工切开：
 
 | 工作层 | 主责角色 | 交接产物 |
 |---|---|---|
 | 核心业务逻辑、数据 schema、hooks 与回归测试 | [Claude Code](/zh/articles/claude-code/) / [Codex](/zh/articles/codex/) | 全绿的 `npm run build` + 明确的路由/接口契约 |
-| 公开落地页动线、卖点拆解与演示切片 | **Grok Build** | 可直接点开体验主 CTA 的预发或线上 URL |
-| ≤90 秒产品演示脚本与上线前核查 | **Grok Build** + [上线与演示清单](/zh/articles/ship-demo-checklist/) | 演示视频/动线 + 移动端冒烟记录 |
+| 公开落地页动线、卖点拆解与演示切片 | **Grok Build** 或已有仓库代理 | 已审阅的页面 diff 与本地 CTA 检查；部署单独完成 |
+| ≤90 秒产品演示脚本与上线前核查 | 人工 + 单独选定的录屏工具 + [上线与演示清单](/zh/articles/ship-demo-checklist/) | 真实录屏/动线 + 移动端冒烟记录 |
 | 生产密钥、TLS/CDN 缓存策略与原子发版 | **人类创始人** | 源站与 Cloudflare 探针全绿 + 可一键回滚版本 |
 
 ## 前置条件
@@ -55,7 +76,7 @@ caveats: "把 Grok Build 当作 OPC 栈中的一环；需要强仓库策略时�
 
 1. **开跑前先核对 xAI 最新线上文档**——构建工具形态演进快，以官方文档记录的工作流为准，不盲信二手社交帖。
 2. **投喂高密度上线说明**（目标买家、现状痛点、一句话卖点、60 秒演示主路径、唯一主 CTA、明确非目标）。
-3. **强制执行「诚实话术过滤」。** 大模型写落地页时极爱顺手编造「10,000+ 团队信赖」「提速 10 倍」或未获授权的合规徽章——凡是无法当场演示或给出真实出处的数字一律删掉。
+3. **强制执行「诚实话术过滤」。** 检查生成文案是否含无依据的「10,000+ 团队信赖」「提速 10 倍」或未获授权的合规徽章——凡是无法当场演示或给出真实出处的数字一律删掉。
 4. **首屏只留一个毫不含糊的主动作**（立即试用演示、复制安装命令、加入候补或直接购买），不要在首屏摆五个平级按钮。
 5. **亲自做冷访客真机冒烟**：覆盖桌面端与窄屏手机（`≤390px`），并顺手测一条异常恢复路径（如 `404` 页或空搜索结果）。
 
@@ -90,10 +111,10 @@ caveats: "把 Grok Build 当作 OPC 栈中的一环；需要强仓库策略时�
 - [ ] 首屏用大白话讲清受众、痛点、核心供给与唯一主 CTA
 - [ ] 页面上的每一组数字、徽章与效果描述都可当场核验，零虚构指标
 - [ ] 主 CTA、演示主路径、主题/语言切换与 `404` 恢复页在手机窄屏（`≤390px`）可顺畅操作
-- [ ] 浏览器开发者工具检查确认零泄露 API 密钥或内部私有地址
+- [ ] 检查构建后的客户端资源与浏览器请求是否含意外秘密/私有地址，并记录检查范围（不宣称已证明绝无泄露）
 
 ## 反模式
 
 - **把「构建变绿」等同于「可以开卖」** —— 没有旁白时，陌生访客依然需要清晰的卖点、演示与购买/开始入口（见[上线与演示清单](/zh/articles/ship-demo-checklist/)）。
 - **放任占位假评价或虚构增长数字上线** —— 对技术型买家而言，一条假数据足以让整站信誉归零。
-- **在复杂仓库里只靠口头提示词跑到底** —— 涉及严格代码不变量与禁改目录时，务必配合 [Claude Code](/zh/articles/claude-code/) 或 [Codex](/zh/articles/codex/) 的 hooks 与 CI 门禁。
+- **在复杂仓库里只靠口头提示词跑到底** —— 涉及严格代码不变量与禁改目录时，应配置并实测所选工具的权限、沙箱、hooks 与独立 CI 门禁。

@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Astro static site + Markdown collections; agent CLI of choice; editorial gate per site SDD"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "Astro content collections"
@@ -29,26 +29,49 @@ tags: [playbook, ops, changelog, timebox, content]
 
 Keep an engineering practice site useful without turning weekends into a content treadmill. Run a **timeboxed 90–120 minute Sunday loop**: filter incoming notes down to actionable workflow changes, open and verify every primary source, update existing Markdown guides before creating new ones, write a structured [Changelog](/en/changelog/) with verified `affectedPages`, pass full build validation, and flip an atomic release symlink. If nothing survives the filter, stop early and publish nothing.
 
+## First practice: one change, local preview only
+
+Choose one existing article and one source that changes a concrete instruction. Keep a private note containing the source URL, what changed, and the exact paragraph you will revise. If the source is inaccessible or does not support the change, stop that item.
+
+1. Make the smallest correction in both available translations. Change `updated` only for substantive guidance, not formatting.
+2. Copy the changelog skeleton below as **draft**, replace every example date, claim, route, and source, then confirm that each target exists in this revision. Publish the entry only after its checks pass.
+3. Run the repository checks and inspect the changed page, locale link, and changelog anchor in local preview. Save the command output and actual result.
+4. Prepare a release candidate. Deploy only through a separately configured, tested release procedure; if you have none, stop at the reviewed local result rather than improvising SSH commands.
+
+**No-update is valid:** save the rejected item and reason privately. For this site's Linux deployment example, review `site/ops/DEPLOYMENT-EXAMPLE.md` in the repository; its GNU tools and `flock` assumptions are not a portable macOS deployment recipe. Static hosts with immutable versions can use their native publish/rollback workflow instead of VPS symlinks.
+
 > [!FLOW] 90–120 minute Sunday refresh pipeline
 >
-> 1. **Filter (15–25m)** — Keep only items that change a real checklist, tool boundary, or risk warning; drop pure news.
-> 2. **Verify & Rewrite (40–60m)** — Open primary URLs, revise executable steps, and set conservative `evidence` labels.
-> 3. **Changelog & Gate (15–25m)** — Log `affectedPages` in `YYYY-wNN.md` and run `npm run validate && npm run build`.
-> 4. **Atomic Flip & Smoke (10–15m)** — Stage `releases/<id>/`, switch the `current` symlink, probe live URLs, and log privately.
+> 1. **Filter & map (15m)** — Keep only actionable changes; stop if none survive.
+> 2. **Verify & rewrite (35m)** — Open primary sources and revise executable steps across locales.
+> 3. **Evidence & notices (10m)** — Assign accurate evidence labels and risk qualifications.
+> 4. **Changelog (10m)** — Record changes with exact affected-page routes.
+> 5. **Validate & deploy (20m)** — Pass the checks, use the configured release workflow, and run smoke probes.
+> 6. **Private record (5m)** — Save the outcome and rollback target outside the public repository.
 
 ## Timebox and stop gates
 
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="A publishing decision tree">
+    <img class="theme-diagram__light" src="/illustrations/weekly-content-site-refresh/overview.light.svg" alt="" data-decorative="true" width="420" height="662" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/weekly-content-site-refresh/overview.dark.svg" alt="" data-decorative="true" width="420" height="662" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>A publishing decision tree</strong> If no item changes a real action, record a private “no update” note and stop. Otherwise verify sources, revise the guide, pass the release gates, and smoke-test the release. Keep the previous release available for rollback.</figcaption>
+</figure>
+
 | Phase | Minutes | Owner | Pass / stop gate |
 |---|---|---|---|
-| **1. Filter & map** | `15–25` | Human editor | At least one concrete action change survives; otherwise stop and record “no update” |
-| **2. Verify & rewrite** | `30–45` | Human + [Claude Code](/en/articles/claude-code/) / [Codex](/en/articles/codex/) | Every cited URL opened by a human; executable sections updated across locales |
-| **3. Evidence & notices** | `10–15` | Human editor | Accurate `tested` / `documentation-backed` / `unverified` badge + caveats |
-| **4. Changelog** | `10–15` | Agent + Human | Non-empty `changes[]` where every `affectedPages` route exists in `dist/` |
-| **5. Validate & deploy** | `15–25` | CI / release script | `npm run build` exits `0`; atomic symlink switch + HTTP smoke probes pass |
+| **1. Filter & map** | `15` | Human editor | At least one concrete action change survives; otherwise stop and record “no update” |
+| **2. Verify & rewrite** | `35` | Human + [Claude Code](/en/articles/claude-code/) / [Codex](/en/articles/codex/) | Every cited URL opened by a human; executable sections updated across locales |
+| **3. Evidence & notices** | `10` | Human editor | Accurate `tested` / `documentation-backed` / `unverified` badge + caveats |
+| **4. Changelog** | `10` | Agent + Human | Non-empty `changes[]` where every `affectedPages` route exists in `dist/` |
+| **5. Validate & deploy** | `20` | CI / release script | `npm run build` exits `0`; atomic symlink switch + HTTP smoke probes pass |
 | **6. Private record** | `5` | Human editor | Private release log saved outside `dist/` with rollback target noted |
 
 > [!TIP] Empty weeks are a feature, not a failure
 > If a week’s digest is 100% funding announcements, model leaderboard drama, or unverified hype, **stop after Phase 1**. Record a 3-line private “no update” note instead of bumping `updated` dates on unchanged guides.
+
+The table budgets 95 minutes, leaving up to 25 minutes of contingency within a 120-minute cap. If source verification or checks exceed the cap, keep the candidate as a draft and resume later; never skip a gate to meet the clock.
 
 ## Briefing filter decision matrix
 
@@ -81,9 +104,14 @@ Treat incoming digests, bookmarks, and X threads as untrusted leads until verifi
 8. **Stage and flip atomically:** Upload `dist/` to a fresh `releases/<id>/` directory, verify file permissions, flip the `current` symlink atomically, and keep at least the previous release ready for one-command rollback.
 9. **Smoke-test and log privately:** Probe key routes and write a brief release record outside `dist/`.
 
+> [!NOTE] Adapt repository-specific examples
+> `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
+
 ## Copy-pasteable templates
 
 ### 1. Weekly changelog entry (`site/src/content/changelog/en/YYYY-wNN.md`)
+
+Illustrative draft, not a record of work performed. Replace every sample claim and date; keep it draft until the cited change and targets have been verified.
 
 ```yaml
 ---
@@ -92,7 +120,7 @@ date: "2026-11-14"
 title: "Week 46: Tighten Codex sandbox flags and weekly smoke checks"
 summary: "Updated Codex sandbox verification steps and added cache-header probes to the Sunday release checklist."
 locale: en
-status: published
+status: draft
 changes:
   - type: revised
     text: "Clarified read-only vs workspace-write approval boundaries before running unattended tasks."
@@ -112,7 +140,9 @@ publicSources:
 Focused maintenance pass on sandbox boundaries; zero new tools added to the core three-tool stack.
 ```
 
-### 2. Private release / no-update log (`ops/releases/YYYY-wNN.md`, outside `dist/`)
+### 2. Private release / no-update log (outside the public repository)
+
+The following is a filled example, not an actual release. Save your own record outside the checkout, or in an explicitly ignored directory; being outside `dist/` alone does not keep it out of Git.
 
 ```markdown
 # Weekly Refresh Record — [YYYY-wNN]
@@ -124,7 +154,7 @@ Focused maintenance pass on sandbox boundaries; zero new tools added to the core
 - **Changed article slugs:** `codex` (en, zh)
 - **Changelog slug:** `2026-w46`
 - **Release directory & previous symlink target:** `releases/20261114-1830` (prev: `releases/20261107-1715`)
-- **Smoke check status:** `/` 302→`/en/`, `/en/` 200, `/en/articles/codex/` 200, `/en/changelog/` 200, `/missing-probe` 404
+- **Smoke check status:** `/` reaches `/en/` (record actual HTTP or page redirect), `/en/` 200, `/en/articles/codex/` 200, `/en/changelog/` 200, `/missing-probe` 404
 ```
 
 ## Definition of done

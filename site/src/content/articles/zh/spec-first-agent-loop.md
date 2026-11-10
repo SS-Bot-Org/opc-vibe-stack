@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code、Codex 或 Grok Build 任一；可选安装 GitHub Spec Kit；配合仓库本地验证命令"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-01"
     note: "Spec Kit / specify-before-code brief"
@@ -41,7 +41,21 @@ tags: [research, spec, workflow]
 
 ## 结论
 
-绝大多数「agent 改崩了整个项目」的事故，根源都是**目标欠规格**。在让任何编码 agent 打开文件之前，先把目标结果、文件边界、非目标与验证命令落成白纸黑字。无论你采用 GitHub **Spec Kit**（`specify → plan → tasks → implement`）还是手写 15 行 Markdown 短切片，**先冻结验收标准再动代码**都是一人公司回报率最高的习惯。
+目标含糊时，agent 改动很难限定范围，也难以验收。在让任何编码 agent 打开文件之前，先把目标结果、文件边界、非目标与验证命令落成白纸黑字。无论你采用 GitHub **Spec Kit**（`specify → plan → tasks → implement`）还是手写 15 行 Markdown 短切片，都应**先写清验收标准再动代码**，让结果可以与书面目标核对。
+
+## 第一个练习：先写检查，再写提示词
+
+先用普通 Markdown 即可，Spec Kit 是可选项。在 `specs/001-slice.md` 中只描述产品里的**一个**行为。例如：“搜索不存在的词时，显示空状态提示，并提供可用的清空操作。”
+
+| 输入 / 操作 | 预期结果 | 检查方法 |
+|---|---|---|
+| 搜索已知标题 | 出现相关结果 | 指定测试或浏览器操作 |
+| 搜索不存在的词 | 出现明确空状态 | 记录文案或截图 |
+| 清空搜索 | 结果消失，输入框仍可用 | 浏览器操作与键盘检查 |
+
+填入真实路由、范围内文件和已有验证命令，改动前先执行一次。缺少测试意味着需要补测试，而不是编造通过结果。只交接第一项任务；如果结果仍有歧义，先完善规格，不要立即进入实现。
+
+**交付物：** 一份规格、小任务清单和可复现的通过/失败记录。下文 `specify → plan → tasks` 是阶段名称，不是终端命令。使用 Spec Kit 时遵循[当前快速开始](https://github.github.com/spec-kit/quickstart.html)，在 agent 对话中调用已安装技能，逐个审阅产物，而非把技能名称粘到终端。
 
 > [!FLOW] 先规格、后改码的四步切片环
 >
@@ -51,6 +65,14 @@ tags: [research, spec, workflow]
 > 4. **单步实现与收敛** — 每次只交一个任务，验证命令全绿后再提交。
 
 ## 模糊「凭感觉提示」vs 规格先行闭环
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="从规格走向可验证结果">
+    <img class="theme-diagram__light" src="/illustrations/spec-first-agent-loop/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="630" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/spec-first-agent-loop/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="630" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>从规格走向可验证结果</strong> 先明确结果、边界与验收条件，再实现单个任务。验证通过后审阅并提交；失败时回到当前任务，修复缺陷或完善规格。</figcaption>
+</figure>
 
 | 对比维度       | 模糊「凭感觉」提示                 | 规格先行切片闭环                                |
 | -------------- | ---------------------------------- | ----------------------------------------------- |
@@ -79,6 +101,9 @@ tags: [research, spec, workflow]
 
 > [!NOTE] 来源与证据边界说明
 > `specify → plan → tasks → implement` 主流程有 GitHub 官方 Spec Kit 文档支撑（**文档依据**）。社交帖提到的仓库星标热度、「先语音倾倒再转技术规格」与「四字段提示法」属于社区经验分享——在你用自己的项目实测前，请将相关效率数字视作**发帖人单方主张（未验证）**。
+
+> [!NOTE] 先替换项目专属配置
+> 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
 
 ## 可直接复制的实用模板
 

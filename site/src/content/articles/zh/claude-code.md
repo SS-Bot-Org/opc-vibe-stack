@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code CLI/agent（Anthropic）；命令与 hooks 配置结构请以最新官方文档为准"
-updated: "2026-11-08"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "Claude Code overview"
@@ -28,6 +28,9 @@ publicSources:
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
     kind: docs
+  - title: "Claude Code quickstart"
+    url: "https://code.claude.com/docs/en/quickstart"
+    kind: docs
 tags: [stack, build, hooks, workflow]
 toolId: claude-code
 toolAvailability: active
@@ -40,6 +43,17 @@ caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而�
 
 当改动跨越多个文件、需要先摸清仓库耦合关系再落笔，或需要用 `PreToolUse` 在调用执行前守住边界、`PostToolUse` 做事后检查、`Stop` 检查收工条件时，把 **Claude Code** 作为你的仓库主力交互式 agent。
 
+## 第一次实践：完成一处小范围仓库改动
+
+**适用情况：** 你已有仓库，以及一个具体缺陷或行为改动。开始前保存现有工作或使用独立分支；不要为了照做而重置有未提交改动的工作区。
+
+1. 按[官方快速开始](https://code.claude.com/docs/en/quickstart)安装，在新终端运行 `claude --version`。进入项目目录后运行 `claude`，完成官方登录流程。
+2. 先问：“阅读项目说明和 README，找出涉及的文件与已有验证命令，暂时不要编辑。”把回答与实际脚本或测试配置核对。
+3. 自己先跑一次验证命令，保留基线；如果原本就失败，先记录，不把旧问题误算成本次改动。
+4. 用下方模板只交付**一个**行为，并要求列出改动文件、实际执行命令、退出结果和未验证部分。
+
+**保留产物：** 任务说明、聚焦的 diff 和验证输出。涉及界面时，还要在实际页面完成约定操作。范围扩大或检查失败时，先解决当前切片的问题；agent 说“完成”不等于验收通过。
+
 > [!FLOW] 仓库内会话闭环
 > 1. **框定与计划** — 给出切片目标、文件边界与验证命令，要求先出计划。
 > 2. **收敛范围** — 在改任何文件前砍掉顺手重构与超范围改动。
@@ -47,6 +61,14 @@ caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而�
 > 4. **沉淀护栏** — 把重复踩坑当天写进 `CLAUDE.md`、`SKILL.md` 或阻断式 hook。
 
 ## 何时选 Claude Code、何时交接
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="一眼看懂 Hook 时机">
+    <img class="theme-diagram__light" src="/illustrations/claude-code/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="556" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/claude-code/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="556" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>一眼看懂 Hook 时机</strong> PreToolUse 可在工具执行前拒绝调用；PostToolUse 检查已经成功执行的操作；Stop 检查完成条件。事后检查和结束检查都不能逆转此前动作。</figcaption>
+</figure>
 
 | 场景 | 最佳负责工具 | 原因 |
 |---|---|---|
@@ -70,9 +92,12 @@ caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而�
 5. **把失误当天转成硬护栏。** 一旦 agent 误碰禁区目录或重复犯错，立即补一行清晰规则，或直接升级为生命周期 hook（见[规则文件 + hooks](/zh/articles/rules-hooks/)）。
 6. **不同任务之间主动清空上下文。** 切新切片时开新会话，防止上一任务的临时假设污染后续代码。
 
+> [!NOTE] 先替换项目专属配置
+> 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
+
 ## 可直接复制的起步模板
 
-### 极简 `CLAUDE.md` 起步模板
+### 共用的 `AGENTS.md`（按你的项目调整此本站示例）
 
 ```markdown
 # Project Rules
@@ -94,6 +119,12 @@ caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而�
 - 保持 diff 聚焦当前切片；顺手发现的优化记入待办，不要同批混改
 ```
 
+共用规则放在上面的 `AGENTS.md`。如仍使用 `CLAUDE.md`，以以下导入开头，不手工维护第二份规则：
+
+```markdown
+@AGENTS.md
+```
+
 ### 先计划后实现的会话提示词
 
 ```text
@@ -110,7 +141,7 @@ caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而�
 ## 完成定义
 
 - [ ] Claude Code 已完成官方登录，仓库与终端历史中无硬编码密钥
-- [ ] `CLAUDE.md` / `AGENTS.md` 中写明了可在 1 分钟内跑完的验证命令
+- [ ] 项目说明写清实际快速检查与完整验证命令，以及合理耗时
 - [ ] 禁改路径与密钥边界不仅写在文档里，还由 hooks 或 CI 兜底拦截
 - [ ] 多文件任务养成「先看计划、再改代码」习惯
 - [ ] 提交前人工审阅 `git status` 与 `git diff`（重点核查 lockfile、鉴权与部署配置）

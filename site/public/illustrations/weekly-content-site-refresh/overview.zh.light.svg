@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 662" role="img" aria-labelledby="title desc">
+<title id="title">只发布能改变实践的内容</title><desc id="desc">每周更新，也允许提前结束。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#555b66" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="662" rx="12" fill="#fafaf8"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#555b66" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#191b20" font-weight="700" text-anchor="start">只发布能改变实践的内容</text>
+<text x="24" y="96" font-size="17" fill="#555b66" font-weight="400" text-anchor="start">每周更新，也允许提前结束。</text>
+<rect x="24" y="122" width="372" height="56" rx="10" fill="#e8eef8" stroke="#1f4b99"/>
+<text x="210" y="157" font-size="22" fill="#191b20" font-weight="650" text-anchor="middle">是否改变实际行动？</text>
+<path d="M301 179 V206" fill="none" stroke="#555b66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="331" y="203" font-size="15" fill="#805a15" font-weight="700" text-anchor="start">否</text>
+<rect x="186" y="218" width="210" height="49" rx="10" fill="#fff6e5" stroke="none"/>
+<text x="291" y="249" font-size="17" fill="#805a15" font-weight="600" text-anchor="middle">记录「本周无更新」</text>
+<path d="M64 179 V282" fill="none" stroke="#555b66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="77" y="235" font-size="15" fill="#286341" font-weight="700" text-anchor="start">是</text>
+<rect x="24" y="297" width="372" height="47" rx="7" fill="#ffffff" stroke="#cbd0d8"/>
+<text x="42" y="327" font-size="15" fill="#1f4b99" font-weight="700" text-anchor="start">01</text>
+<text x="84" y="327" font-size="19" fill="#191b20" font-weight="600" text-anchor="start">核实一手来源</text>
+<path d="M210 345 V354" fill="none" stroke="#555b66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="360" width="372" height="47" rx="7" fill="#ffffff" stroke="#cbd0d8"/>
+<text x="42" y="390" font-size="15" fill="#1f4b99" font-weight="700" text-anchor="start">02</text>
+<text x="84" y="390" font-size="19" fill="#191b20" font-weight="600" text-anchor="start">修改文章与证据标签</text>
+<path d="M210 408 V417" fill="none" stroke="#555b66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="423" width="372" height="47" rx="7" fill="#ffffff" stroke="#cbd0d8"/>
+<text x="42" y="453" font-size="15" fill="#1f4b99" font-weight="700" text-anchor="start">03</text>
+<text x="84" y="453" font-size="19" fill="#191b20" font-weight="600" text-anchor="start">更新日志与构建门禁</text>
+<path d="M210 471 V480" fill="none" stroke="#555b66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="486" width="372" height="47" rx="7" fill="#eaf6ee" stroke="#286341"/>
+<text x="42" y="516" font-size="15" fill="#1f4b99" font-weight="700" text-anchor="start">04</text>
+<text x="84" y="516" font-size="19" fill="#191b20" font-weight="600" text-anchor="start">发布并执行冒烟检查</text>
+<rect x="24" y="567" width="372" height="70" rx="10" fill="#eaf6ee" stroke="none"/>
+<text x="42" y="596" font-size="18" fill="#286341" font-weight="650" text-anchor="start">保留上一个可用版本。</text>
+<text x="42" y="621" font-size="17" fill="#286341" font-weight="400" text-anchor="start">发布失败时，有明确的回滚目标。</text></g>
+</svg>

@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "与具体工具无关；请按产品类别核对当地法规与厂商文档"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "FCC Equipment Authorization (overview)"
@@ -26,6 +26,19 @@ tags: [hardware, firmware, compliance, supply-chain]
 
 一人公司一旦出货实体硬件，必须把**设备固件**、**配套 App** 与可选**云端服务**拆成三条独立发版节奏的产品线。先冻结通信协议并用软件模拟器解耦，让 coding agent 在配套 App 和云端侧全速迭代；固件侧死守板级实测与离线人工签名密钥；至于射频、安规与代工供应链，一律按**本人逐项核实**推进——绝不靠营销话术蒙混过关。
 
+## 第一个交付物：通信契约与四组模拟数据
+
+连接实物前，先写清真实编码方式、消息长度、单位、允许值、协议版本、超时时间和错误响应。下方模板只是草图，不是可直接发送的线协议，也不是有效厂商标识。
+
+| 模拟情况 | 配套应用应有的行为 |
+|---|---|
+| 有效状态帧 | 显示约定状态与正确单位 |
+| 不支持的协议版本 | 提示版本不兼容，不自行猜测 |
+| 格式错误或越界值 | 拒绝输入，保留上一个有效状态 |
+| 设备断开或超时 | 给出重连提示，不谎报成功 |
+
+**通过标准：** 确定性模拟器能产生四种情况，界面逐一正确响应。再在实物上关闭 Wi-Fi/蜂窝但保留 BLE 或 USB，重测关键情况，记录设备型号、固件版本、应用版本和结果。模拟器通过不等于射频、电源安全、OTA 恢复或法律合规通过，这些需要独立台架证据和目标市场核验。
+
 > [!FLOW] 软硬解耦的四段式交付管线
 >
 > 1. **冻结通信契约** — 先定义 BLE/USB 数据帧并写出纯软件 Mock 设备模拟器。
@@ -34,6 +47,14 @@ tags: [hardware, firmware, compliance, supply-chain]
 > 4. **离线人工签名与合规核验** — 离线私钥签名 OTA 固件，核实目标市场法规授权后再接付费订单。
 
 ## 三层架构与发版拆分
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="分开三层发版边界">
+    <img class="theme-diagram__light" src="/illustrations/hardware-soft-split/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="614" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/hardware-soft-split/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="614" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>分开三层发版边界</strong> 云服务是可选项。配套应用通过明确的 BLE 或 USB 协议与固件通信，开发时可使用模拟器。核心控制应离线可用，固件发布则需经过实物测试与人工保管的密钥签名。</figcaption>
+</figure>
 
 | 层级 | 核心职责 | 发版节奏 | Coding Agent 适配度 | 混为一谈的高危后果 |
 |---|---|---|---|---|
@@ -50,7 +71,7 @@ tags: [hardware, firmware, compliance, supply-chain]
 ## 执行步骤
 
 1. **画板和建仓前先写软硬边界一页纸：** 明确哪些逻辑留在固件、哪些放进配套 App，并立下硬规矩——**完全断网时核心硬件功能必须照常可用**。
-2. **先定带版本号的通信契约 + 软件模拟器：** 把 BLE 特征值或串口/USB 指令帧写成清晰结构，让 coding agent 不插真机也能独立跑完 90% 的配套 App 开发与回归测试。
+2. **先定带版本号的通信契约 + 软件模拟器：** 把 BLE 特征值或串口/USB 指令帧写成清晰结构，让 coding agent 不插实物也能测试已定义的应用状态；覆盖程度以你自己的测试用例为准。
 3. **用人工离线密钥锁死固件升级入口：** 在任何外部内测开始前就写好 Bootloader 签名校验，生产私钥全程离线保管，严禁放进仓库或 agent 环境（[安全速查](/zh/articles/security-quickcheck/)）。
 4. **逐项跑通下方「自行核实清单」：** 只有你亲手拿到原厂规格书、模组授权边界条件或实验室报告原件时才打勾。
 5. **用已核实证据反审落地页文案：** 严格区分「采用已过认证的射频模组」（整机往往仍受天线、外壳与主控集成规则约束）与「整机已完成目标市场认证」。
@@ -74,12 +95,12 @@ tags: [hardware, firmware, compliance, supply-chain]
 # 软硬边界与通信契约：[设备名称]
 
 - **产品类别与目标市场：** [例如：BLE 桌面计时器 — 北美市场]
-- **离线优先硬规则：** 手机开启飞行模式（仅开蓝牙、关 Wi-Fi/蜂窝）时，配对与核心控制必须 100% 可用。
-- **OTA 签名权限：** Bootloader 强制校验 Ed25519 签名；生产私钥离线冷存储（严禁进仓库 / CI / agent）。
+- **离线优先硬规则：** 关闭 Wi-Fi 和蜂窝数据，保持 BLE 或 USB 可用，验证已定义的本地配对与核心控制。
+- **OTA 签名权限：** Bootloader 使用设备支持的算法与信任链验证签名；记录密钥负责人和离线签名流程。
 
 ## 通信协议契约 v1（固件与 App 模拟器共用）
 - **物理传输层：** [BLE GATT / WebUSB / 串口]
-- **Service UUID / Vendor ID：** `0000XXXX-0000-1000-8000-00805f9b34fb`
+- **传输标识：** [BLE 填真实服务与特征 UUID；USB 填已分配 VID/PID；串口填端口与帧配置。这些标识不能互换。]
 - **状态上报帧（设备 → App）：** `{ protocolVersion: 1, batteryMv: number, mode: "idle" | "active", fwVersion: string }`
 - **控制指令帧（App → 设备）：** `{ cmd: "set_mode" | "ping", payload: ... }`
 

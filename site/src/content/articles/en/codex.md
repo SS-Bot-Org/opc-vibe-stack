@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "OpenAI Codex CLI/agent; confirm current CLI flags and config.toml keys against official OpenAI docs"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "OpenAI Codex documentation"
@@ -18,6 +18,9 @@ publicSources:
     kind: docs
   - title: "Codex configuration reference (config.toml & mcp_servers)"
     url: "https://developers.openai.com/codex/config-reference"
+    kind: docs
+  - title: "Codex CLI setup"
+    url: "https://learn.chatgpt.com/docs/codex/cli"
     kind: docs
 tags: [stack, build, cli, workflow]
 toolId: codex
@@ -31,6 +34,17 @@ caveats: "Product surfaces evolve; pin docs links and re-check commands after up
 
 Reach for **Codex** when you already have a written task boundary—inputs, files in scope, acceptance checks, and a verify command—and want a disciplined CLI/agent run that turns that spec into a focused, reviewable diff.
 
+## First run: a task you can accept or reject
+
+**Start with:** an existing repository, one reproducible issue, and a check that distinguishes failure from success. You do not need several agents or MCP servers for this exercise.
+
+1. Use the [official Codex CLI setup](https://learn.chatgpt.com/docs/codex/cli), or select this repository in the desktop app. For the CLI, run `codex` from the repository directory after installation and sign-in.
+2. Ask Codex to identify the project instructions, relevant files, and existing tests before editing. Confirm that it is working in the intended repository.
+3. Supply the four-part task brief below and capture the failing behavior first. For example, a search that returns drafts should get a regression check asserting that drafts are absent.
+4. Review the diff and rerun the exact check. Test the original input plus one empty or invalid input; record expected and actual results.
+
+**Accept when:** the reproduction passes, unrelated behavior remains intact, and all changed paths fit the brief. If a dependency, schema, or permission change becomes necessary, reassess the scope before continuing. When running independent tasks, use separate branches/worktrees; “parallel-safe” does not mean two agents should edit one checkout concurrently.
+
 > [!FLOW] Spec-to-diff execution loop
 > 1. **Write task brief** — Pin exact target behavior, allowed files, and verify command.
 > 2. **Run one slice** — Execute Codex on a single bounded task with clean Git state.
@@ -39,7 +53,15 @@ Reach for **Codex** when you already have a written task boundary—inputs, file
 
 ## Parallel vs sequential task split
 
-One of Codex’s biggest OPC advantages is running bounded tasks cleanly without hand-holding—**if** your slices do not collide on shared files.
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="A map of task boundaries">
+    <img class="theme-diagram__light" src="/illustrations/codex/overview.light.svg" alt="" data-decorative="true" width="420" height="586" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/codex/overview.dark.svg" alt="" data-decorative="true" width="420" height="586" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>A map of task boundaries</strong> Independent bugfixes and content slices can proceed in parallel when their files do not overlap. Shared schema and dependency changes stay sequential. Every path still needs verification and review of sensitive diffs.</figcaption>
+</figure>
+
+Use independent tasks only when their file ownership and acceptance checks are clear. Shared files still require coordination; parallel execution is not an automatic speedup.
 
 | Slice type | Run mode | Why |
 |---|---|---|
@@ -62,6 +84,9 @@ One of Codex’s biggest OPC advantages is running bounded tasks cleanly without
 3. **Hand Codex a four-part task brief** (goal, in-scope files, out-of-scope boundaries, verify command). If you cannot write the verify check yet, step back to [Spec first, then let the agent change code](/en/articles/spec-first-agent-loop/).
 4. **Run one slice per session.** Clear or start a new session before switching to an unrelated problem so earlier file assumptions do not bleed across diffs.
 5. **Review `git diff --stat` and security-sensitive lines** before committing—especially dependencies, environment handling, and build gates.
+
+> [!NOTE] Adapt repository-specific examples
+> `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
 
 ## Starter templates
 
@@ -105,7 +130,7 @@ Verify command: cd site && npm run check && npm test && npm run build
 
 - [ ] Task brief specifies exact in-scope files, non-goals, and a runnable verify command
 - [ ] Codex finishes with `npm run check`, `npm test`, and `npm run build` (or repo equivalent) exiting `0`
-- [ ] `git status` shows zero untracked scratch files, `.env` artifacts, or unintended `dist/` commits
+- [ ] Reviewed tracked and untracked paths; staged only intended files, excluding secrets and generated output while preserving pre-existing user work
 - [ ] Any change to dependencies, schemas, auth, or deploy scripts has been read line-by-line by a human
 
 ## Anti-patterns

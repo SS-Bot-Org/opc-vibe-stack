@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "OpenAI Codex CLI/agent；具体 CLI 参数与 config.toml 键名请以 OpenAI 最新官方文档为准"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "OpenAI Codex documentation"
@@ -18,6 +18,9 @@ publicSources:
     kind: docs
   - title: "Codex configuration reference (config.toml & mcp_servers)"
     url: "https://developers.openai.com/codex/config-reference"
+    kind: docs
+  - title: "Codex CLI setup"
+    url: "https://learn.chatgpt.com/docs/codex/cli"
     kind: docs
 tags: [stack, build, cli, workflow]
 toolId: codex
@@ -31,6 +34,17 @@ caveats: "产品界面会演进；升级后请固定文档链接并复查命令�
 
 当你手里已经有书面任务边界——输入输出、允许触碰的文件、验收条件与验证命令——希望编码 agent 干脆利落地交出一份可审阅的聚焦 diff 时，优先使用 **Codex**。
 
+## 第一次实践：交付一个能明确验收的任务
+
+**准备：** 已有仓库、一个可复现的问题，以及能区分成功与失败的检查。这个练习不需要多个 agent，也不需要先配置 MCP。
+
+1. 按[官方 Codex CLI 指引](https://learn.chatgpt.com/docs/codex/cli)完成设置，或在桌面应用中选择此仓库。使用 CLI 时，安装登录后在仓库目录运行 `codex`。
+2. 先让 Codex 找出项目说明、相关文件和已有测试，暂不修改；确认它打开的是目标仓库。
+3. 提供下方四字段任务单，先记录失败行为。例如搜索泄露草稿时，新增“结果不能包含草稿”的回归检查。
+4. 审阅 diff，重新执行同一检查；再用原始输入和一个空输入或非法输入各测一次，记录预期与实际结果。
+
+**验收条件：** 原始问题通过验证、无关行为保持正常、改动路径符合任务单。若必须修改依赖、数据结构或权限，先重新确认范围。并行任务使用独立分支或 worktree；“适合并行”不代表让两个 agent 同时修改同一份工作区。
+
 > [!FLOW] 规格到 Diff 的执行闭环
 > 1. **写清任务单** — 锁定目标行为、允许修改的文件列表与验证命令。
 > 2. **单切片执行** — 在干净 Git 工作区上每次只跑一个有边界的任务。
@@ -38,6 +52,14 @@ caveats: "产品界面会演进；升级后请固定文档链接并复查命令�
 > 4. **人工审敏感行** — 合并前逐行核查 lockfile、鉴权、schema 与部署脚本。
 
 ## 并行切片 vs 串行人工门禁
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="任务边界分工图">
+    <img class="theme-diagram__light" src="/illustrations/codex/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="586" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/codex/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="586" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>任务边界分工图</strong> 独立缺陷修复和内容切片，只有在文件不重叠时才适合并行；共享数据结构与依赖变更应串行进行。无论哪条路径，都要验证结果并审阅敏感改动。</figcaption>
+</figure>
 
 对一人公司来说，Codex 最大的效率杠杆是按规格批量推进独立切片——但前提是**各切片不会踩同一批共享文件**。
 
@@ -62,6 +84,9 @@ caveats: "产品界面会演进；升级后请固定文档链接并复查命令�
 3. **每次投喂「四要素任务单」**（目标、范围内文件、范围外禁区、验证命令）。如果连验收怎么测都还没想好，先退回[先写规格，再让 agent 改代码](/zh/articles/spec-first-agent-loop/)。
 4. **一会话只干一件事。** 切换到无关问题前先清空上下文或重开会话，避免上一次的文件假设污染新 diff。
 5. **提交前跑 `git diff --stat` 并精读敏感改动**——重点看依赖项、环境变量处理与构建门禁脚本。
+
+> [!NOTE] 先替换项目专属配置
+> 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
 
 ## 可直接复制的起步模板
 
@@ -105,7 +130,7 @@ caveats: "产品界面会演进；升级后请固定文档链接并复查命令�
 
 - [ ] 任务单明确列出了范围内文件、非目标与可运行的验证命令
 - [ ] Codex 跑完后，`npm run check`、`npm test` 与 `npm run build`（或项目等价门禁）退出码均为 `0`
-- [ ] `git status` 干净，无残留临时脚本、`.env` 文件或误入版本库的 `dist/`
+- [ ] 已审阅已跟踪与未跟踪路径，只暂存预期文件，排除秘密与生成产物，同时保留用户原有工作
 - [ ] 凡涉及依赖、schema、鉴权或部署脚本的变更，均已由你本人逐行审完
 
 ## 反模式

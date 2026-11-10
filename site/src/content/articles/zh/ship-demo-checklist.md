@@ -10,7 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "任意栈内 agent + 静态/预发托管环境；可选用 agent-screenplay MCP/CLI（需 Node 20+）生成脚本化录屏"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-04"
     note: "Agent-made demo / screen recording tools"
@@ -34,6 +34,19 @@ tags: [sell, launch, demo]
 
 「`main` 分支全绿」不叫上线。真正的上线是：**一个完全陌生的访客打开你的公开链接，10 秒内看懂这是给谁解决什么问题，花 ≤90 秒看完或点完核心快乐路径，并在没有你语音解释的情况下顺畅完成主 CTA。**
 
+CTA 指主要行动入口，即让用户开始目标任务的按钮或链接。
+
+## 找一位新访客执行这套验收
+
+使用预发环境和合成数据。请一位没见过产品的同行直接打开页面，不先讲解。录制视频是可选项；真实完成任务是必需项。
+
+1. 让对方读完首屏后，说出目标用户与预期结果。记录原话，不要替对方解释答案。
+2. 给出一个有代表性的输入，观察其能否自行找到 CTA、完成操作并识别结果。
+3. 在 390px 宽度重测。用键盘访问 CTA，触发一次非法输入或空状态，再恢复到起点。
+4. 每个失败都记成 **页面 → 操作 → 预期 → 实际 → 修复**。先修第一个阻塞问题，重做同一操作，再打磨演示视频。
+
+**发布证据：** 测试地址/版本、日期、视口、具体任务、结果与剩余限制。需要登录时使用测试账号或明确标注的录屏，不为演示移除必要访问控制。页面能打开，不代表 CTA、购买或表单提交已经可用。
+
 > [!FLOW] 从「仓库变绿」到「陌生人可转化」
 > 1. **搭五段式落地页** — 按顺序写清受众、痛点、供给、可核验证据与唯一主 CTA。
 > 2. **做 ≤90 秒演示** — 手动实录或在预发环境用脚本生成单路径核心演示。
@@ -42,13 +55,21 @@ tags: [sell, launch, demo]
 
 ## 五段式落地页结构蓝图
 
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="围绕访客问题组织页面">
+    <img class="theme-diagram__light" src="/illustrations/ship-demo-checklist/overview.zh.light.svg" alt="" data-decorative="true" width="420" height="664" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/ship-demo-checklist/overview.zh.dark.svg" alt="" data-decorative="true" width="420" height="664" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>围绕访客问题组织页面</strong> 这张概念线框图将五个访客问题对应到五个页面区域。演示色条遵循正文的 10 / 35 / 25 / 20 秒分镜：问题、工作流、结果与行动入口；它不是真实产品截图。</figcaption>
+</figure>
+
 按买家阅读心理从上往下排布，让每一次滚屏都刚好回答下一个顾虑：
 
 | 区块 | 文案任务 | 陌生人 10 秒验收标准 |
 |---|---|---|
 | **1. 受众 + 一句话供给** | 点名具体目标人群与交付结果 | 访客看完首屏就能复述你在卖什么 |
 | **2. 现状痛点对比** | 对比手工东拼西凑的痛苦 vs 你的闭环方案 | 目标用户一眼认出自己正在踩的坑 |
-| **3. ≤90 秒快乐路径演示** | 真实展示「输入 → 产出」（视频或免登录交互预览） | 无需先注册账号就能看懂核心价值 |
+| **3. ≤90 秒快乐路径演示** | 真实展示「输入 → 产出」（视频或交互预览） | 使用合成数据或明确标注的录屏，并保留必要的访问控制 |
 | **4. 诚实可核验的证据** | 放开源仓库、官方文档、真实样例或带标签的实测说明 | 零虚构用户数、零假客户 Logo |
 | **5. 唯一主 CTA 与定价/起步** | 一个明确动作（开始使用、复制安装、购买或加入候补） | 访客清楚代价与点击后的下一步 |
 
@@ -81,6 +102,9 @@ tags: [sell, launch, demo]
 > [!WARNING] 严禁让自动化录屏脚本连真实生产账号
 > 自动化浏览器/桌面剧本会真实点击按钮并提交表单。运行 `agent-screenplay` 或任何浏览器控制类 MCP 时，**必须**只指向 `localhost` 或关闭了真实扣款与外部发信的隔离预发环境——绝不要对着线上 Stripe、生产 Webhook 或真实客户数据开跑。
 
+> [!NOTE] 可选录屏工具会修改本地环境
+> [agent-screenplay README](https://github.com/gmpetrov/agent-screenplay) 说明，`init` 会下载 Chromium、为检测到的 agent 添加 MCP 配置并安装指引。先审阅这些改动，完成后重启 agent。手动录屏也能完成本清单，不需要为了验证访客路径而先安装它。
+
 ## 可直接复制的上线与演示准备单
 
 ```text
@@ -89,7 +113,7 @@ tags: [sell, launch, demo]
 一句话核心卖点：
 主 CTA 按钮文案 + 跳转地址：
 定价 / 准入方式（免费开源 | 付费档位 | 候补名单）：
-演示制作方式（手动实录 | 免登录交互预览 | agent-screenplay）：
+演示制作方式（手动实录 | 交互预览 | agent-screenplay）：
 录屏所用预发地址（确认零生产副作用）：
 页面需直接回应的前 3 个买家顾虑：
 ```

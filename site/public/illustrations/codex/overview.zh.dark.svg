@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 586" role="img" aria-labelledby="title desc">
+<title id="title">按文件归属拆分任务</title><desc id="desc">只有相互独立的切片，才适合并行。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#b6becb" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="586" rx="12" fill="#16191e"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#b6becb" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#edf0f5" font-weight="700" text-anchor="start">按文件归属拆分任务</text>
+<text x="24" y="96" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">只有相互独立的切片，才适合并行。</text>
+<rect x="24" y="125" width="176" height="242" rx="10" fill="#20362a" stroke="#9cd6ae"/>
+<text x="40" y="157" font-size="16" fill="#9cd6ae" font-weight="700" text-anchor="start">可并行</text>
+<rect x="36" y="177" width="152" height="50" rx="6" fill="#20252d" stroke="none"/>
+<text x="112" y="209" font-size="17" fill="#edf0f5" font-weight="600" text-anchor="middle">独立缺陷修复</text>
+<rect x="36" y="243" width="152" height="50" rx="6" fill="#20252d" stroke="none"/>
+<text x="112" y="275" font-size="17" fill="#edf0f5" font-weight="600" text-anchor="middle">内容切片</text>
+<text x="112" y="344" font-size="17" fill="#9cd6ae" font-weight="400" text-anchor="middle">文件互不重叠</text>
+<rect x="220" y="125" width="176" height="242" rx="10" fill="#3b3020" stroke="#e8c783"/>
+<text x="236" y="157" font-size="16" fill="#e8c783" font-weight="700" text-anchor="start">需串行</text>
+<rect x="232" y="177" width="152" height="50" rx="6" fill="#20252d" stroke="none"/>
+<text x="308" y="209" font-size="17" fill="#edf0f5" font-weight="600" text-anchor="middle">共享数据结构</text>
+<rect x="232" y="243" width="152" height="50" rx="6" fill="#20252d" stroke="none"/>
+<text x="308" y="275" font-size="17" fill="#edf0f5" font-weight="600" text-anchor="middle">依赖变更</text>
+<text x="308" y="344" font-size="17" fill="#e8c783" font-weight="400" text-anchor="middle">修改公共约定</text>
+<path d="M112 368 V392 H210 V412" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M308 368 V392 H210" fill="none" stroke="#455061" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="24" y="425" width="372" height="90" rx="10" fill="#20252d" stroke="#455061"/>
+<text x="210" y="459" font-size="22" fill="#edf0f5" font-weight="650" text-anchor="middle">逐一验证每个切片</text>
+<text x="210" y="489" font-size="18" fill="#b6becb" font-weight="400" text-anchor="middle">人工审阅敏感改动</text>
+<text x="210" y="556" font-size="17" fill="#a4c2ff" font-weight="600" text-anchor="middle">一份任务说明 → 一份可审阅改动</text></g>
+</svg>

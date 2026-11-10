@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 556" role="img" aria-labelledby="title desc">
+<title id="title">Put checks at the right time</title><desc id="desc">A repository session, with clear gates.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#555b66" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="556" rx="12" fill="#fafaf8"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#555b66" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#191b20" font-weight="700" text-anchor="start">Put checks at the right time</text>
+<text x="24" y="96" font-size="17" fill="#555b66" font-weight="400" text-anchor="start">A repository session, with clear gates.</text>
+<path d="M43 155 V416" fill="none" stroke="#cbd0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="63" y="124" width="333" height="94" rx="10" fill="#e8eef8" stroke="none"/>
+<rect x="35" y="155" width="16" height="16" rx="8" fill="#1f4b99" stroke="none"/>
+<text x="80" y="151" font-size="17" fill="#555b66" font-weight="400" text-anchor="start">Before a tool call</text>
+<text x="80" y="179" font-size="23" fill="#1f4b99" font-weight="700" text-anchor="start">PreToolUse</text>
+<text x="80" y="204" font-size="17" fill="#191b20" font-weight="400" text-anchor="start">Can reject the call</text>
+<rect x="63" y="232" width="333" height="94" rx="10" fill="#fff6e5" stroke="none"/>
+<rect x="35" y="263" width="16" height="16" rx="8" fill="#805a15" stroke="none"/>
+<text x="80" y="259" font-size="17" fill="#555b66" font-weight="400" text-anchor="start">After successful execution</text>
+<text x="80" y="287" font-size="23" fill="#805a15" font-weight="700" text-anchor="start">PostToolUse</text>
+<text x="80" y="312" font-size="17" fill="#191b20" font-weight="400" text-anchor="start">Checks work already done</text>
+<rect x="63" y="340" width="333" height="94" rx="10" fill="#eaf6ee" stroke="none"/>
+<rect x="35" y="371" width="16" height="16" rx="8" fill="#286341" stroke="none"/>
+<text x="80" y="367" font-size="17" fill="#555b66" font-weight="400" text-anchor="start">Before finishing</text>
+<text x="80" y="395" font-size="23" fill="#286341" font-weight="700" text-anchor="start">Stop</text>
+<text x="80" y="420" font-size="17" fill="#191b20" font-weight="400" text-anchor="start">Checks completion conditions</text>
+<rect x="24" y="463" width="372" height="70" rx="10" fill="#fff6e5" stroke="none"/>
+<text x="42" y="492" font-size="18" fill="#805a15" font-weight="650" text-anchor="start">After-the-fact checks cannot undo</text>
+<text x="42" y="517" font-size="17" fill="#805a15" font-weight="400" text-anchor="start">an action that already ran.</text></g>
+</svg>

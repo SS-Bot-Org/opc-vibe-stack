@@ -10,7 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Tool-independent guidance; confirm local regulations and vendor docs for your product class"
-updated: "2026-11-07"
+updated: "2026-11-10"
 internalBriefing: []
 publicSources:
   - title: "FCC Equipment Authorization (overview)"
@@ -26,6 +26,19 @@ tags: [hardware, firmware, compliance, supply-chain]
 
 When a one-person company ships physical hardware, treat **firmware**, **companion app**, and optional **cloud services** as three distinct products on separate release trains. Let coding agents accelerate the companion app and cloud layers against a mocked device transport, keep firmware behind hardware-in-the-loop verification and offline human signing keys, and treat radio, safety, and factory compliance as **verify-yourself** engineering—never marketing guesswork.
 
+## First deliverable: a transport contract and four fixtures
+
+Before connecting hardware, write down the actual packet encoding, message length, units, allowed values, protocol version, timeout, and error response. The sketch below is not a wire format or a valid vendor identifier.
+
+| Fixture | Expected companion-app behavior |
+|---|---|
+| Valid state frame | Show the documented state and units |
+| Unknown protocol version | Display an unsupported-version message; do not guess |
+| Malformed or out-of-range value | Reject it and keep the previous valid state |
+| Device disconnected / timed out | Show reconnect guidance; do not report success |
+
+**Pass:** a deterministic mock produces all four states and the UI handles each one. Then repeat the critical cases on a physical unit with Wi-Fi/cellular disabled and BLE or USB still enabled. Record device model, firmware version, app version, and result. A mock pass does not validate radio behavior, power safety, OTA recovery, or legal compliance; those need their own bench evidence and market-specific review.
+
 > [!FLOW] Decoupled hardware-software release pipeline
 >
 > 1. **Freeze Transport Contract** — Specify BLE/USB packets and build a software mock device first.
@@ -34,6 +47,14 @@ When a one-person company ships physical hardware, treat **firmware**, **compani
 > 4. **Human-Signed OTA & Compliance** — Sign firmware offline and verify regulatory grants before taking live orders.
 
 ## Three-layer architecture split
+
+<figure class="article-figure article-figure--overview">
+  <div class="theme-diagram" role="img" aria-label="Separate the release boundaries">
+    <img class="theme-diagram__light" src="/illustrations/hardware-soft-split/overview.light.svg" alt="" data-decorative="true" width="420" height="614" loading="lazy" decoding="async" />
+    <img class="theme-diagram__dark" src="/illustrations/hardware-soft-split/overview.dark.svg" alt="" data-decorative="true" width="420" height="614" loading="lazy" decoding="async" />
+  </div>
+  <figcaption><strong>Separate the release boundaries</strong> Cloud services are optional. The companion app talks to firmware through a defined BLE or USB contract, with a mock for development. Keep core controls usable offline and firmware releases behind hardware tests and human-held signing keys.</figcaption>
+</figure>
 
 | Layer | Core responsibilities | Release cadence | Coding-agent fit | Failure mode when blurred |
 |---|---|---|---|---|
@@ -50,7 +71,7 @@ When a one-person company ships physical hardware, treat **firmware**, **compani
 ## Execution steps
 
 1. **Write a boundary one-pager before touching PCB or app scaffolding:** Explicitly name what lives in firmware, what lives in the companion app, and verify that core device controls still work with **zero cloud connectivity**.
-2. **Define a versioned transport contract + software simulator:** Document every BLE characteristic or USB command frame so coding agents can build and test 90% of the companion app without needing a physical board plugged in.
+2. **Define a versioned transport contract + software simulator:** Document every BLE characteristic or USB command frame so coding agents can exercise the documented app states without a physical board; measure coverage against your own test cases.
 3. **Gate firmware updates behind human-held signing keys:** Implement cryptographic signature verification in the bootloader before any external beta, and store private signing keys completely offline ([Security quickcheck](/en/articles/security-quickcheck/)).
 4. **Work through the verify-yourself compliance checklist below:** Check off an item only when you hold the primary datasheet, module grant conditions, or lab report in your own files.
 5. **Audit landing copy against verified evidence:** Separate *“uses a pre-certified BLE module”* (which still carries host integration rules) from claiming full end-product certification you have not completed.
@@ -74,12 +95,12 @@ Give coding agents the software contract while fencing off signing keys and hard
 # Hardware / Software Split Spec: [Device Name]
 
 - **Product class & target markets:** [e.g., BLE desk timer — US & Canada]
-- **Offline-first rule:** Device + companion app must pair and operate with airplane-mode Wi-Fi off.
-- **OTA authority:** Bootloader verifies Ed25519 signature; private signing key is offline (NEVER in repo/CI/agent).
+- **Offline-first rule:** Disable Wi-Fi and cellular data; keep BLE or USB enabled and verify the documented local controls.
+- **OTA authority:** Bootloader verifies signatures using the algorithm and trust chain supported by this device; document the key owner and offline signing procedure.
 
 ## Transport contract v1 (shared by Firmware + Companion Mock)
 - **Transport:** [BLE GATT / WebUSB / Serial]
-- **Service UUID / Vendor ID:** `0000XXXX-0000-1000-8000-00805f9b34fb`
+- **Transport identifier:** [BLE: actual service + characteristic UUIDs; USB: assigned VID/PID; serial: port/framing settings. These are different identifiers, not interchangeable.]
 - **State frame (device → app):** `{ protocolVersion: 1, batteryMv: number, mode: "idle" | "active", fwVersion: string }`
 - **Command frame (app → device):** `{ cmd: "set_mode" | "ping", payload: ... }`
 

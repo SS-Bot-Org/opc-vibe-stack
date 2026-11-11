@@ -1,16 +1,112 @@
-# Nginx canonical redirects (example only)
+# Nginx canonical redirects
 
-`opcvibestack.conf.example` adds two normalization rules that the live site still needs:
+`opcvibestack.conf.example` is a sanitized copy of the live VPS config applied
+on 2026-11-11. It is documentation of what is running, not a content-release
+artifact. Do **not** apply this file from a content pull request. Changing live
+nginx is a separate operator step (backup, `nginx -t`, reload, verify, rollback).
 
-1. `www.opcvibestack.com` → `https://opcvibestack.com` with the same path and query.
-2. Any explicit `index.html` → the directory URL (`/en/index.html` → `/en/`), query preserved.
+Canonical host: `https://opcvibestack.com/<path>/` (apex, HTTPS, trailing slash,
+no `www`, no explicit `index.html`). Path and query are preserved on redirects.
 
-Do **not** apply this file from a content pull request. A maintainer should review the live
-server (and Cloudflare) first, then install or merge the snippet and reload nginx.
+## What the live config does
 
-Suggested apply steps (operator only):
+1. `http://` and `https://www.opcvibestack.com$request_uri` →
+   `https://opcvibestack.com$request_uri` (301). The **HTTPS www server block**
+   is required because TLS already terminates on the VPS. The Let's Encrypt
+   certificate covers both apex and `www`; do not drop those cert paths when
+   editing.
+2. Any explicit `index.html` (`/index.html` or `/<path>/index.html`) → the
+   directory URL (`/en/index.html` → `/en/`), query preserved, using
+   `if ($request_uri …)` rather than `location` blocks.
+3. Existing apex HTTP → HTTPS and `/` → `/en/` redirects are unchanged.
+   `try_files $uri $uri/ $uri/index.html` still serves directory URLs as 200.
 
-1. Diff against the live site config and confirm where TLS and `www` are already handled.
-2. Install the `www` server block and the `index.html` locations without dropping existing TLS, logs, or deny rules.
-3. `nginx -t` and reload.
-4. Check: `https://www.opcvibestack.com/en/?utm=1` and `https://opcvibestack.com/en/index.html?utm=1` both 301 to `https://opcvibestack.com/en/?utm=1`.
+## Why `if ($request_uri)` instead of `location` for `index.html`
+
+An earlier sketch used:
+
+```nginx
+location = /index.html {
+    return 301 /$is_args$args;
+}
+location ~* ^(.+)/index\.html$ {
+    return 301 $1/$is_args$args;
+}
+```
+
+Those locations match the rewritten `$uri`. With
+`try_files $uri $uri/ $uri/index.html` and nginx's default `index index.html`,
+a client request to `/en/` can be internally rewritten to `/en/index.html`,
+which would then 301 back to `/en/` — a redirect loop.
+
+`$request_uri` is the original client URI (including the query string). The
+`if` + `return 301` form therefore redirects only when the client actually
+asked for `index.html`. Internal `try_files` / index-module rewrites still
+serve the file, and `/en` still 301s to `/en/`.
+
+## Apply or change (operator only)
+
+1. Diff this file against `/etc/nginx/sites-available/opcvibestack.conf` on the
+   VPS. Confirm TLS, logs, and any deny rules are preserved.
+2. Back up the live file with a UTC timestamp, and keep a second copy (for
+   example under `/root/nginx-backups/`).
+3. Install the new config.
+4. Run `nginx -t`. If it fails, restore the backup and stop.
+5. Reload nginx (`systemctl reload nginx`).
+6. Run the verification curls below. On any failure, roll back immediately.
+
+## Rollback
+
+```bash
+cp -a /etc/nginx/sites-available/opcvibestack.conf.bak-<UTC-stamp> \
+      /etc/nginx/sites-available/opcvibestack.conf
+nginx -t && systemctl reload nginx
+```
+
+Confirm `nginx -t` succeeds and `systemctl is-active nginx` is `active` after
+the restore. Do not start a new change until the previous config is serving
+again.
+
+## Verification curls
+
+Probe the origin (use `curl --resolve` to the VPS A record if a local resolver
+intercepts these names). Expect 301 to the apex canonical URL, query preserved.
+Directory URLs and static files stay 200. Follow redirects with `--max-redirs 5`
+and confirm there is no loop.
+
+```bash
+# www HTTP and HTTPS → apex (query preserved)
+curl -sSI http://www.opcvibestack.com/en/
+# Location: https://opcvibestack.com/en/
+curl -sSI 'http://www.opcvibestack.com/en/?utm=1'
+# Location: https://opcvibestack.com/en/?utm=1
+curl -sSI https://www.opcvibestack.com/en/
+curl -sSI 'https://www.opcvibestack.com/en/?utm=1'
+
+# explicit index.html → directory URL (query preserved)
+curl -sSI https://opcvibestack.com/en/index.html
+# Location: https://opcvibestack.com/en/
+curl -sSI https://opcvibestack.com/zh/index.html
+# Location: https://opcvibestack.com/zh/
+curl -sSI 'https://opcvibestack.com/en/stack/index.html?x=1'
+# Location: https://opcvibestack.com/en/stack/?x=1
+
+# apex pages, robots, sitemap, and 404 still behave as before
+curl -sSI https://opcvibestack.com/en/
+curl -sSI https://opcvibestack.com/zh/
+curl -sSI https://opcvibestack.com/robots.txt
+curl -sSI https://opcvibestack.com/sitemap.xml
+curl -sSI https://opcvibestack.com/this-page-does-not-exist-opc-probe
+
+# HTTP → HTTPS and / → /en/ still work
+curl -sSI http://opcvibestack.com/en/
+curl -sSI https://opcvibestack.com/
+
+# no redirect loop (directory URL is a 200 with 0 hops)
+curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
+  -L --max-redirs 5 'https://www.opcvibestack.com/en/?utm=1'
+curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
+  -L --max-redirs 5 'https://opcvibestack.com/en/index.html?utm=1'
+curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
+  -L --max-redirs 5 https://opcvibestack.com/en/
+```

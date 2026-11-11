@@ -1,15 +1,13 @@
-# Example Nginx site for OPC Vibe Stack (Ubuntu VPS).
-# Document root should be the `current` symlink to a release directory.
-#
-# This file is a repo-side sketch only. Applying it to the live VPS is a
-# separate operations step and is NOT done by the SEO/GEO pull request.
-# If Cloudflare (or another proxy) already issues www or HTTPS redirects,
-# keep those in one place to avoid redirect chains.
+# OPC Vibe Stack — sanitized copy of the live Ubuntu VPS nginx config
+# applied 2026-11-11. Document root is the `current` symlink to a release
+# directory. Changing live nginx is a separate operator step (see README.md);
+# this file is not applied by a content deploy.
 #
 # Canonical host: https://opcvibestack.com/<path>/  (apex, HTTPS, trailing slash,
 # no www, no explicit index.html). Preserve path and query string on redirects.
+# The Let's Encrypt certificate already covers both apex and www.
 
-# www → apex, preserve path + query.
+# www HTTP → apex HTTPS, preserve path + query.
 server {
     listen 80;
     listen [::]:80;
@@ -17,26 +15,57 @@ server {
     return 301 https://opcvibestack.com$request_uri;
 }
 
+# apex HTTP → apex HTTPS, preserve path + query.
 server {
     listen 80;
     listen [::]:80;
     server_name opcvibestack.com;
+    return 301 https://opcvibestack.com$request_uri;
+}
 
-    # Prefer Cloudflare Full (strict) with origin cert; this block is HTTP origin sketch.
-    # Terminate TLS at the proxy or add a matching 443 server with the origin certificate.
+# www HTTPS → apex HTTPS, preserve path + query.
+# Required because TLS already terminates on the VPS (not only at a proxy).
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name www.opcvibestack.com;
+
+    ssl_certificate /etc/letsencrypt/live/opcvibestack.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/opcvibestack.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    return 301 https://opcvibestack.com$request_uri;
+}
+
+# apex HTTPS — site content.
+server {
+    listen 443 ssl; # managed by Certbot
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    server_name opcvibestack.com;
+
     root /srv/opcvibestack/current;
     error_page 404 /404.html;
 
-    location = / {
-        return 301 /en/;
-    }
-
     # Explicit index.html → the directory URL (canonical), keep the query string.
-    location = /index.html {
+    # Key off $request_uri (the original client URI, including query) so an
+    # internal rewrite from try_files / the index module to .../index.html
+    # cannot 301-loop back to the directory URL.
+    #
+    # Do not replace these with:
+    #   location = /index.html { return 301 /$is_args$args; }
+    #   location ~* ^(.+)/index\.html$ { return 301 $1/$is_args$args; }
+    # Those match the rewritten $uri and would loop with the existing
+    # `try_files $uri $uri/ $uri/index.html` plus default `index index.html`.
+    if ($request_uri ~* ^/index\.html(?:\?.*)?$) {
         return 301 /$is_args$args;
     }
-    location ~* ^(.+)/index\.html$ {
+    if ($request_uri ~* ^(.+)/index\.html(?:\?.*)?$) {
         return 301 $1/$is_args$args;
+    }
+
+    location = / {
+        return 301 /en/;
     }
 
     location / {
@@ -52,4 +81,9 @@ server {
     location ~* \.(html|xml|txt|json)$ {
         add_header Cache-Control "no-cache";
     }
+
+    ssl_certificate /etc/letsencrypt/live/opcvibestack.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/opcvibestack.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }

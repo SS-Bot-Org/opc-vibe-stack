@@ -37,7 +37,7 @@ These rules implement the 2026-11-10 site review. They are editorial standards, 
 ## Canonical URLs, structured data, and sitemap
 
 - Canonical host is `https://opcvibestack.com` (apex, HTTPS, trailing slash, no `www`, no explicit `index.html`).
-- `www` and explicit `index.html` should 301 to that canonical form, preserving path and query. The repo example lives in `site/ops/nginx/`; applying it on the VPS is an operator step, not a content deploy.
+- `www` and explicit `index.html` should 301 to that canonical form, preserving path and query. The live VPS config (HTTPS www block and `$request_uri` index.html redirects) is recorded in `site/ops/nginx/`. Changing it is an operator step, not a content deploy.
 - Articles use `og:type=article` and emit `Article` plus `BreadcrumbList` JSON-LD that matches the visible title, dates, author, and breadcrumb path. Other pages stay `website`.
 - Share images should be self-made typographic cards (see `site/scripts/generate-og-cards.py`). No AI covers and no UI screenshots. Every page needs `og:image:alt`.
 - Sitemap `lastmod` comes from real substantive dates (`updated` for articles; latest listed content for section indexes; pinned `aboutUpdated` for About). Never stamp the build clock on every URL.

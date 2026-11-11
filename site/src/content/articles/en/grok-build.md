@@ -1,5 +1,7 @@
 ---
 title: "Grok Build"
+seoTitle: "Grok Build: Buyer Pages, Honest Proof, and a CTA"
+subtitle: "Last-mile agent workflow for one public page, proof, and a tested call to action"
 slug: grok-build
 summary: "A coding-agent workflow for one buyer-facing page: scoped changes, honest proof, a tested CTA, and a separate release step."
 locale: en
@@ -10,6 +12,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Grok Build / xAI build tooling; confirm current product surfaces and CLI/web workflows in live xAI docs"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:

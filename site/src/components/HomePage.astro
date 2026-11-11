@@ -2,7 +2,7 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Icon from './Icon.astro';
 import EvidenceLabel from './EvidenceLabel.astro';
-import { site, type Locale } from '../data/site';
+import { type Locale } from '../data/site';
 import { getPublishedChangelog, getStackCards, articleHref } from '../lib/content';
 
 interface Props { locale: Locale; }
@@ -17,18 +17,19 @@ const copy = zh ? {
   title: '下一步，选对你的 Agent。',
   intro: '用 Claude Code、Codex 与 Grok Build，完成调研、构建与销售的实用指南。',
   stack: '主工具栈', comparison: '完整对照表', agent: '工具', bestFor: '擅长什么', guide: '指南', read: '阅读指南',
-  evidence: '基于文档的实践指南', playbook: '用 48 小时，从想法走向 MVP。', cta: '从 48 小时 MVP Playbook 开始',
+  evidence: '基于文档的实践指南', playbook: '建议的 48 小时时间预算：从想法推进到一个足够薄的 MVP。', cta: '从 48 小时 MVP Playbook 开始',
   research: '调研', build: '构建', sell: '销售', latest: '最近更新', empty: '首条周更即将到来。',
 } : {
   eyebrow: 'The solo builder’s reference',
   title: 'The right agent for the next step.',
   intro: 'Practical guides to research, build, and sell with Claude Code, Codex, and Grok Build.',
   stack: 'Primary stack', comparison: 'Full comparison', agent: 'Agent', bestFor: 'Best for', guide: 'Guide', read: 'Read guide',
-  evidence: 'Documentation-backed guidance', playbook: 'Go from idea to MVP in 48 hours.', cta: 'Start the 48-hour MVP playbook',
+  evidence: 'Documentation-backed guidance', playbook: 'A suggested 48-hour time budget: go from idea to a thin MVP.', cta: 'Start the 48-hour MVP playbook',
   research: 'Research', build: 'Build', sell: 'Sell', latest: 'Latest update', empty: 'First weekly update coming soon.',
 };
+const pageTitle = zh ? '一人公司的 AI 编程与交付指南' : 'AI Coding Workflows for Solo Builders';
 ---
-<SiteLayout locale={locale} title={site.name} description={copy.intro} canonicalPath={home} wide={true}>
+<SiteLayout locale={locale} title={pageTitle} description={copy.intro} canonicalPath={home} wide={true}>
   <section class="home-intro" aria-labelledby="home-heading">
     <p class="eyebrow">{copy.eyebrow}</p>
     <h1 id="home-heading">{copy.title}</h1>
@@ -47,6 +48,7 @@ const copy = zh ? {
             <th scope="row">
               <a href={articleHref(card.data.slug, locale)}>{card.data.title}</a>
               {card.data.toolAvailability !== 'active' && <span class={`badge badge--${card.data.toolAvailability}`}>{card.data.toolAvailability}</span>}
+              {card.data.subtitle && <p class="tool-subtitle">{card.data.subtitle}</p>}
             </th>
             <td>{card.data.bestFor ?? card.data.summary}</td>
             <td><a class="text-link" href={articleHref(card.data.slug, locale)} aria-label={`${copy.read}: ${card.data.title}`}>{copy.read}<Icon name="arrow" /></a></td>

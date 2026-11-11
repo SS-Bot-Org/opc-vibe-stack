@@ -10,6 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "与具体工具无关；请按产品类别核对当地法规与厂商文档"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:

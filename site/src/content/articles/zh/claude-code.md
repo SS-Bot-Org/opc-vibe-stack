@@ -1,5 +1,7 @@
 ---
 title: "Claude Code"
+seoTitle: "Claude Code 实战：先计划后改码与可强制的 Hooks"
+subtitle: "仓库内交互式编码 agent：先审计划、再改代码，并用 hooks 约束行为"
 slug: claude-code
 summary: "擅长仓库内交互式探索、先计划后改码、验证闭环与 hooks 强制约束的主力编码 agent。"
 locale: zh
@@ -10,6 +12,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code CLI/agent（Anthropic）；命令与 hooks 配置结构请以最新官方文档为准"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:
@@ -75,7 +78,7 @@ caveats: "密钥勿进提示词；硬性禁区写进权限规则与 hooks，而�
 | 多文件新功能或耦合不清的重构 | **Claude Code** | 交互式读库能力强，适合「先审计划、再动代码」 |
 | 已有明确规格、可拆成多条独立切片并行推进 | [Codex](/zh/articles/codex/) | 边界和测试清晰时，CLI 批处理与单切片产出更干脆 |
 | 功能已通，准备打磨落地页、卖点与公开演示路径 | [Grok Build](/zh/articles/grok-build/) | 聚焦买家视角与主 CTA 冒烟，不把销售页写成技术日志 |
-| 严禁改动数据库迁移、`.env` 或部署核心脚本 | [规则 + hooks](/zh/articles/rules-hooks/) | 自然语言提示会漂移，唯有 hooks 与 CI 能确定性拦截 |
+| 严禁改动数据库迁移、`.env` 或部署核心脚本 | [规则 + hooks](/zh/articles/rules-hooks/) | 文字规则会漂移。权限规则与 PreToolUse 可在执行前拒绝调用；hooks 与 CI 能对禁止操作给出确定性失败，但 PostToolUse / Stop 等事后检查不能逆转已经发生的动作 |
 
 ## 前置条件
 

@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: unverified
 applicableToolsVersions: "All local coding-agent CLIs, desktop chat apps, MCP servers, and editor extension marketplaces; re-audit after updates"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-01"

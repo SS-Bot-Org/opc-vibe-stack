@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code, Codex, or Grok Build; GitHub Spec Kit when installed; paired with your repo’s verify command"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-01"
@@ -77,7 +78,7 @@ Fill in the actual route, files in scope, and existing check command. Run the ch
 |---|---|---|
 | Starting input | *“Add search and make the UI nicer”* | Written user outcome + routes/files in scope + non-goals |
 | Architecture decisions | Invented mid-edit by the model | Reviewed in `spec.md` / `plan.md` before code changes |
-| Typical diff size | 20+ touched files, mixed concerns | 1–4 files per task, easy human diff review |
+| Task-splitting example (not a measured average) | A vague prompt such as “add search and make the UI nicer” can sprawl across many files (20+ is an illustration, not a measured typical result) | A bounded task keeps the diff reviewable—for example 1–4 files in one slice |
 | Failure recovery | Endless chat debugging spirals | `git checkout` one small task or tighten the spec |
 | Completion signal | “Looks right in chat” | Deterministic verify command exits `0` |
 
@@ -97,6 +98,8 @@ Fill in the actual route, files in scope, and existing check command. Run the ch
 6. **Frame the coding prompt with four concrete fields** (what to build, what finished looks like, how to verify it is done, and what must never be done) rather than filler phrases like *“think carefully step by step.”*
 7. **Execute one task at a time.** Forbid drive-by refactors in both your prompt and your project rules ([Rules files + hooks](/en/articles/rules-hooks/)).
 8. **Verify, then commit.** If the verify command fails, either fix the defect within scope or revert and refine the spec—never pile new features onto a broken build.
+
+This repository’s own [broken-link release gate](/en/articles/48h-mvp-agent-stack/#broken-link-release-gate) is a concrete, pinned example of a deterministic verify command failing a bad content release.
 
 > [!NOTE] Evidence boundary on sources
 > The `specify → plan → tasks → implement` workflow is **documentation-backed** via GitHub’s official Spec Kit quickstart. Social star counts, the voice-to-spec pre-pass, and the four-field prompt framing come from briefing-linked X posts—treat any productivity multipliers as **poster-claimed and unverified** until you test them on your own repository.

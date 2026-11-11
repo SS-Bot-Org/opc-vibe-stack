@@ -10,6 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code + Codex + Grok Build / xAI docs as of 2026-11; re-check CLI names before a timed run"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:
@@ -140,9 +141,35 @@ Drop this file into your repository root before starting the timer:
 
 ## Worked example: make a broken content release fail
 
-Use the [OPC Vibe Stack repository](https://github.com/SS-Bot-Org/opc-vibe-stack) as a concrete content-MVP slice. The runnable fixture lives in `site/tests/content.test.mjs`: it copies the site into a temporary directory, injects a broken quoted YAML route into a published changelog, runs the **full** build, and asserts a nonzero exit without touching your working tree or publishing anything.
+<a id="broken-link-release-gate"></a>
 
-Copy this bounded task brief into your coding agent:
+Use the [OPC Vibe Stack repository](https://github.com/SS-Bot-Org/opc-vibe-stack) as a concrete content-MVP slice. The following input, command, and failure diagnostic come from that repository’s real history—not a reconstructed demo.
+
+**Pinned commits**
+
+- Test introduced in [`ab2504a843597dfb408f4ea34fe168e8a8dc2c0b`](https://github.com/SS-Bot-Org/opc-vibe-stack/commit/ab2504a843597dfb408f4ea34fe168e8a8dc2c0b) (2026-11-07, *fix: enforce publishing contracts and harden reader workflows*).
+- The same fixture is still present on `main` as of [`96117d2d901452e623e714691ecbbbc898acb07e`](https://github.com/SS-Bot-Org/opc-vibe-stack/commit/96117d2d901452e623e714691ecbbbc898acb07e) (2026-11-10, merge of the article-illustrations work). Recheck the file on a newer revision before quoting later behavior.
+
+**Reproducible input**
+
+The runnable fixture is `site/tests/content.test.mjs`. It copies the site into a temporary directory, edits a published changelog, runs the **full** `npm run build`, and asserts a nonzero exit without touching your working tree or publishing anything. The mutation, against `site/src/content/changelog/en/2026-w45-m3.md`, is:
+
+- find the `affectedPages` line `- /en/playbooks/`
+- replace it with the quoted string `- "/en/does-not-exist/"`
+
+**Command and expected output**
+
+After checking out the repository, run with Node.js ≥22.23.4:
+
+```bash
+cd site
+npm ci
+node --test --test-name-pattern='quoted nonexistent changelog link' tests/content.test.mjs
+```
+
+Expected result recorded for this fixture: the selected test `FULL npm run build rejects quoted nonexistent changelog link` passes. The inner build exits nonzero and the combined stdout/stderr includes `missing output`. The outer test runner exits **0** because it expects that failure. Run `npm run check && npm test && npm run build` for the full local gate on an unmodified tree (that path should exit 0).
+
+Copy this bounded task brief into your coding agent if you want the same check added to another site:
 
 ```text
 Goal: reject a release containing a nonexistent changelog target.
@@ -155,18 +182,8 @@ the regression test exits zero because it EXPECTS that failure.
 Safety: keep the real source untouched; no network deployment or production probes.
 ```
 
-After checking out the repository, run with Node.js ≥22.23.4:
-
-```bash
-cd site
-npm ci
-node --test --test-name-pattern='quoted nonexistent changelog link' tests/content.test.mjs
-```
-
-Expected result: the selected `FULL npm run build rejects quoted nonexistent changelog link` test passes. Its inner build fails deliberately with `missing output`, while the outer test runner exits **0**. Run `npm run check && npm test && npm run build` for the full local gate.
-
 > [!NOTE] Scope of local verification
-> Local reproduction recorded on Node 22.23.4 (Linux, 2026-11-07). This fixture verifies a deterministic content-release failure gate only—not agent reasoning quality, revenue outcomes, visual browser layout, or live VPS deployment. External URLs are not crawled. The playbook’s overall `evidence` remains `documentation-backed`; one locally tested regression fixture does not upgrade every workflow recommendation on this page to `tested`.
+> Local reproduction recorded on Node 22.23.4 (Linux, 2026-11-07), matching the commit that introduced the fixture. This verifies a deterministic content-release failure gate only—not agent reasoning quality, revenue outcomes, visual browser layout, or live VPS deployment. External URLs are not crawled. The playbook’s overall `evidence` remains `documentation-backed`; one locally tested regression fixture does not upgrade every workflow recommendation on this page to `tested`.
 
 ## Definition of done
 

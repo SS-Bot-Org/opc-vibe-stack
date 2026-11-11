@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: unverified
 applicableToolsVersions: "所有本地编程 agent CLI、桌面聊天客户端、MCP 服务器与编辑器扩展市场；工具升级后请复查"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-01"

@@ -7,8 +7,10 @@ import Icon from '../components/Icon.astro';
 import type { CollectionEntry } from 'astro:content';
 import type { MarkdownHeading } from 'astro';
 import { site } from '../data/site';
+import { editorialName, aboutHref } from '../data/editorial';
 import { transformArticleHtml } from '../lib/article-html.mjs';
-import { getRelatedArticles, articleHref } from '../lib/content';
+import { getRelatedArticles, articleHref, pageTitleForArticle } from '../lib/content';
+import { articleJsonLd, breadcrumbList, ogImageForArticle, ogImageAltForArticle, absoluteUrl } from '../lib/seo.mjs';
 
 interface Props {
   entry: CollectionEntry<'articles'>;
@@ -59,8 +61,33 @@ function estimateReadingMinutes(raw: string, isZh: boolean): number {
 
 const readMinutes = estimateReadingMinutes(entry.body ?? '', zh);
 const sectionPath = `/${locale}/${section}/`;
-const resolvedOg = ogImage ?? (d.slug === '48h-mvp-agent-stack' ? '/og/playbook-48h-mvp.png'
-  : d.slug === 'hardware-soft-split' ? '/og/hardware.png' : site.ogImagePath);
+const pageTitle = pageTitleForArticle(d);
+const resolvedOg = ogImage ?? ogImageForArticle(d.slug, locale, site.ogImagePath);
+const ogImageAlt = ogImageAltForArticle(pageTitle, locale);
+const authorName = editorialName(locale);
+const authorUrl = absoluteUrl(aboutHref(locale));
+const homePath = `/${locale}/`;
+const homeLabel = zh ? '首页' : 'Home';
+const crumbs = [
+  { name: homeLabel, path: homePath },
+  { name: sectionLabels[section], path: sectionPath },
+  { name: d.title },
+];
+const jsonLd = [
+  articleJsonLd({
+    headline: d.title,
+    description: d.summary,
+    url: absoluteUrl(path),
+    image: absoluteUrl(resolvedOg),
+    imageAlt: ogImageAlt,
+    datePublished: d.published,
+    dateModified: d.updated,
+    locale,
+    authorName,
+    authorUrl,
+  }),
+  breadcrumbList(crumbs),
+];
 
 const related = await getRelatedArticles(entry, locale, 3);
 
@@ -72,24 +99,35 @@ if (related.length > 0) {
   toc.push({ depth: 2, slug: 'related-heading', text: zh ? '下一步推荐' : 'Next in the workflow' });
 }
 ---
-<SiteLayout title={d.title} description={d.summary} canonicalPath={path} noindex={d.status === 'deprecated'}
-  locale={locale} ogImage={resolvedOg} wide={true} article={true} activeSection={sectionPath}>
+<SiteLayout title={pageTitle} description={d.summary} canonicalPath={path} noindex={d.status === 'deprecated'}
+  locale={locale} ogImage={resolvedOg} ogImageAlt={ogImageAlt} wide={true} article={true} activeSection={sectionPath}
+  datePublished={d.published} dateModified={d.updated} jsonLd={jsonLd}>
   <div class="article-layout">
     <header class="article-header">
       <nav class="breadcrumb" aria-label={zh ? '当前位置' : 'Breadcrumb'}>
+        <a href={homePath}>{homeLabel}</a>
+        <span aria-hidden="true">/</span>
         <a href={sectionPath}>{sectionLabels[section]}</a>
         <span aria-hidden="true">/</span>
-        <span>{categoryLabels[d.category] ?? (zh ? '指南' : 'Guide')}</span>
+        <span>{d.title}</span>
       </nav>
       <h1 id="article-title">{d.title}</h1>
+      {d.subtitle && <p class="article-subtitle">{d.subtitle}</p>}
       <p class="lede">{d.summary}</p>
       <div class="article-meta">
         <EvidenceLabel evidence={d.evidence} locale={locale} />
         <span class="meta-pill">{stageLabels[d.stage]}</span>
         <span>{zh ? `约 ${readMinutes} 分钟阅读` : `${readMinutes} min read`}</span>
+        <span>{zh ? '首次发布' : 'First published'} <time datetime={d.published}>{d.published}</time></span>
         <span>{zh ? '更新于' : 'Updated'} <time datetime={d.updated}>{d.updated}</time></span>
         {d.status === 'deprecated' && <span class="badge badge--deprecated">{zh ? '已弃用' : 'Deprecated'}</span>}
       </div>
+      <p class="article-byline">
+        {zh ? '作者 / 编辑：' : 'By '}
+        <a href={`${aboutHref(locale)}#editorial`}>{authorName}</a>
+        {zh ? '。人工复核与 AI 辅助范围见关于页；纠错请走 ' : '. Human review and AI-assisted scope are described on the About page. Corrections: '}
+        <a href="https://github.com/SS-Bot-Org/opc-vibe-stack/issues">{zh ? 'GitHub Issues' : 'GitHub issues'}</a>{zh ? '。' : '.'}
+      </p>
       <div class="article-tools-row">
         <span class="article-tools-row__label">{zh ? '涉及工具：' : 'Tools:'}</span>
         {d.tools.length > 0 ? (

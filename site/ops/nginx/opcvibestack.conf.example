@@ -1,12 +1,29 @@
 # Example Nginx site for OPC Vibe Stack (Ubuntu VPS).
 # Document root should be the `current` symlink to a release directory.
+#
+# This file is a repo-side sketch only. Applying it to the live VPS is a
+# separate operations step and is NOT done by the SEO/GEO pull request.
+# If Cloudflare (or another proxy) already issues www or HTTPS redirects,
+# keep those in one place to avoid redirect chains.
+#
+# Canonical host: https://opcvibestack.com/<path>/  (apex, HTTPS, trailing slash,
+# no www, no explicit index.html). Preserve path and query string on redirects.
+
+# www → apex, preserve path + query.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name www.opcvibestack.com;
+    return 301 https://opcvibestack.com$request_uri;
+}
 
 server {
     listen 80;
     listen [::]:80;
-    server_name opcvibestack.com www.opcvibestack.com;
+    server_name opcvibestack.com;
 
     # Prefer Cloudflare Full (strict) with origin cert; this block is HTTP origin sketch.
+    # Terminate TLS at the proxy or add a matching 443 server with the origin certificate.
     root /srv/opcvibestack/current;
     error_page 404 /404.html;
 
@@ -14,12 +31,20 @@ server {
         return 301 /en/;
     }
 
+    # Explicit index.html → the directory URL (canonical), keep the query string.
+    location = /index.html {
+        return 301 /$is_args$args;
+    }
+    location ~* ^(.+)/index\.html$ {
+        return 301 $1/$is_args$args;
+    }
+
     location / {
         try_files $uri $uri/ $uri/index.html =404;
     }
 
     location /_astro/ {
-        # M1: assets live inside the release. When using shared/_astro later, alias there.
+        # Assets live inside the release. When using shared/_astro later, alias there.
         add_header Cache-Control "public, max-age=31536000, immutable";
         try_files $uri =404;
     }

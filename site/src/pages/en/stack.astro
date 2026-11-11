@@ -1,19 +1,21 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getStackCards, articleHref } from '../../lib/content';
+import { getStackCards, articleHref, featuredToolNames } from '../../lib/content';
+import { stackDocumentTitle } from '../../lib/seo.mjs';
 
 const cards = await getStackCards('en');
+const title = stackDocumentTitle(featuredToolNames(cards), 'en');
 ---
 <SiteLayout
   locale="en"
-  title="Stack"
-  description="How a one-person company should split Claude Code, Codex, and Grok Build."
+  title={title}
+  description="How a one-person company can split work across the current featured coding agents, with availability tracked separately from article status."
   canonicalPath="/en/stack/"
   wide={true}
 >
   <h1>Stack</h1>
   <p class="lede">
-    Three primary tools, with availability tracked separately from article status.
+    Current featured tools, with availability tracked separately from article status. This comparison follows the tools listed this week, not a permanent vendor ranking.
   </p>
 
   <div class="table-wrap" tabindex="0" role="region" aria-label="Agent comparison, scroll horizontally if needed">
@@ -31,7 +33,10 @@ const cards = await getStackCards('en');
       <tbody>
         {cards.map((c) => (
           <tr>
-            <td><a href={articleHref(c.data.slug)}>{c.data.title}</a></td>
+            <td>
+              <a href={articleHref(c.data.slug)}>{c.data.title}</a>
+              {c.data.subtitle && <p class="tool-subtitle">{c.data.subtitle}</p>}
+            </td>
             <td>{c.data.stage}</td>
             <td>{c.data.bestFor}</td>
             <td>{c.data.poorFit}</td>
@@ -51,6 +56,7 @@ const cards = await getStackCards('en');
     {cards.map((c) => (
       <article class="card">
         <h2><a href={articleHref(c.data.slug)}>{c.data.title}</a></h2>
+        {c.data.subtitle && <p class="tool-subtitle">{c.data.subtitle}</p>}
         <p>{c.data.summary}</p>
         <p class="meta">Updated {c.data.updated}</p>
       </article>

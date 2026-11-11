@@ -1,5 +1,7 @@
 ---
 title: "Claude Code"
+seoTitle: "Claude Code: Plan-First Edits and Enforceable Hooks"
+subtitle: "Interactive, repo-aware agent for plan-first edits, verify loops, and hooks"
 slug: claude-code
 summary: "Interactive, repo-aware coding agent for plan-first refactors, verification loops, and enforceable hooks."
 locale: en
@@ -10,6 +12,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code CLI/agent (Anthropic); confirm current commands and hook schema against live vendor docs"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:

@@ -1,11 +1,12 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { evidenceCopy } from '../../data/site';
+import { editorial } from '../../data/editorial';
 ---
 <SiteLayout
   locale="en"
-  title="About"
-  description="About OPC Vibe Stack, how updates work, evidence labels, and the disclaimer."
+  title="Editorial Process, Evidence Labels, and Corrections"
+  description="Who maintains OPC Vibe Stack, how human review and AI assistance are split, evidence labels, and how to request a correction."
   canonicalPath="/en/about/"
 >
   <h1>About</h1>
@@ -19,6 +20,25 @@ import { evidenceCopy } from '../../data/site';
     <p>
       Executable checklists and tool-division guidance—not a news dump, course platform, or
       unofficial vendor ranking. The site itself is dogfooded with the same agent stack.
+    </p>
+
+    <h2 id="editorial">Editorial team and accountability</h2>
+    <p>
+      Pages are published by the <strong>{editorial.nameEn}</strong>, which maintains this
+      site through the public <a href={editorial.repoUrl}>GitHub repository</a>.
+      This byline names the maintaining team, not a single biographical author, and it does
+      not claim professional licenses or vendor affiliation.
+    </p>
+    <p>
+      Drafting and revision often use AI coding agents (the same stack the guides describe).
+      A human editor reviews sources, evidence labels, numerical claims, and the decision to
+      publish before a change goes live. AI assistance does not replace that review, and it
+      is not a substitute for checking current official documentation.
+    </p>
+    <p>
+      If something is wrong, unclear, or out of date, open a public issue on
+      <a href={editorial.correctionsUrl}>GitHub Issues</a>. That is the correction channel
+      for this site.
     </p>
 
     <h2>How updates work</h2>

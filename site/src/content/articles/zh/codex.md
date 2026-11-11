@@ -1,5 +1,7 @@
 ---
 title: "Codex"
+seoTitle: "Codex 实战：从任务规格到可验证的代码改动"
+subtitle: "规格驱动的编码 agent 与 CLI，适合边界清晰的单切片与可验证 diff"
 slug: codex
 summary: "OpenAI 面向规格驱动任务的编码 agent 与 CLI，擅长边界清晰的单切片执行、批处理修改与干净 diff。"
 locale: zh
@@ -10,6 +12,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "OpenAI Codex CLI/agent；具体 CLI 参数与 config.toml 键名请以 OpenAI 最新官方文档为准"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:
@@ -61,7 +64,7 @@ caveats: "产品界面会演进；升级后请固定文档链接并复查命令�
   <figcaption><strong>任务边界分工图</strong> 独立缺陷修复和内容切片，只有在文件不重叠时才适合并行；共享数据结构与依赖变更应串行进行。无论哪条路径，都要验证结果并审阅敏感改动。</figcaption>
 </figure>
 
-对一人公司来说，Codex 最大的效率杠杆是按规格批量推进独立切片——但前提是**各切片不会踩同一批共享文件**。
+独立切片只有在文件归属和验收检查都清楚时才适合并行。共享文件仍需要协调；并行并不会自动加快进度。
 
 | 切片类型 | 推荐执行方式 | 原因 |
 |---|---|---|

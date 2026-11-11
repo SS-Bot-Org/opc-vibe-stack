@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "任意栈内 agent + 静态/预发托管环境；可选用 agent-screenplay MCP/CLI（需 Node 20+）生成脚本化录屏"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-04"

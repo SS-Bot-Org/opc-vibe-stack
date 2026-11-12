@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP; Codex config.toml & mcp_servers — confirm exact syntax for your installed CLI version"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-02"
@@ -114,7 +115,7 @@ This tests one access path. [Read/Edit deny rules do not cover every subprocess]
 | *“Please never edit `.env` or production deploy keys”* | `permissions.deny` rules such as `Read(./.env)` / `Edit(./.env)`, a `PreToolUse` hook for patterns the rules can't express, plus `.gitignore` |
 | *“Never touch production”* in `CLAUDE.md` | `deny` or `ask` rules for the deploy commands you actually use (for example `Bash(git push *)`), and keep production credentials off the agent's machine |
 | *“Always run `npm run check` before saying you’re done”* | `Stop` hook runs `npm run check`, maps failures to exit `2`, and guards `stop_hook_active`; post-edit checks cannot undo an edit |
-| *“Don’t break translated slugs or changelog page links”* | `scripts/validate.mjs` + `scripts/validate-output.mjs` fail `npm run build` automatically |
+| *“Don’t break translated slugs or changelog page links”* | `scripts/validate.mjs` + `scripts/validate-output.mjs` fail `npm run build` automatically ([pinned broken-link release gate](/en/articles/48h-mvp-agent-stack/#broken-link-release-gate)) |
 
 ## Prerequisites
 

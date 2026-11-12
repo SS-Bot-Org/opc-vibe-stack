@@ -1,0 +1,89 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import EvidenceLabel from './EvidenceLabel.astro';
+import { getStageArticleGroups, articleHref, type Article } from '../lib/content';
+import { stageCopy, type JourneyStage } from '../data/stages';
+import type { Locale } from '../data/site';
+
+interface Props { stage: JourneyStage; locale: Locale; }
+const { stage, locale } = Astro.props;
+const zh = locale === 'zh';
+const copy = stageCopy[locale][stage];
+const { primary, supplementary } = await getStageArticleGroups(stage, locale);
+const path = `/${locale}/${stage}/`;
+
+function item(a: Article) {
+  return { a, href: articleHref(a.data.slug, locale) };
+}
+---
+<SiteLayout locale={locale} title={copy.title} description={copy.description} canonicalPath={path}>
+  <h1>{copy.heading}</h1>
+  <p class="lede">{copy.lede}</p>
+
+  <section class="stage-panel" aria-labelledby="stage-questions">
+    <h2 id="stage-questions">{copy.questionHeading}</h2>
+    <ol class="stage-questions">
+      {copy.questions.map((q) => <li>{q}</li>)}
+    </ol>
+  </section>
+
+  <section class="stage-panel" aria-labelledby="stage-deliverables">
+    <h2 id="stage-deliverables">{copy.deliverableHeading}</h2>
+    <ul class="stage-deliverables">
+      {copy.deliverables.map((d) => <li>{d}</li>)}
+    </ul>
+  </section>
+
+  {primary.length === 0 ? (
+    <div class="empty-state">{copy.empty}</div>
+  ) : (
+    <section class="stage-panel" aria-labelledby="stage-primary">
+      <h2 id="stage-primary">{copy.primaryHeading}</h2>
+      <p class="stage-reading-label">{copy.readingHeading}</p>
+      <ol class="list-plain stage-reading-list">
+        {primary.map((a, i) => {
+          const { href } = item(a);
+          return (
+            <li>
+              <p class="stage-step">{zh ? `第 ${i + 1} 步` : `Step ${i + 1}`}</p>
+              <h3 class="stage-item-title"><a href={href}>{a.data.title}</a></h3>
+              <p>{a.data.summary}</p>
+              <p class="meta">
+                <EvidenceLabel evidence={a.data.evidence} locale={locale} />
+                {' · '}
+                {a.data.category}
+                {' · '}
+                {zh ? '更新于' : 'Updated'} {a.data.updated}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )}
+
+  {supplementary.length > 0 && (
+    <section class="stage-panel stage-panel--secondary" aria-labelledby="stage-supplementary">
+      <h2 id="stage-supplementary">{copy.supplementaryHeading}</h2>
+      <p class="stage-supp-lede">{copy.supplementaryLede}</p>
+      <ul class="list-plain">
+        {supplementary.map((a) => {
+          const { href } = item(a);
+          return (
+            <li>
+              <h3 class="stage-item-title"><a href={href}>{a.data.title}</a></h3>
+              <p>{a.data.summary}</p>
+              <p class="meta">
+                <EvidenceLabel evidence={a.data.evidence} locale={locale} />
+                {' · '}
+                {zh ? '跨阶段' : 'cross-stage'}
+                {' · '}
+                {zh ? '更新于' : 'Updated'} {a.data.updated}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )}
+</SiteLayout>

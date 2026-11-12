@@ -1,19 +1,21 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getStackCards, articleHref } from '../../lib/content';
+import { getStackCards, articleHref, featuredToolNames } from '../../lib/content';
+import { stackDocumentTitle } from '../../lib/seo.mjs';
 
 const cards = await getStackCards('zh');
+const title = stackDocumentTitle(featuredToolNames(cards), 'zh');
 ---
 <SiteLayout
-  title="工具栈"
-  description="一人公司如何分工使用 Claude Code、Codex 与 Grok Build。"
+  title={title}
+  description="一人公司如何在当前主推的编码 agent 之间分工；工具可用性与文章状态相互独立。"
   canonicalPath="/zh/stack/"
   locale="zh"
   wide={true}
 >
   <h1>工具栈</h1>
   <p class="lede">
-    三个主工具，工具可用性（availability）与文章状态相互独立。
+    当前主推工具；工具可用性（availability）与文章状态相互独立。对照关系跟随本周列出的工具，不是固定的厂商排行。
   </p>
 
   <div class="table-wrap" tabindex="0" role="region" aria-label="工具对照表，可横向滚动">
@@ -31,7 +33,10 @@ const cards = await getStackCards('zh');
       <tbody>
         {cards.map((c) => (
           <tr>
-            <td><a href={articleHref(c.data.slug, 'zh')}>{c.data.title}</a></td>
+            <td>
+              <a href={articleHref(c.data.slug, 'zh')}>{c.data.title}</a>
+              {c.data.subtitle && <p class="tool-subtitle">{c.data.subtitle}</p>}
+            </td>
             <td>{c.data.stage}</td>
             <td>{c.data.bestFor}</td>
             <td>{c.data.poorFit}</td>
@@ -51,6 +56,7 @@ const cards = await getStackCards('zh');
     {cards.map((c) => (
       <article class="card">
         <h2><a href={articleHref(c.data.slug, 'zh')}>{c.data.title}</a></h2>
+        {c.data.subtitle && <p class="tool-subtitle">{c.data.subtitle}</p>}
         <p>{c.data.summary}</p>
         <p class="meta">更新于 {c.data.updated}</p>
       </article>

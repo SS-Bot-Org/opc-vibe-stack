@@ -10,6 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code + Codex + Grok Build / xAI 文档截至 2026-11；计时开跑前请再核对 CLI 名称"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:
@@ -140,9 +141,35 @@ tags: [playbook, mvp, toolchain, timebox]
 
 ## 实例：让带坏链接的内容版本构建失败
 
-你可以直接用 [OPC Vibe Stack 仓库](https://github.com/SS-Bot-Org/opc-vibe-stack) 体验一个最小内容 MVP 切片。可运行夹具位于 `site/tests/content.test.mjs`：它会复制一份临时站点、修改带引号的 YAML 路由链接、执行**完整构建**并断言非零退出，全程不会改动你的工作区源码，也不会触发任何线上发布。
+<a id="broken-link-release-gate"></a>
 
-可直接复制给 coding agent 的任务简报：
+你可以直接用 [OPC Vibe Stack 仓库](https://github.com/SS-Bot-Org/opc-vibe-stack) 体验一个最小内容 MVP 切片。下面的输入、命令和失败诊断来自该仓库的真实历史，不是事后编造的演示。
+
+**固定 commit**
+
+- 测试引入于 [`ab2504a843597dfb408f4ea34fe168e8a8dc2c0b`](https://github.com/SS-Bot-Org/opc-vibe-stack/commit/ab2504a843597dfb408f4ea34fe168e8a8dc2c0b)（2026-11-07，*fix: enforce publishing contracts and harden reader workflows*）。
+- 同一夹具在 `main` 的 [`96117d2d901452e623e714691ecbbbc898acb07e`](https://github.com/SS-Bot-Org/opc-vibe-stack/commit/96117d2d901452e623e714691ecbbbc898acb07e)（2026-11-10，文章插图相关合并）中仍然存在。引用更新修订上的行为前，请重新核对该文件。
+
+**可复现输入**
+
+可运行夹具位于 `site/tests/content.test.mjs`。它会复制一份临时站点、修改已发布 changelog、执行完整的 `npm run build` 并断言非零退出，全程不会改动你的工作区源码，也不会触发任何线上发布。针对 `site/src/content/changelog/en/2026-w45-m3.md` 的变更是：
+
+- 找到 `affectedPages` 中的 `- /en/playbooks/`
+- 替换为带引号的 `- "/en/does-not-exist/"`
+
+**命令与预期输出**
+
+检出仓库后，使用 Node.js ≥22.23.4 执行：
+
+```bash
+cd site
+npm ci
+node --test --test-name-pattern='quoted nonexistent changelog link' tests/content.test.mjs
+```
+
+该夹具的预期结果：选中的 `FULL npm run build rejects quoted nonexistent changelog link` 用例通过。内部构建非零退出，并且合并后的 stdout/stderr 包含 `missing output`。外层测试运行器退出码为 **0**，因为它预期这次失败。在未改动的源码树上，完整本地门禁可运行 `npm run check && npm test && npm run build`（这条路径应退出 0）。
+
+若要在其他站点加入同样的检查，可直接复制下面的任务简报给 coding agent：
 
 ```text
 目标：阻止包含不存在的更新日志目标的版本发布。
@@ -155,18 +182,8 @@ tags: [playbook, mvp, toolchain, timebox]
 安全边界：不动真实源码；不部署、不探测生产环境。
 ```
 
-检出仓库后，使用 Node.js ≥22.23.4 执行：
-
-```bash
-cd site
-npm ci
-node --test --test-name-pattern='quoted nonexistent changelog link' tests/content.test.mjs
-```
-
-预期结果：选中的 `FULL npm run build rejects quoted nonexistent changelog link` 用例通过——内部构建按预期因 `missing output` 失败，外层测试运行器退出码为 **0**。完整本地门禁可运行 `npm run check && npm test && npm run build`。
-
 > [!NOTE] 本地复现范围说明
-> 本地复现记录：2026-11-07，Linux，Node 22.23.4。该夹具仅验证「内容发布坏链拦截」这一确定性失败门禁，不代表 agent 代码质量、商业收入、浏览器视觉布局或生产部署已获验证；构建过程也不会抓取外部链接。本文整体 `evidence` 标签仍保持 `documentation-backed`——单个本地测试实例不会把全文所有流程建议自动升级为 `tested`。
+> 本地复现记录：2026-11-07，Linux，Node 22.23.4，与引入该夹具的 commit 一致。该夹具仅验证「内容发布坏链拦截」这一确定性失败门禁，不代表 agent 代码质量、商业收入、浏览器视觉布局或生产部署已获验证；构建过程也不会抓取外部链接。本文整体 `evidence` 标签仍保持 `documentation-backed`——单个本地测试实例不会把全文所有流程建议自动升级为 `tested`。
 
 ## 完成定义
 

@@ -10,6 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Tool-independent guidance; confirm local regulations and vendor docs for your product class"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:

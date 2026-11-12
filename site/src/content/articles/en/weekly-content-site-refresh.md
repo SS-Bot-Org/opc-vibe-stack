@@ -10,6 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Astro static site + Markdown collections; agent CLI of choice; editorial gate per site SDD"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:
@@ -27,7 +28,7 @@ tags: [playbook, ops, changelog, timebox, content]
 
 ## Conclusion
 
-Keep an engineering practice site useful without turning weekends into a content treadmill. Run a **timeboxed 90–120 minute Sunday loop**: filter incoming notes down to actionable workflow changes, open and verify every primary source, update existing Markdown guides before creating new ones, write a structured [Changelog](/en/changelog/) with verified `affectedPages`, pass full build validation, and flip an atomic release symlink. If nothing survives the filter, stop early and publish nothing.
+Keep an engineering practice site useful without turning weekends into a content treadmill. Run a **timeboxed 90–120 minute Sunday loop**: filter incoming notes down to actionable workflow changes, open and verify every primary source, update existing Markdown guides before creating new ones, write a structured [Changelog](/en/changelog/) with verified `affectedPages`, pass full build validation (see the [broken-link release gate](/en/articles/48h-mvp-agent-stack/#broken-link-release-gate) for a pinned, reproducible failure case), and flip an atomic release symlink. If nothing survives the filter, stop early and publish nothing.
 
 ## First practice: one change, local preview only
 

@@ -134,3 +134,58 @@ test('FULL build preserves mixed Markdown task/plain lists in both article local
     assert.equal(text(list).split('Nested recovery details').length - 1, 1);
   }
 }));
+
+test('output validator rejects unexpected noindex injected into EN/ZH Codex build output', async () => fixture(async (dir) => {
+  const result = build(dir);
+  assert.equal(result.status, 0, result.output);
+  for (const locale of ['en', 'zh']) {
+    const file = path.join(dir, `dist/${locale}/articles/codex/index.html`);
+    const html = await readFile(file, 'utf8');
+    assert.doesNotMatch(html, /name="robots" content="noindex"/);
+    await writeFile(file, html.replace('</title>', '</title>\n    <meta name="robots" content="noindex" />'));
+  }
+  const sitemap = await readFile(path.join(dir, 'dist/sitemap.xml'), 'utf8');
+  assert.match(sitemap, /https:\/\/opcvibestack.com\/en\/articles\/codex\//);
+  assert.match(sitemap, /https:\/\/opcvibestack.com\/zh\/articles\/codex\//);
+  const check = spawnSync('node', ['scripts/validate-output.mjs'], { cwd: dir, encoding: 'utf8', timeout: 30000 });
+  const output = check.stdout + check.stderr;
+  assert.notEqual(check.status, 0, output);
+  assert.match(output, /\/en\/articles\/codex\/: unexpected noindex on a published inventory page/);
+  assert.match(output, /\/zh\/articles\/codex\/: unexpected noindex on a published inventory page/);
+  assert.match(output, /\/en\/articles\/codex\/: sitemap must not include a noindex page/);
+  assert.match(output, /\/zh\/articles\/codex\/: sitemap must not include a noindex page/);
+}));
+
+test('FULL npm run build escapes </script> in an article summary so JSON-LD still parses', async () => fixture(async (dir) => {
+  const summary = 'Codex summary containing a literal </script> tag to verify JSON-LD escaping.';
+  assert.ok(summary.length >= 40 && summary.length <= 160);
+  for (const locale of ['en', 'zh']) {
+    const file = path.join(dir, `src/content/articles/${locale}/codex.md`);
+    const raw = await readFile(file, 'utf8');
+    const updated = raw.replace(/^summary: ".*"$/m, `summary: ${JSON.stringify(summary)}`);
+    assert.notEqual(updated, raw, `failed to rewrite ${locale} summary`);
+    await writeFile(file, updated);
+  }
+  const result = build(dir);
+  assert.equal(result.status, 0, result.output);
+  for (const locale of ['en', 'zh']) {
+    const html = await readFile(path.join(dir, `dist/${locale}/articles/codex/index.html`), 'utf8');
+    assert.match(html, /type="application\/ld\+json"/);
+    const encoded = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    assert.ok(encoded, `${locale} JSON-LD script missing`);
+    assert.doesNotMatch(encoded[1], /<\/script>/);
+    assert.match(encoded[1], /\\u003c\/script\\u003e/);
+    const { parseJsonLdBlocks } = await import('../src/lib/seo.mjs');
+    const articles = [];
+    const visit = (node) => {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) { node.forEach(visit); return; }
+      if (node['@graph']) visit(node['@graph']);
+      const type = node['@type'];
+      if (type === 'Article' || (Array.isArray(type) && type.includes('Article'))) articles.push(node);
+    };
+    parseJsonLdBlocks(html).forEach(visit);
+    assert.equal(articles.length, 1, `${locale} Article JSON-LD missing or duplicated`);
+    assert.equal(articles[0].description, summary);
+  }
+}));

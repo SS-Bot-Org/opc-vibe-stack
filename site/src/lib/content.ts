@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { site } from '../data/site';
+import { stageReadingOrder, supplementaryReadingOrder, type JourneyStage } from '../data/stages';
 import { readInventory } from './inventory.mjs';
 
 export type Article = CollectionEntry<'articles'>;
@@ -135,4 +136,44 @@ export async function getRelatedArticles(
     .sort((a, b) => b.score - a.score || b.cand.data.updated.localeCompare(a.cand.data.updated))
     .slice(0, limit)
     .map((item) => item.cand);
+}
+
+function orderBySlug(articles: Article[], order: readonly string[]): Article[] {
+  const rank = new Map(order.map((slug, i) => [slug, i]));
+  return [...articles].sort((a, b) => {
+    const av = rank.get(a.data.slug) ?? 1000;
+    const bv = rank.get(b.data.slug) ?? 1000;
+    if (av !== bv) return av - bv;
+    return b.data.updated.localeCompare(a.data.updated);
+  });
+}
+
+export async function getStageArticleGroups(stage: JourneyStage, locale = 'en'): Promise<{
+  primary: Article[];
+  supplementary: Article[];
+}> {
+  const listed = await getListedArticles(locale);
+  const primary = orderBySlug(
+    listed.filter((a) => a.data.category !== 'stack' && a.data.stage === stage),
+    stageReadingOrder[stage],
+  );
+  const supplementary = orderBySlug(
+    listed.filter((a) => a.data.category !== 'stack' && a.data.stage === 'cross'),
+    supplementaryReadingOrder,
+  );
+  return { primary, supplementary };
+}
+
+export const toolDisplayNames: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
+  'grok-build': 'Grok Build',
+};
+
+export function featuredToolNames(cards: Article[]): string[] {
+  return cards.map((card) => toolDisplayNames[card.data.toolId ?? card.data.slug] ?? card.data.title);
+}
+
+export function pageTitleForArticle(data: Article['data']): string {
+  return data.seoTitle ?? data.title;
 }

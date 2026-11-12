@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-02"
@@ -114,7 +115,7 @@ tags: [build, hooks, skills, mcp, safety]
 | *「请绝对不要读取或修改 `.env` 和私钥」* | `permissions.deny` 规则如 `Read(./.env)` / `Edit(./.env)`，再配 `PreToolUse` hook 覆盖规则表达不了的模式，并配合 `.gitignore` |
 | *在 `CLAUDE.md` 里写「绝对别碰生产」* | 对你实际使用的部署命令配置 `deny` 或 `ask`（例如 `Bash(git push *)`），并把生产凭证放在 agent 够不到的机器外 |
 | *「汇报完成前请务必跑一遍类型检查」* | `Stop` hook 执行 `npm run check`，把失败映射为退出码 `2`，并检查 `stop_hook_active`；编辑后检查不能撤销编辑 |
-| *「翻译文章不要漏配 slug 或写错更新日志链接」* | 由 `scripts/validate.mjs` 与 `scripts/validate-output.mjs` 在构建期自动卡死 |
+| *「翻译文章不要漏配 slug 或写错更新日志链接」* | 由 `scripts/validate.mjs` 与 `scripts/validate-output.mjs` 在构建期自动卡死（[已固定的坏链接发布门禁实例](/zh/articles/48h-mvp-agent-stack/#broken-link-release-gate)） |
 
 ## 前置条件
 
@@ -287,7 +288,7 @@ stdin 中的 `stop_hook_active` 防循环检查遵循[官方指引](https://code
 
 ## 反模式
 
-- **手写维护两份互不同步的 `AGENTS.md` 与 `CLAUDE.md`** —— 必然漂移；用 import 让一份指向另一份。
+- **手写维护两份互不同步的 `AGENTS.md` 与 `CLAUDE.md`** —— 它们会漂移；用 import 让一份指向另一份。
 - **把 `AGENTS.md` 当成权限防火墙** —— 自然语言只能减少误操作，不能替代文件权限与进程隔离。
 - **每次保存文件都触发耗时 3 分钟的全量测试 hook** —— 卡顿会逼你亲手关掉所有校验；高频 hook 务必控制在 15 秒内。
 - **塞一个包罗万象的「团队开发总纲」巨型 Skill** —— 匹配边界模糊会导致乱触发；坚持一 Skill 一具体活。

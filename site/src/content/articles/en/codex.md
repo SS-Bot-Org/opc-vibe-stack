@@ -1,5 +1,7 @@
 ---
 title: "Codex"
+seoTitle: "Codex: From Task Specs to Verifiable Code Changes"
+subtitle: "Spec-driven CLI agent for scoped slices, batchable edits, and clean diffs"
 slug: codex
 summary: "OpenAI’s spec-driven coding agent and CLI for scoped repository slices, batchable edits, and clean diffs."
 locale: en
@@ -10,6 +12,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "OpenAI Codex CLI/agent; confirm current CLI flags and config.toml keys against official OpenAI docs"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:

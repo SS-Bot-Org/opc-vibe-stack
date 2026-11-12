@@ -1,5 +1,7 @@
 ---
 title: "Grok Build"
+seoTitle: "Grok Build 实战：面向买家的页面、诚实证据与主 CTA"
+subtitle: "用编码代理完成一处公开页面改动：限定范围、真实证据与可验证的行动号召"
 slug: grok-build
 summary: "用编码代理完成一处面向用户的页面改动：限定范围、真实证据、验证 CTA，并单独完成发布。"
 locale: zh
@@ -10,6 +12,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Grok Build / xAI 构建工具；具体界面与命令流请以 xAI 最新线上文档为准"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:

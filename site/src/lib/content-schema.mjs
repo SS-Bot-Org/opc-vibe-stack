@@ -31,7 +31,10 @@ export const articleSchema = z.object({
     evidence: evidenceSchema,
     verification: verificationSchema.optional(),
     applicableToolsVersions: z.string().min(1),
+    published: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     updated: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    seoTitle: z.string().min(1).max(70).optional(),
+    subtitle: z.string().min(1).max(160).optional(),
     internalBriefing: z.array(briefingSchema).default([]),
     publicSources: z.array(publicSourceSchema).default([]),
     tags: z.array(z.string()).default([]),
@@ -74,6 +77,8 @@ export function loaderId(entry, data) {
 }
 export function assertConditional(data, label) {
   if (data.status === 'draft') return;
+  if (!data.published) throw new Error(`${label}: published date is required`);
+  if (data.published > data.updated) throw new Error(`${label}: published date must be on or before updated`);
   if (data.evidence === 'documentation-backed' && !data.publicSources.length)
     throw new Error(`${label}: documentation-backed evidence requires publicSources`);
   if (data.category === 'stack') {

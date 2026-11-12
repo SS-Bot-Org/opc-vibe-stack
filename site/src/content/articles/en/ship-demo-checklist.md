@@ -10,6 +10,7 @@ priority: P0
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Any stack agent plus your static/staging host; optional agent-screenplay MCP/CLI (Node 20+) for scripted recordings"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing:
   - date: "2026-11-04"

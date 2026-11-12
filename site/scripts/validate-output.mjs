@@ -8,6 +8,15 @@ import {
   parseSrcset,
   validateImageRef,
 } from '../src/lib/validate-output-lib.mjs';
+import {
+  inspectHtml,
+  assertIndexedPageSeo,
+  assertArticleSeo,
+  assertHreflangReciprocal,
+  assertSitemapLastmods,
+  assertInventoryNoindexPolicy,
+} from '../src/lib/validate-seo.mjs';
+import { routeLastmod } from '../src/lib/lastmod.mjs';
 
 const root = path.resolve('dist');
 const files = new Map();
@@ -74,8 +83,35 @@ for (const { file, data } of inventory.changelog) {
   }
 }
 const sitemap = await readFile(path.join(root, 'sitemap.xml'), 'utf8');
-const sitemapPaths = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
-if (sitemapPaths.length !== inventory.routes.size || sitemapPaths.some((p) => !inventory.routes.has(p)))
-  throw new Error('Sitemap must exactly match published route inventory');
-for (const href of sitemapPaths) check(href, '/index.html');
-console.log(`output ok: ${pages.size} HTML files, internal links/anchors, ${imageRefs.length} images, and ${sitemapPaths.length} sitemap routes`);
+const sitemapReport = assertSitemapLastmods(sitemap, inventory, routeLastmod);
+for (const href of sitemapReport.paths) check(href, '/index.html');
+
+const seoPages = new Map();
+const seoErrors = [...sitemapReport.errors];
+for (const [key, file] of files) {
+  if (!key.endsWith('.html') || key === '/404.html') continue;
+  const html = await readFile(file, 'utf8');
+  let info;
+  try {
+    info = inspectHtml(html);
+  } catch (error) {
+    seoErrors.push(`${key}: JSON-LD or HTML inspect failed (${error.message})`);
+    continue;
+  }
+  const route = key.replace(/index\.html$/, '');
+  seoPages.set(route, info);
+  // Formal inventory routes must not be noindex. Only 404 (skipped above),
+  // out-of-inventory deprecated pages, and missing-translation fallbacks
+  // may carry noindex.
+  if (inventory.routes.has(route)) {
+    if (info.noindex) continue;
+    seoErrors.push(...assertIndexedPageSeo(key, info, route));
+    if (/^\/(en|zh)\/articles\//.test(route)) seoErrors.push(...assertArticleSeo(key, info));
+  }
+}
+seoErrors.push(...assertInventoryNoindexPolicy(seoPages, inventory, sitemapReport.paths));
+const indexed = new Map([...seoPages].filter(([route, info]) => !info.noindex && inventory.routes.has(route)));
+seoErrors.push(...assertHreflangReciprocal(indexed));
+if (seoErrors.length) throw new Error(seoErrors.join('\n'));
+
+console.log(`output ok: ${pages.size} HTML files, internal links/anchors, ${imageRefs.length} images, ${sitemapReport.paths.length} sitemap routes, and SEO metadata`);

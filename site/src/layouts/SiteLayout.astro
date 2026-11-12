@@ -5,6 +5,7 @@ import Header from '../components/Header.astro';
 import { site, type Locale } from '../data/site';
 import { absoluteUrl, htmlLang } from '../lib/routes';
 import { uiFor, footerFor, detectLocaleFromPath } from '../lib/i18n';
+import { documentTitle, serializeJsonLd } from '../lib/seo.mjs';
 
 interface Props {
   title: string;
@@ -14,8 +15,12 @@ interface Props {
   noindex?: boolean;
   locale?: Locale | string;
   ogImage?: string;
+  ogImageAlt?: string;
   article?: boolean;
   activeSection?: string;
+  datePublished?: string;
+  dateModified?: string;
+  jsonLd?: unknown;
 }
 
 const {
@@ -26,21 +31,28 @@ const {
   noindex = false,
   locale: localeProp,
   ogImage = site.ogImagePath,
+  ogImageAlt,
   article = false,
   activeSection,
+  datePublished,
+  dateModified,
+  jsonLd,
 } = Astro.props;
 
 const locale = (localeProp ?? detectLocaleFromPath(Astro.url.pathname)) as Locale | string;
 const ui = uiFor(locale);
 const footer = footerFor(locale);
 const path = canonicalPath ?? (locale === 'zh' ? '/zh/' : '/en/');
-const fullTitle = title === site.name ? title : `${title} · ${site.name}`;
+const fullTitle = documentTitle(title, site.name);
 const canonical = absoluteUrl(path);
 const ogImageAbs = absoluteUrl(ogImage);
+const resolvedOgAlt = ogImageAlt ?? (locale === 'zh'
+  ? 'OPC Vibe Stack：一人公司的 AI 编程与交付指南'
+  : 'OPC Vibe Stack — AI coding workflows for solo builders');
 const lang = htmlLang(locale);
 const { routes } = await readInventory();
 const alternateLinks = noindex || !routes.has(Astro.url.pathname) ? [] : alternateRoutes(routes, Astro.url.pathname);
-
+const ogType = article ? 'article' : 'website';
 ---
 <!doctype html>
 <html lang={lang}>
@@ -53,19 +65,24 @@ const alternateLinks = noindex || !routes.has(Astro.url.pathname) ? [] : alterna
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageAbs} />
+    <meta property="og:image:alt" content={resolvedOgAlt} />
     <meta property="og:locale" content={locale === 'zh' ? 'zh_CN' : 'en_US'} />
+    {article && datePublished && <meta property="article:published_time" content={datePublished} />}
+    {article && dateModified && <meta property="article:modified_time" content={dateModified} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageAbs} />
+    <meta name="twitter:image:alt" content={resolvedOgAlt} />
     {alternateLinks.map((a) => (
       <link rel="alternate" hreflang={a.locale === 'zh' ? 'zh-Hans' : a.locale} href={absoluteUrl(a.href)} />
     ))}
     <link rel="alternate" type="application/rss+xml" title={`${site.name} changelog`} href="/en/rss.xml" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {jsonLd && <script type="application/ld+json" set:html={serializeJsonLd(jsonLd)} />}
     <script is:inline>
       (function () {
         try {

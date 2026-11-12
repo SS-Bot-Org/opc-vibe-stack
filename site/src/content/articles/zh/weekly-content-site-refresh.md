@@ -10,6 +10,7 @@ priority: P1
 status: published
 evidence: documentation-backed
 applicableToolsVersions: "Astro 静态站 + Markdown collections；任选 agent CLI；编辑验证门按本站 SDD"
+published: "2026-11-06"
 updated: "2026-11-10"
 internalBriefing: []
 publicSources:
@@ -27,7 +28,7 @@ tags: [playbook, ops, changelog, timebox, content]
 
 ## 结论
 
-让工程实践站长期保持参考价值，靠的不是日更追热点，而是**严控在 90–120 分钟内的周日维护闭环**：先把输入简报过滤到真正改变实操动作的条目，亲手点开核对每一个一手来源，优先修订既有指南而非盲目新建页面，在[更新日志](/zh/changelog/)中写清真实的 `affectedPages`，跑通构建门禁后用原子 symlink 切换发布。如果当周没有任何实质条目通过过滤，直接提前收工，绝不硬凑更新。
+让工程实践站长期保持参考价值，靠的不是日更追热点，而是**严控在 90–120 分钟内的周日维护闭环**：先把输入简报过滤到真正改变实操动作的条目，亲手点开核对每一个一手来源，优先修订既有指南而非盲目新建页面，在[更新日志](/zh/changelog/)中写清真实的 `affectedPages`，跑通构建门禁后用原子 symlink 切换发布（可复现的失败例子见[坏链接发布门禁实例](/zh/articles/48h-mvp-agent-stack/#broken-link-release-gate)）。如果当周没有任何实质条目通过过滤，直接提前收工，绝不硬凑更新。
 
 ## 第一次实践：只改一处，先在本地预览
 

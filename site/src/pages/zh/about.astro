@@ -1,10 +1,11 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import { evidenceCopyZh } from '../../data/site';
+import { editorial } from '../../data/editorial';
 ---
 <SiteLayout
-  title="关于"
-  description="关于 OPC Vibe Stack、更新机制、证据标签与免责声明。"
+  title="编辑流程、证据标签与纠错说明"
+  description="OPC Vibe Stack 由谁维护、人工复核与 AI 辅助如何分工、证据标签，以及如何提交纠错。"
   canonicalPath="/zh/about/"
   locale="zh"
 >
@@ -18,6 +19,23 @@ import { evidenceCopyZh } from '../../data/site';
     <h2>这是什么</h2>
     <p>
       可执行清单与工具分工说明——不是新闻站、课程平台，也不是非官方厂商排行榜。本站自身也用同一套 agent 栈维护（dogfood）。
+    </p>
+
+    <h2 id="editorial">编辑团队与责任说明</h2>
+    <p>
+      页面由<strong>{editorial.nameZh}</strong>发布，并通过公开的
+      <a href={editorial.repoUrl}>GitHub 仓库</a>维护。
+      这一署名指的是维护团队，不是某位个人的简历式作者，也不构成职业资质或厂商授权声明。
+    </p>
+    <p>
+      起草和修订经常使用 AI 编码代理（也就是各指南所描述的同一套工具栈）。
+      发布前由人工编辑核对来源、证据标签、数字主张，并决定是否上线。
+      AI 辅助不能取代这项复核，也不能代替你查阅现行官方文档。
+    </p>
+    <p>
+      若发现错误、表述不清或内容过时，请在
+      <a href={editorial.correctionsUrl}>GitHub Issues</a>
+      提交公开 issue。这是本站的纠错渠道。
     </p>
 
     <h2>如何更新</h2>

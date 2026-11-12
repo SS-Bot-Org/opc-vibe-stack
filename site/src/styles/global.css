@@ -194,6 +194,7 @@ th { background: var(--surface-soft); font-weight: 600; }
 .site-footer { padding: 24px 0 32px; color: var(--muted); font-size: 0.75rem; }
 .site-footer__inner { width: min(100% - var(--gutter) * 2, var(--wide)); margin-inline: auto; padding-top: 22px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 24px; }
 .site-footer p { margin: 0; }
+.site-footer p + p { margin-top: 4px; }
 .footer-nav { display: flex; flex-wrap: wrap; gap: 14px; list-style: none; padding: 0; margin: 0; }
 .footer-nav a { color: var(--muted); }
 

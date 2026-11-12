@@ -106,7 +106,14 @@ const ogType = article ? 'article' : 'website';
     </main>
     <footer class="site-footer">
       <div class="site-footer__inner">
-        <p>© {new Date().getFullYear()} {site.name}. {ui.footerBlurb}</p>
+        <div>
+          <p>© {new Date().getFullYear()} {site.name}. {ui.footerBlurb}</p>
+          <p>
+            {ui.footerCodeLicense}<a href="https://github.com/SS-Bot-Org/opc-vibe-stack/blob/main/LICENSE">MIT</a>
+            {' · '}
+            {ui.footerContentLicense}<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+          </p>
+        </div>
         <ul class="footer-nav">
           {footer.map((item) => (
             <li><a href={item.href}>{item.label}</a></li>

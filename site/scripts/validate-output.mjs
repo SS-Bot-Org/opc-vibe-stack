@@ -14,6 +14,7 @@ import {
   assertArticleSeo,
   assertHreflangReciprocal,
   assertSitemapLastmods,
+  assertInventoryNoindexPolicy,
 } from '../src/lib/validate-seo.mjs';
 import { routeLastmod } from '../src/lib/lastmod.mjs';
 
@@ -99,10 +100,16 @@ for (const [key, file] of files) {
   }
   const route = key.replace(/index\.html$/, '');
   seoPages.set(route, info);
-  if (info.noindex || !inventory.routes.has(route)) continue;
-  seoErrors.push(...assertIndexedPageSeo(key, info, route));
-  if (/^\/(en|zh)\/articles\//.test(route)) seoErrors.push(...assertArticleSeo(key, info));
+  // Formal inventory routes must not be noindex. Only 404 (skipped above),
+  // out-of-inventory deprecated pages, and missing-translation fallbacks
+  // may carry noindex.
+  if (inventory.routes.has(route)) {
+    if (info.noindex) continue;
+    seoErrors.push(...assertIndexedPageSeo(key, info, route));
+    if (/^\/(en|zh)\/articles\//.test(route)) seoErrors.push(...assertArticleSeo(key, info));
+  }
 }
+seoErrors.push(...assertInventoryNoindexPolicy(seoPages, inventory, sitemapReport.paths));
 const indexed = new Map([...seoPages].filter(([route, info]) => !info.noindex && inventory.routes.has(route)));
 seoErrors.push(...assertHreflangReciprocal(indexed));
 if (seoErrors.length) throw new Error(seoErrors.join('\n'));

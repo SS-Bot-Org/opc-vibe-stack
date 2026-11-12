@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   documentTitle, stackDocumentTitle, toolListPhrase,
-  isLastmodFormat, parseJsonLdBlocks, jsonLdTypes,
+  isLastmodFormat, parseJsonLdBlocks, jsonLdTypes, serializeJsonLd,
 } from '../src/lib/seo.mjs';
 import { routeLastmod } from '../src/lib/lastmod.mjs';
-import { inspectHtml, assertIndexedPageSeo, assertArticleSeo, assertHreflangReciprocal } from '../src/lib/validate-seo.mjs';
+import { inspectHtml, assertIndexedPageSeo, assertArticleSeo, assertHreflangReciprocal, assertInventoryNoindexPolicy } from '../src/lib/validate-seo.mjs';
 import { readInventory } from '../src/lib/inventory.mjs';
 
 test('document titles do not double the brand', () => {
@@ -87,11 +87,18 @@ test('nginx example 301s www and explicit index.html, preserving path and query'
   assert.match(conf, /return 301 https:\/\/opcvibestack\.com\$request_uri;/);
   assert.match(conf, /listen 443 ssl;[\s\S]*server_name www\.opcvibestack\.com;/);
   assert.match(conf, /if \(\$request_uri ~\* \^\/index\\.html/);
-  assert.match(conf, /if \(\$request_uri ~\* \^\(\.\+\)\/index\\.html/);
+  assert.match(conf, /if \(\$request_uri ~\* \^\(\[\^\?\]\*\)\/index\\.html/);
   assert.match(conf, /return 301 \$1\/\$is_args\$args;/);
   const active = conf.replace(/^\s*#.*$/gm, '');
   assert.doesNotMatch(active, /location = \/index\.html/);
   assert.doesNotMatch(active, /location ~\* \^\(\.\+\)\/index\\.html\$/);
+  assert.doesNotMatch(active, /~\* \^\(\.\+\)\/index\\.html/);
+  const pathRe = /^([^?]*)\/index\.html(\?.*)?$/i;
+  assert.equal(pathRe.test('/en/?next=/index.html'), false);
+  assert.equal(pathRe.test('/en/index.html'), true);
+  const hit = '/en/stack/index.html?next=/index.html'.match(pathRe);
+  assert.equal(hit?.[1], '/en/stack');
+  assert.equal(hit?.[2], '?next=/index.html');
   const readme = await readFile(path.resolve('ops/nginx/README.md'), 'utf8');
   assert.match(readme, /Do \*\*not\*\* apply this file from a content pull request/i);
   assert.match(readme, /if \(\$request_uri\)/);
@@ -99,4 +106,48 @@ test('nginx example 301s www and explicit index.html, preserving path and query'
   assert.match(readme, /Rollback/i);
   assert.match(readme, /https:\/\/www\.opcvibestack\.com\/en\/\?utm=1/);
   assert.match(readme, /en\/stack\/index\.html\?x=1/);
+  assert.match(readme, /\/en\/\?next=\/index\.html/);
+  assert.match(readme, /en\/stack\/index\.html\?next=\/index\.html/);
+  assert.match(readme, /en\/stack\/\?next=\/index\.html/);
+});
+
+test('serializeJsonLd escapes HTML and JS terminators so a summary with </script> still parses', () => {
+  const payload = {
+    '@type': 'Article',
+    description: 'A summary with a literal </script> and line\u2028break & more.',
+  };
+  const raw = JSON.stringify(payload);
+  assert.match(raw, /<\/script>/);
+  const encoded = serializeJsonLd(payload);
+  assert.doesNotMatch(encoded, /</);
+  assert.doesNotMatch(encoded, />/);
+  assert.doesNotMatch(encoded, /&/);
+  assert.doesNotMatch(encoded, /\u2028/);
+  assert.match(encoded, /\\u003c\/script\\u003e/);
+  const html = `<script type="application/ld+json">${encoded}</script><p>after</p>`;
+  assert.equal(html.includes('</script><p>after</p>'), true);
+  assert.equal((html.match(/<\/script>/g) || []).length, 1);
+  const [parsed] = parseJsonLdBlocks(html);
+  assert.equal(parsed.description, payload.description);
+  assert.equal(parsed['@type'], 'Article');
+});
+
+test('inventory noindex policy rejects formal pages and sitemap URLs, exempts out-of-inventory fallbacks', () => {
+  const inventory = { routes: new Set(['/en/articles/codex/', '/zh/articles/codex/', '/en/']) };
+  const seoPages = new Map([
+    ['/en/articles/codex/', { noindex: true }],
+    ['/zh/articles/codex/', { noindex: true }],
+    ['/en/', { noindex: false }],
+    ['/zh/articles/missing-translation-fallback/', { noindex: true }],
+    ['/en/articles/deprecated-example/', { noindex: true }],
+  ]);
+  const sitemapPaths = ['/en/articles/codex/', '/zh/articles/codex/', '/en/'];
+  const errors = assertInventoryNoindexPolicy(seoPages, inventory, sitemapPaths);
+  assert.ok(errors.some((e) => e.includes('/en/articles/codex/') && e.includes('unexpected noindex')));
+  assert.ok(errors.some((e) => e.includes('/zh/articles/codex/') && e.includes('unexpected noindex')));
+  assert.ok(errors.some((e) => e.includes('/en/articles/codex/') && e.includes('sitemap must not include')));
+  assert.ok(errors.some((e) => e.includes('/zh/articles/codex/') && e.includes('sitemap must not include')));
+  assert.equal(errors.some((e) => e.includes('missing-translation-fallback')), false);
+  assert.equal(errors.some((e) => e.includes('deprecated-example')), false);
+  assert.deepEqual(assertInventoryNoindexPolicy(new Map([['/en/', { noindex: false }]]), inventory, ['/en/']), []);
 });

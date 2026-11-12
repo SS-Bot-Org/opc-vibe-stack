@@ -44,6 +44,14 @@ which would then 301 back to `/en/` — a redirect loop.
 asked for `index.html`. Internal `try_files` / index-module rewrites still
 serve the file, and `/en` still 301s to `/en/`.
 
+The path capture must be `([^?]*)`, not `(.+)`. `.+` can cross `?`, so a
+query value that happens to contain `/index.html` is treated as the page
+path. The live repro was `/en/?next=/index.html` 301ing to
+`/en/?next=/?next=/index.html` and looping. Restricting the capture to the
+path means that URL stays 200 with the query intact, while a real
+`/en/stack/index.html?next=/index.html` still 301s once to
+`/en/stack/?next=/index.html`.
+
 ## Apply or change (operator only)
 
 1. Diff this file against `/etc/nginx/sites-available/opcvibestack.conf` on the
@@ -91,6 +99,12 @@ curl -sSI https://opcvibestack.com/zh/index.html
 curl -sSI 'https://opcvibestack.com/en/stack/index.html?x=1'
 # Location: https://opcvibestack.com/en/stack/?x=1
 
+# query values may contain "/index.html" and must not trigger a redirect
+curl -sSI 'https://opcvibestack.com/en/?next=/index.html'
+# HTTP/1.1 200 (no Location)
+curl -sSI 'https://opcvibestack.com/en/stack/index.html?next=/index.html'
+# Location: https://opcvibestack.com/en/stack/?next=/index.html
+
 # apex pages, robots, sitemap, and 404 still behave as before
 curl -sSI https://opcvibestack.com/en/
 curl -sSI https://opcvibestack.com/zh/
@@ -109,4 +123,10 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
   -L --max-redirs 5 'https://opcvibestack.com/en/index.html?utm=1'
 curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
   -L --max-redirs 5 https://opcvibestack.com/en/
+curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
+  -L --max-redirs 5 'https://opcvibestack.com/en/?next=/index.html'
+# 200 https://opcvibestack.com/en/?next=/index.html 0
+curl -sS -o /dev/null -w '%{http_code} %{url_effective} %{num_redirects}\n' \
+  -L --max-redirs 5 'https://opcvibestack.com/en/stack/index.html?next=/index.html'
+# 200 https://opcvibestack.com/en/stack/?next=/index.html 1
 ```

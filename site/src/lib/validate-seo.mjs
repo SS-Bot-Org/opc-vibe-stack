@@ -120,4 +120,20 @@ export function assertSitemapLastmods(sitemapXml, inventory, routeLastmod) {
   return { errors, paths };
 }
 
+export function assertInventoryNoindexPolicy(seoPages, inventory, sitemapPaths = []) {
+  const errors = [];
+  for (const [route, info] of seoPages) {
+    if (inventory.routes.has(route) && info.noindex) {
+      errors.push(`${route}: unexpected noindex on a published inventory page`);
+    }
+  }
+  for (const path of sitemapPaths) {
+    const info = seoPages.get(path);
+    if (info?.noindex) {
+      errors.push(`${path}: sitemap must not include a noindex page`);
+    }
+  }
+  return errors;
+}
+
 export { TITLE_MIN, TITLE_MAX, DESC_MIN, DESC_MAX };

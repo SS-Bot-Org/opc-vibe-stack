@@ -5,7 +5,7 @@ import Header from '../components/Header.astro';
 import { site, type Locale } from '../data/site';
 import { absoluteUrl, htmlLang } from '../lib/routes';
 import { uiFor, footerFor, detectLocaleFromPath } from '../lib/i18n';
-import { documentTitle } from '../lib/seo.mjs';
+import { documentTitle, serializeJsonLd } from '../lib/seo.mjs';
 
 interface Props {
   title: string;
@@ -82,7 +82,7 @@ const ogType = article ? 'article' : 'website';
     ))}
     <link rel="alternate" type="application/rss+xml" title={`${site.name} changelog`} href="/en/rss.xml" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {jsonLd && <script type="application/ld+json" set:html={serializeJsonLd(jsonLd)} />}
     <script is:inline>
       (function () {
         try {

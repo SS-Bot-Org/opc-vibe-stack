@@ -50,6 +50,15 @@ export function ogImageAltForArticle(title, locale) {
     : `${title} — OPC Vibe Stack guide`;
 }
 
+export function serializeJsonLd(value) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
 export function parseJsonLdBlocks(html) {
   const blocks = [];
   const re = /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;

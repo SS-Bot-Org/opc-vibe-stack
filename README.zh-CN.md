@@ -76,3 +76,11 @@ AGENTS.md              给贡献者和编码代理的仓库说明
 - 内容与元数据请遵循 [docs/seo-geo.md](docs/seo-geo.md)：把官方事实、编辑建议和实测结果分开写；中文不要比英文更绝对；不要编造作者、日期或数据。
 - 新增图解请遵循 [docs/illustrations.md](docs/illustrations.md)。
 - 不要提交凭证、`.env` 文件或生成的 `dist/` 产物。
+
+## 许可协议
+
+本仓库采用分开授权：
+
+- **代码**（本仓库中的站点、脚本及其他软件）以 [MIT License](LICENSE) 授权。版权所有 © 2026 OPC Vibe Stack contributors。
+- **内容**（`site/src/content/` 中的文章、`site/public/illustrations/` 中的插图，以及 Open Graph 分享图）以 [CC BY 4.0](LICENSE-CONTENT) 授权。转载或再使用时请署名 **OPC Vibe Stack**，并链接至 [https://opcvibestack.com](https://opcvibestack.com)。
+- `site/src/assets/icons/` 中的图标资源仍适用其[上游 MIT 许可](site/src/assets/icons/LICENSE)（Copyright © 2020–2026 Paweł Kuna）。这是第三方例外，不是本仓库的原创作品。

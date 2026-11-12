@@ -106,7 +106,10 @@ const ogType = article ? 'article' : 'website';
     </main>
     <footer class="site-footer">
       <div class="site-footer__inner">
-        <p>© {new Date().getFullYear()} {site.name}. {ui.footerBlurb}</p>
+        <div>
+          <p>© {new Date().getFullYear()} {site.name}. {ui.footerBlurb}</p>
+          <p>{ui.footerLicense}</p>
+        </div>
         <ul class="footer-nav">
           {footer.map((item) => (
             <li><a href={item.href}>{item.label}</a></li>

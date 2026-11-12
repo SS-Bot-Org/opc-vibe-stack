@@ -76,3 +76,11 @@ Product and design background (internal, not the public site): [PRD-v0.5.md](PRD
 - Content and metadata should follow [docs/seo-geo.md](docs/seo-geo.md): keep official fact, editorial recommendation, and tested results distinct; do not make the Chinese text more absolute than the English; do not invent authors, dates, or metrics.
 - New diagrams should follow [docs/illustrations.md](docs/illustrations.md).
 - Never commit credentials, `.env` files, or generated `dist/` output.
+
+## License
+
+This repository uses a split license:
+
+- **Code** — the site, scripts, and other software in this repository — is licensed under the [MIT License](LICENSE). Copyright © 2026 OPC Vibe Stack contributors.
+- **Content** — articles in `site/src/content/`, illustrations in `site/public/illustrations/`, and Open Graph share images — is licensed under [CC BY 4.0](LICENSE-CONTENT). Please attribute **OPC Vibe Stack** and link to [https://opcvibestack.com](https://opcvibestack.com).
+- Icon assets in `site/src/assets/icons/` remain under their [upstream MIT license](site/src/assets/icons/LICENSE) (Copyright © 2020–2026 Paweł Kuna). That is a third-party exception, not original work of this repository.

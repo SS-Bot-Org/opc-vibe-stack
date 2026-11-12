@@ -17,6 +17,7 @@ export const uiEn = {
     'This page has not been translated. You can read the English version, or browse Chinese About and Stack pages.',
   fallbackCta: 'Read in English',
   footerBlurb: 'Unofficial practice notes for indie OPC builders.',
+  footerLicense: 'Code is MIT. Articles, illustrations, and share images are CC BY 4.0.',
   latestUpdate: 'Latest update',
   noUpdatesYet: 'First weekly update coming soon.',
   themeToggle: 'Toggle light and dark theme',

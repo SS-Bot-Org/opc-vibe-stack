@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Release id | 2026-w47-tips |
-| Source revision (git SHA) | 96e1a9fc89e72b22a9cceccde4a2c7a86143aed6 |
+| Source revision (git SHA) | 1a51abf705cfffeadf97511ed4b70654165101bc |
 | Build timestamp (UTC) | 2026-11-16T11:54:42Z |
 | Editor | OPC Vibe Stack editorial team |
 | Changed slugs / paths | `/en/tips/`, `/zh/tips/`, six tip slugs, changelog `2026-w47-tips`, nav, validators, `docs/tips.md` |

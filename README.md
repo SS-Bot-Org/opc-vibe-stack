@@ -59,12 +59,12 @@ npm run build     # validate content, build, and check the output
 
 ```
 site/                  Astro app, content, tests, and build validators
-  src/content/         Markdown articles and changelog (en/ and zh/)
+  src/content/         Markdown articles, changelog, and tips (en/ and zh/)
   src/pages/           Routes, including /en/ and /zh/
   public/              Static assets, including illustrations and share images
   scripts/             Content and output validators
   ops/                 Example release and nginx snippets
-docs/                  Editorial conventions (SEO/GEO, illustrations)
+docs/                  Editorial conventions (SEO/GEO, illustrations, tips)
 AGENTS.md              Repository working notes for contributors and coding agents
 ```
 
@@ -75,6 +75,7 @@ Product and design background (internal, not the public site): [PRD-v0.5.md](PRD
 - Prefer a pull request for a concrete fix or a [GitHub issue](https://github.com/SS-Bot-Org/opc-vibe-stack/issues) for a correction.
 - Content and metadata should follow [docs/seo-geo.md](docs/seo-geo.md): keep official fact, editorial recommendation, and tested results distinct; do not make the Chinese text more absolute than the English; do not invent authors, dates, or metrics.
 - New diagrams should follow [docs/illustrations.md](docs/illustrations.md).
+- New Vibe Coding tips should follow [docs/tips.md](docs/tips.md): one copyable prompt, flag, or command, official source required, EN and ZH shipped together.
 - Never commit credentials, `.env` files, or generated `dist/` output.
 
 ## License
@@ -82,5 +83,5 @@ Product and design background (internal, not the public site): [PRD-v0.5.md](PRD
 This repository uses a split license:
 
 - **Code** — the site, scripts, and other software in this repository — is licensed under the [MIT License](LICENSE). Copyright © 2026 OPC Vibe Stack contributors.
-- **Content** — articles in `site/src/content/`, illustrations in `site/public/illustrations/`, and Open Graph share images — is licensed under [CC BY 4.0](LICENSE-CONTENT). Please attribute **OPC Vibe Stack** and link to [https://opcvibestack.com](https://opcvibestack.com).
+- **Content** — articles and tips in `site/src/content/`, illustrations in `site/public/illustrations/`, and Open Graph share images — is licensed under [CC BY 4.0](LICENSE-CONTENT). Please attribute **OPC Vibe Stack** and link to [https://opcvibestack.com](https://opcvibestack.com).
 - Icon assets in `site/src/assets/icons/` remain under their [upstream MIT license](site/src/assets/icons/LICENSE) (Copyright © 2020–2026 Paweł Kuna). That is a third-party exception, not original work of this repository.

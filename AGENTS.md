@@ -6,7 +6,7 @@ OPC Vibe Stack is an English-first, bilingual static Astro site. Canonical requi
 
 - `site/src/pages/`: routes, including `en/` and `zh/` pages and feed/search endpoints.
 - `site/src/components/`, `layouts/`, and `styles/`: shared UI and global CSS.
-- `site/src/content/{articles,changelog}/{en,zh}/`: Markdown content; schemas live in `site/src/content.config.ts`.
+- `site/src/content/{articles,changelog,tips}/{en,zh}/`: Markdown content; schemas live in `site/src/content.config.ts`.
 - `site/src/data/` and `lib/`: site settings, translated UI strings, and content/routing helpers.
 - `site/public/`: static assets; `site/scripts/validate.mjs`: content checks; `site/ops/`: deployment examples and release records.
 

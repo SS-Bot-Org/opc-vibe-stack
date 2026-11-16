@@ -30,10 +30,13 @@ export function routeLastmod(route, inventory) {
   const changelog = inventory.changelog
     .filter((entry) => entry.data.locale === locale && entry.data.status === 'published')
     .map((entry) => entry.data.date);
+  const tips = (inventory.tips || [])
+    .filter((entry) => entry.data.locale === locale && entry.data.status !== 'draft')
+    .flatMap((entry) => [entry.data.dateAdded, entry.data.lastVerified]);
   const updated = (pred) => latestDate(listed.filter(pred).map((entry) => entry.data.updated));
   switch (name) {
     case 'home':
-      return latestDate([...listed.map((entry) => entry.data.updated), ...changelog]);
+      return latestDate([...listed.map((entry) => entry.data.updated), ...changelog, ...tips]);
     case 'changelog':
       return latestDate(changelog);
     case 'stack':
@@ -50,6 +53,8 @@ export function routeLastmod(route, inventory) {
       return updated((entry) => entry.data.category === 'alert' || entry.data.slug === 'security-quickcheck');
     case 'about':
       return editorialAboutUpdated;
+    case 'tips':
+      return latestDate(tips);
     default:
       return null;
   }

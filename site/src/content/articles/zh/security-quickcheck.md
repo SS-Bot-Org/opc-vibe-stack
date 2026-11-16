@@ -11,12 +11,16 @@ status: published
 evidence: unverified
 applicableToolsVersions: "所有本地编程 agent CLI、桌面聊天客户端、MCP 服务器与编辑器扩展市场；工具升级后请复查"
 published: "2026-11-06"
-updated: "2026-11-10"
+updated: "2026-11-15"
 internalBriefing:
   - date: "2026-11-01"
     note: "Cursor marketplace Claude Code extension compromise report"
   - date: "2026-11-05"
     note: "Windows infostealer targeting coding-agent tokens"
+  - date: "2026-11-10"
+    note: "Check whether .claude/settings.local.json is committed"
+  - date: "2026-11-13"
+    note: "Don't start coding agents in ~/Downloads or other untrusted folders"
 publicSources:
   - title: "Tampered Claude Code extension in Cursor marketplace (report)"
     url: "https://x.com/neuralnotions/status/2116883761329803580"
@@ -44,6 +48,15 @@ publicSources:
     kind: docs
   - title: "Claude Code permissions"
     url: "https://code.claude.com/docs/en/permissions"
+    kind: docs
+  - title: "Claude Code settings files and scopes (settings.local.json)"
+    url: "https://code.claude.com/docs/en/settings"
+    kind: docs
+  - title: "Claude Code security: workspace trust dialog"
+    url: "https://code.claude.com/docs/en/security"
+    kind: docs
+  - title: "Codex advanced configuration (project config only for trusted projects)"
+    url: "https://developers.openai.com/codex/config-advanced"
     kind: docs
 tags: [alert, security]
 notice:
@@ -101,6 +114,8 @@ GitHub 用户可按[安全日志指引](https://docs.github.com/en/authenticatio
 5. **收窄部署账号权限。** 部署身份仅授予实际需要的发布路径和已审阅的激活/回滚操作。仅能写 `releases/` 并不意味着可以切换 `current`；不要为了部署成功而扩大到通用管理员权限。
 6. **验证命令坚持本地闭环。** 优先跑纯本地单测与静态构建（`npm test`、`npm run build`），拒绝在验证脚本里 `curl` 外部陌生脚本。
 7. **接入 MCP 与 `SKILL.md` 前先审代码。** 正如 Claude Code 官方 MCP 文档提醒，凡是会抓取外部不受控网页的 MCP 服务，都可能把提示词注入带进本地会话。
+8. **检查个人 agent 设置有没有被提交。** 在每个仓库里运行 `git ls-files .claude .codex`。官方事实（[权限](https://code.claude.com/docs/en/permissions)、[设置](https://code.claude.com/docs/en/settings)）：对 Bash 命令或 WebFetch 域名选择 “Yes, and don't ask again” 时，Claude Code 会把这条规则存进 `.claude/settings.local.json`；该文件由 Claude Code 创建时会自动排除在 git 之外，手动创建的则需要你自己加进 `.gitignore`。编辑推断：保存的规则包含你批准过的命令文本，如果那段命令里带了密钥，一旦文件被跟踪或推送，就应把该密钥视为已暴露。先吊销密钥，再执行 `git rm --cached .claude/settings.local.json` 并补上忽略规则；历史记录里仍保留着旧文件。
+9. **只在你打算信任的目录里启动 agent，不要在 `~/Downloads` 或主目录里启动。** 官方事实（[安全](https://code.claude.com/docs/en/security)、[权限](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)）：交互式 Claude Code 遇到未信任目录会弹出工作区信任对话框，但 `claude -p` 和 SDK 运行不会弹出；而且即使该目录从未被信任，仓库设置文件里的 hooks、`env` 块以及 `apiKeyHelper` 等辅助命令仍会被使用。在不是你写的仓库里跑 `claude -p` 之前，加 `--setting-sources user` 或 `--bare`，或为这次运行传入 `--settings '{"disableAllHooks": true}'`。Codex [只在项目受信任时加载项目级配置](https://developers.openai.com/codex/config-advanced)。无论用哪个工具，信任仓库之前都先读一遍它的 `AGENTS.md`、`CLAUDE.md`、`.mcp.json`、hooks 和 `.codex/`；即使配置被跳过，说明文件仍可能引导模型。
 
 ## 可直接复制的安全基线模板
 
@@ -117,6 +132,9 @@ GitHub 用户可按[安全日志指引](https://docs.github.com/en/authenticatio
 *.key
 ops/records/
 dist/
+
+# 个人 agent 设置（保存的批准规则可能含命令文本）
+.claude/settings.local.json
 ```
 
 ### 15 分钟私有安全体检记录表（保存在公开仓库之外）
@@ -128,6 +146,7 @@ dist/
 已核查 ~/.ssh/authorized_keys（开发机 + 线上 VPS）：
 Agent CLI 会话与 API 密钥上次轮换日期：
 已审阅的活跃 MCP 服务器与 SKILL.md 目录：
+各仓库 `git ls-files .claude .codex` 结果：
 部署密钥最小权限核验结果（非 root、仅限发布目录）：
 ```
 
@@ -137,6 +156,7 @@ Agent CLI 会话与 API 密钥上次轮换日期：
 - [ ] 开发机与 VPS 的 `~/.ssh/authorized_keys` 中没有任何陌生公钥
 - [ ] 已记录秘密扫描范围与结果；发现暴露凭证时先撤销，再处理跟踪文件与历史
 - [ ] 各 agent CLI 与 MCP 配置均通过环境变量引用凭证，仓库配置文件零明文密钥
+- [ ] 每个仓库里 `.claude/settings.local.json` 都未被跟踪，且没有在 `~/Downloads` 或其他不打算信任的目录里启动过 agent
 - [ ] 线上 VPS 部署身份非 `root`，权限严格限制在站点发布目录内
 - [ ] 已记录所用厂商的会话、OAuth 授权、API Key 与部署凭证的撤销入口及负责人
 

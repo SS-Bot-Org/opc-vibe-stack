@@ -12,6 +12,7 @@ import {
   inspectHtml,
   assertIndexedPageSeo,
   assertArticleSeo,
+  assertTipsSeo,
   assertHreflangReciprocal,
   assertSitemapLastmods,
   assertInventoryNoindexPolicy,
@@ -107,6 +108,7 @@ for (const [key, file] of files) {
     if (info.noindex) continue;
     seoErrors.push(...assertIndexedPageSeo(key, info, route));
     if (/^\/(en|zh)\/articles\//.test(route)) seoErrors.push(...assertArticleSeo(key, info));
+    if (/^\/(en|zh)\/tips\/$/.test(route)) seoErrors.push(...assertTipsSeo(key, info));
   }
 }
 seoErrors.push(...assertInventoryNoindexPolicy(seoPages, inventory, sitemapReport.paths));

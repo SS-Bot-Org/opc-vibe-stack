@@ -77,6 +77,13 @@ export function assertArticleSeo(pageKey, info) {
   return errors;
 }
 
+export function assertTipsSeo(pageKey, info) {
+  const errors = [];
+  if (!info.jsonLdTypes.has('ItemList')) errors.push(`${pageKey}: missing ItemList JSON-LD`);
+  if (!info.jsonLdTypes.has('BreadcrumbList')) errors.push(`${pageKey}: missing BreadcrumbList JSON-LD`);
+  return errors;
+}
+
 export function assertHreflangReciprocal(pagesByPath) {
   const errors = [];
   for (const [path, info] of pagesByPath) {

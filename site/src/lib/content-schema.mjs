@@ -71,6 +71,29 @@ export const changelogSchema = z.object({
     publicSources: z.array(publicSourceSchema).default([]),
   });
 
+export const tipSchema = z.object({
+    title: z.string().min(1),
+    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    summary: z.string().min(1).max(160),
+    locale: z.enum(['en', 'zh']).default('en'),
+    tools: z.array(z.string().min(1)).min(1),
+    appliesTo: z.string().min(1),
+    tags: z.array(z.string()).default([]),
+    evidence: evidenceSchema,
+    wording: z.string().min(1),
+    wordingLang: z.enum(['text', 'bash', 'yaml', 'markdown']).default('text'),
+    effect: z.string().min(1),
+    limits: z.string().min(1),
+    officialSource: publicSourceSchema,
+    discoverySource: publicSourceSchema.optional(),
+    dateAdded: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    lastVerified: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    status: z.enum(['draft', 'active', 'retired']),
+    verification: verificationSchema.optional(),
+    internalBriefing: z.array(briefingSchema).default([]),
+    publicSources: z.array(publicSourceSchema).default([]),
+  });
+
 export function loaderId(entry, data) {
   const locale = data.locale || (entry.startsWith('zh/') ? 'zh' : 'en');
   return `${locale}/${data.slug || entry.split('/').pop().replace(/\.mdx?$/, '')}`;
@@ -91,4 +114,35 @@ export function assertConditional(data, label) {
     throw new Error(`${label}: alert or non-active tool requires a notice`);
   if (data.status === 'deprecated' && !data.notice?.text)
     throw new Error(`${label}: deprecated guidance requires a notice`);
+}
+
+export function assertTipConditional(data, label) {
+  if (data.status === 'draft') return;
+  if (data.evidence === 'documentation-backed' && !data.officialSource)
+    throw new Error(`${label}: documentation-backed evidence requires officialSource`);
+  if (data.evidence === 'tested' && !data.verification)
+    throw new Error(`${label}: tested evidence requires verification date, environment and outcome`);
+  if (data.lastVerified && data.dateAdded > data.lastVerified)
+    throw new Error(`${label}: dateAdded must be on or before lastVerified`);
+}
+
+export function assertTipPairing(tips) {
+  const listed = tips.filter((entry) => entry.data.status !== 'draft');
+  const byLocale = { en: new Map(), zh: new Map() };
+  for (const entry of listed) byLocale[entry.data.locale].set(entry.data.slug, entry);
+  for (const slug of new Set([...byLocale.en.keys(), ...byLocale.zh.keys()])) {
+    const en = byLocale.en.get(slug);
+    const zh = byLocale.zh.get(slug);
+    if (!en || !zh) throw new Error(`tips: ${slug} must have matching en and zh entries`);
+    for (const key of ['status', 'evidence', 'dateAdded', 'lastVerified', 'wording']) {
+      if ((en.data[key] ?? '') !== (zh.data[key] ?? ''))
+        throw new Error(`tips: ${slug} ${key} must match across en/zh`);
+    }
+    if (JSON.stringify(en.data.tools) !== JSON.stringify(zh.data.tools))
+      throw new Error(`tips: ${slug} tools must match across en/zh`);
+    if (en.data.officialSource.url !== zh.data.officialSource.url)
+      throw new Error(`tips: ${slug} officialSource.url must match across en/zh`);
+    if ((en.data.discoverySource?.url ?? '') !== (zh.data.discoverySource?.url ?? ''))
+      throw new Error(`tips: ${slug} discoverySource.url must match across en/zh`);
+  }
 }

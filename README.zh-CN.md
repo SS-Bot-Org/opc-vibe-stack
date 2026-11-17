@@ -59,12 +59,12 @@ npm run build     # 校验内容、构建并检查产物
 
 ```
 site/                  Astro 应用、内容、测试与构建校验
-  src/content/         Markdown 文章与更新日志（en/ 与 zh/）
+  src/content/         Markdown 文章、更新日志与技巧（en/ 与 zh/）
   src/pages/           路由，包括 /en/ 与 /zh/
   public/              静态资源，包括插图与分享图
   scripts/             内容与产物校验
   ops/                 示例发布流程与 nginx 片段
-docs/                  编辑约定（SEO/GEO、插图）
+docs/                  编辑约定（SEO/GEO、插图、技巧）
 AGENTS.md              给贡献者和编码代理的仓库说明
 ```
 
@@ -75,6 +75,7 @@ AGENTS.md              给贡献者和编码代理的仓库说明
 - 具体修正请优先提 pull request；纠错说明可开 [GitHub issue](https://github.com/SS-Bot-Org/opc-vibe-stack/issues)。
 - 内容与元数据请遵循 [docs/seo-geo.md](docs/seo-geo.md)：把官方事实、编辑建议和实测结果分开写；中文不要比英文更绝对；不要编造作者、日期或数据。
 - 新增图解请遵循 [docs/illustrations.md](docs/illustrations.md)。
+- 新增 Vibe Coding 技巧请遵循 [docs/tips.md](docs/tips.md)：只写一条可复制的提示词、开关或命令，必须有官方来源，中英文一起发布。
 - 不要提交凭证、`.env` 文件或生成的 `dist/` 产物。
 
 ## 许可协议
@@ -82,5 +83,5 @@ AGENTS.md              给贡献者和编码代理的仓库说明
 本仓库采用分开授权：
 
 - **代码**（本仓库中的站点、脚本及其他软件）以 [MIT License](LICENSE) 授权。版权所有 © 2026 OPC Vibe Stack contributors。
-- **内容**（`site/src/content/` 中的文章、`site/public/illustrations/` 中的插图，以及 Open Graph 分享图）以 [CC BY 4.0](LICENSE-CONTENT) 授权。转载或再使用时请署名 **OPC Vibe Stack**，并链接至 [https://opcvibestack.com](https://opcvibestack.com)。
+- **内容**（`site/src/content/` 中的文章与技巧、`site/public/illustrations/` 中的插图，以及 Open Graph 分享图）以 [CC BY 4.0](LICENSE-CONTENT) 授权。转载或再使用时请署名 **OPC Vibe Stack**，并链接至 [https://opcvibestack.com](https://opcvibestack.com)。
 - `site/src/assets/icons/` 中的图标资源仍适用其[上游 MIT 许可](site/src/assets/icons/LICENSE)（Copyright © 2020–2026 Paweł Kuna）。这是第三方例外，不是本仓库的原创作品。

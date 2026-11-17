@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseDocument } from 'yaml';
-import { articleSchema, changelogSchema, loaderId, assertConditional } from './content-schema.mjs';
+import { articleSchema, changelogSchema, tipSchema, loaderId, assertConditional, assertTipConditional, assertTipPairing } from './content-schema.mjs';
 
 async function walk(dir) {
   const out = [];
@@ -14,7 +14,7 @@ async function walk(dir) {
 }
 export async function readInventory(root = process.cwd()) {
   const collections = {};
-  for (const [name, schema] of [['articles', articleSchema], ['changelog', changelogSchema]]) {
+  for (const [name, schema] of [['articles', articleSchema], ['changelog', changelogSchema], ['tips', tipSchema]]) {
     const base = path.join(root, 'src/content', name);
     const identities = new Set(), ids = new Set(), entries = [];
     for (const file of (await walk(base)).filter((f) => /\/(en|zh)\/[^/]+\.md$/.test(f))) {
@@ -34,10 +34,12 @@ export async function readInventory(root = process.cwd()) {
       if (path.relative(base, file).split(path.sep)[0] !== data.locale)
         throw new Error(`${file}: locale must match directory`);
       if (name === 'articles') assertConditional(data, file);
+      if (name === 'tips') assertTipConditional(data, file);
       entries.push({ file, data });
     }
     collections[name] = entries;
   }
+  assertTipPairing(collections.tips);
   for (const { file, data } of collections.articles) {
     if (data.status === 'draft') continue;
     for (const slug of data.notice?.relatedSlugs || []) {

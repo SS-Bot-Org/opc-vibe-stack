@@ -76,6 +76,14 @@ if (playbooks.length < 2) {
 }
 
 // Final-output link and anchor validation runs after Astro renders, not against a guessed route set.
+const listedTips = inventory.tips.filter((entry) => entry.data.status === 'active' || entry.data.status === 'retired');
+const enTips = listedTips.filter((entry) => entry.data.locale === 'en');
+const zhTips = listedTips.filter((entry) => entry.data.locale === 'zh');
+if (enTips.length !== zhTips.length) {
+  console.error(`Tip locale counts differ: en=${enTips.length} zh=${zhTips.length}`);
+  process.exit(1);
+}
+
 console.log(
-  `validate ok: ${published.length} public articles (${enPublished.length} en / ${zhPublished.length} zh), ${enToolCards.length} en + ${zhToolCards.length} zh stack cards, ${playbooks.length} playbooks`,
+  `validate ok: ${published.length} public articles (${enPublished.length} en / ${zhPublished.length} zh), ${enToolCards.length} en + ${zhToolCards.length} zh stack cards, ${playbooks.length} playbooks, ${enTips.length} en + ${zhTips.length} zh tips`,
 );

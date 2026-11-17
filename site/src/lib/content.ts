@@ -5,6 +5,7 @@ import { readInventory } from './inventory.mjs';
 
 export type Article = CollectionEntry<'articles'>;
 export type ChangelogEntry = CollectionEntry<'changelog'>;
+export type Tip = CollectionEntry<'tips'>;
 
 export function isPublicArticle(a: Article): boolean {
   return a.data.status === 'published' || a.data.status === 'deprecated';
@@ -69,6 +70,31 @@ export function articleHref(slug: string, locale = 'en'): string {
   return `/${locale}/articles/${slug}/`;
 }
 
+export function isListedTip(tip: Tip): boolean {
+  return tip.data.status === 'active' || tip.data.status === 'retired';
+}
+
+export function tipHref(slug: string, locale = 'en'): string {
+  return `/${locale}/tips/#${slug}`;
+}
+
+export async function getPublishedTips(locale = 'en'): Promise<Tip[]> {
+  const all = await getCollection('tips');
+  return all
+    .filter((tip) => tip.data.locale === locale && isListedTip(tip))
+    .sort((a, b) => {
+      if (a.data.status !== b.data.status) return a.data.status === 'active' ? -1 : 1;
+      return b.data.dateAdded.localeCompare(a.data.dateAdded) || a.data.slug.localeCompare(b.data.slug);
+    });
+}
+
+export const tipToolLabels: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
+  'grok-build': 'Grok Build',
+  'claude-fable': 'Claude Fable 5.2',
+};
+
 export type SearchIndexItem = {
   title: string;
   tags: string[];
@@ -79,15 +105,26 @@ export type SearchIndexItem = {
 
 export async function buildSearchIndex(locale = 'en'): Promise<SearchIndexItem[]> {
   const listed = await getListedArticles(locale);
+  const tips = await getPublishedTips(locale);
   const { routes } = await readInventory();
   // Use the same published route inventory as sitemap and alternate links.
-  return listed.filter((a) => routes.has(articleHref(a.data.slug, locale))).map((a) => ({
+  const articles = listed.filter((a) => routes.has(articleHref(a.data.slug, locale))).map((a) => ({
     title: a.data.title,
     tags: a.data.tags,
     summary: a.data.summary,
     url: articleHref(a.data.slug, locale),
     slug: a.data.slug,
   }));
+  const tipItems = routes.has(`/${locale}/tips/`)
+    ? tips.map((tip) => ({
+        title: tip.data.title,
+        tags: [...tip.data.tags, ...tip.data.tools],
+        summary: tip.data.summary,
+        url: tipHref(tip.data.slug, locale),
+        slug: tip.data.slug,
+      }))
+    : [];
+  return [...articles, ...tipItems];
 }
 
 /** EN articles that lack a published zh counterpart (for zh fallback routes). */

@@ -17,6 +17,7 @@ export const navEn = [
   { label: 'Build', href: '/en/build/' },
   { label: 'Sell', href: '/en/sell/' },
   { label: 'Playbooks', href: '/en/playbooks/' },
+  { label: 'Tips', href: '/en/tips/' },
   { label: 'Hardware', href: '/en/hardware/' },
   { label: 'Changelog', href: '/en/changelog/' },
 ] as const;
@@ -28,6 +29,7 @@ export const navZh = [
   { label: '构建', href: '/zh/build/' },
   { label: '销售', href: '/zh/sell/' },
   { label: 'Playbooks', href: '/zh/playbooks/' },
+  { label: '技巧', href: '/zh/tips/' },
   { label: '硬件', href: '/zh/hardware/' },
   { label: '更新日志', href: '/zh/changelog/' },
 ] as const;

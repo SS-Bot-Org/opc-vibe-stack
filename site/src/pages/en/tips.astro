@@ -1,0 +1,7 @@
+---
+import TipsList from '../../components/TipsList.astro';
+import { getPublishedTips } from '../../lib/content';
+
+const tips = await getPublishedTips('en');
+---
+<TipsList locale="en" tips={tips} />

@@ -1,7 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { readInventory } from './lib/inventory.mjs';
-import { articleSchema, changelogSchema, loaderId, assertConditional } from './lib/content-schema.mjs';
+import { articleSchema, changelogSchema, tipSchema, loaderId, assertConditional, assertTipConditional } from './lib/content-schema.mjs';
 
 function validatedGlob(options: Parameters<typeof glob>[0]) {
   const loader = glob(options);
@@ -24,4 +24,12 @@ const changelog = defineCollection({
     generateId: ({ entry, data }) => loaderId(entry, data) }),
   schema: changelogSchema,
 });
-export const collections = { articles, changelog };
+const tips = defineCollection({
+  loader: validatedGlob({ pattern: '**/{en,zh}/*.md', base: './src/content/tips',
+    generateId: ({ entry, data }) => loaderId(entry, data) }),
+  schema: tipSchema.superRefine((data, ctx) => {
+    try { assertTipConditional(data, 'tip'); }
+    catch (error) { ctx.addIssue({ code: 'custom', message: String(error) }); }
+  }),
+});
+export const collections = { articles, changelog, tips };

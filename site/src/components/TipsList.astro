@@ -1,0 +1,151 @@
+---
+import EvidenceLabel from './EvidenceLabel.astro';
+import { editorialName, aboutHref } from '../data/editorial';
+import { tipHref, tipToolLabels, type Tip } from '../lib/content';
+import { absoluteUrl } from '../lib/routes';
+import { breadcrumbList, itemListJsonLd } from '../lib/seo.mjs';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+interface Props {
+  locale: 'en' | 'zh';
+  tips: Tip[];
+}
+
+const { locale, tips } = Astro.props;
+const zh = locale === 'zh';
+const path = `/${locale}/tips/`;
+const homePath = `/${locale}/`;
+const title = zh ? 'Vibe Coding 技巧' : 'Vibe Coding tips';
+const description = zh
+  ? '可立即使用的提示词、设置、开关与命令，用来改变编程 agent 的行为。每条都注明适用工具、官方来源和限制条件。'
+  : 'Short prompts, settings, flags, and commands that change how coding agents behave, each with an official source and stated limits.';
+const lede = zh
+  ? '每条都是一句可复制的提示词、一条设置、一个开关或一条命令，用来改变 agent 的行为。数字只写在带条件的说明里，并以官方文档为准。'
+  : 'Each item is one copyable prompt, setting, flag, or command that changes agent behavior. Numbers stay with their conditions, and official docs are the source of fact.';
+const homeLabel = zh ? '首页' : 'Home';
+const sectionLabel = zh ? '技巧' : 'Tips';
+const authorName = editorialName(locale);
+const crumbs = [
+  { name: homeLabel, path: homePath },
+  { name: sectionLabel, path },
+];
+const jsonLd = [
+  itemListJsonLd({
+    name: title,
+    description,
+    url: absoluteUrl(path),
+    items: tips.map((tip) => ({
+      name: tip.data.title,
+      url: absoluteUrl(tipHref(tip.data.slug, locale)),
+      description: tip.data.summary,
+    })),
+  }),
+  breadcrumbList(crumbs),
+];
+
+const toolIds = [...new Set(tips.flatMap((tip) => tip.data.tools))];
+// A shared/search fragment must remain reachable even outside the selected tool.
+const filterStyle = toolIds
+  .map((id) => `.tips-page:has([name="tip-tool"][value="${id}"]:checked) .tip:not(:target):not([data-tools~="${id}"]){display:none}`)
+  .join('');
+
+const ogImageAlt = zh
+  ? 'OPC Vibe Stack：面向独立开发者的 Vibe Coding 技巧列表'
+  : 'OPC Vibe Stack — Vibe Coding tips for solo builders';
+---
+<SiteLayout
+  title={title}
+  description={description}
+  canonicalPath={path}
+  locale={locale}
+  activeSection={path}
+  ogImageAlt={ogImageAlt}
+  jsonLd={jsonLd}
+>
+  {filterStyle && <style set:html={filterStyle} />}
+  <div class="tips-page">
+    <nav class="breadcrumb" aria-label={zh ? '当前位置' : 'Breadcrumb'}>
+      <a href={homePath}>{homeLabel}</a>
+      <span aria-hidden="true">/</span>
+      <span>{sectionLabel}</span>
+    </nav>
+    <h1>{title}</h1>
+    <p class="lede">{lede}</p>
+    <p class="article-byline">
+      {zh ? '作者 / 编辑：' : 'By '}
+      <a href={`${aboutHref(locale)}#editorial`}>{authorName}</a>
+      {zh ? '。人工复核与 AI 辅助范围见关于页；纠错请走 ' : '. Human review and AI-assisted scope are described on the About page. Corrections: '}
+      <a href="https://github.com/SS-Bot-Org/opc-vibe-stack/issues">{zh ? 'GitHub Issues' : 'GitHub issues'}</a>{zh ? '。' : '.'}
+    </p>
+    {tips.length === 0 ? (
+      <div class="empty-state">{zh ? '暂无已发布的技巧。' : 'No published tips yet.'}</div>
+    ) : (
+      <>
+        <div class="tips-toolbar">
+          <span class="tips-toolbar__label" id="tip-filter-label">{zh ? '按工具筛选' : 'Filter by tool'}</span>
+          <div class="tips-filters" role="radiogroup" aria-labelledby="tip-filter-label">
+            <label>
+              <input type="radio" name="tip-tool" value="all" checked />
+              {zh ? '全部' : 'All'}
+            </label>
+            {toolIds.map((id) => (
+              <label>
+                <input type="radio" name="tip-tool" value={id} />
+                {tipToolLabels[id] ?? id}
+              </label>
+            ))}
+          </div>
+        </div>
+        {tips.map((tip) => {
+          const d = tip.data;
+          const wording = d.wordingLang === 'yaml' && !d.wording.trim().startsWith('---')
+            ? ('---\n' + d.wording.trim() + '\n---')
+            : d.wording;
+          return (
+            <article class:list={['tip', d.status === 'retired' && 'tip--retired']} id={d.slug} data-tools={d.tools.join(' ')}>
+              <h2 class="tip__title">
+                <a href={`#${d.slug}`}>{d.title}</a>
+              </h2>
+              <div class="tip__meta">
+                <EvidenceLabel evidence={d.evidence} locale={locale} />
+                {d.status === 'retired' && <span class="badge">{zh ? '已停用' : 'Retired'}</span>}
+                {d.tools.map((tool) => (
+                  <span class="tool-chip tool-chip--neutral">{tipToolLabels[tool] ?? tool}</span>
+                ))}
+                <span>{d.appliesTo}</span>
+                <span>{zh ? '收录于' : 'Added'} <time datetime={d.dateAdded}>{d.dateAdded}</time></span>
+                {d.lastVerified && (
+                  <span>{zh ? '核对于' : 'Verified'} <time datetime={d.lastVerified}>{d.lastVerified}</time></span>
+                )}
+              </div>
+              <div class="tip__section">
+                <h3>{zh ? '可复制内容' : 'Copy this'}</h3>
+                <pre><code class={`language-${d.wordingLang}`}>{wording}</code></pre>
+              </div>
+              <div class="tip__section">
+                <h3>{zh ? '它改变什么' : 'What it changes'}</h3>
+                <p>{d.effect}</p>
+              </div>
+              <div class="tip__section">
+                <h3>{zh ? '条件与限制' : 'Conditions and limits'}</h3>
+                <p>{d.limits}</p>
+              </div>
+              <ul class="tip__sources">
+                <li>
+                  {zh ? '官方来源：' : 'Official source: '}
+                  <a href={d.officialSource.url} rel="noopener noreferrer">{d.officialSource.title}</a>
+                </li>
+                {d.discoverySource && (
+                  <li>
+                    {zh ? '发现来源：' : 'Discovery source: '}
+                    <a href={d.discoverySource.url} rel="noopener noreferrer">{d.discoverySource.title}</a>
+                  </li>
+                )}
+              </ul>
+            </article>
+          );
+        })}
+      </>
+    )}
+  </div>
+</SiteLayout>

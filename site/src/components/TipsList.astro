@@ -44,8 +44,9 @@ const jsonLd = [
 ];
 
 const toolIds = [...new Set(tips.flatMap((tip) => tip.data.tools))];
+// A shared/search fragment must remain reachable even outside the selected tool.
 const filterStyle = toolIds
-  .map((id) => `.tips-page:has([name="tip-tool"][value="${id}"]:checked) .tip:not([data-tools~="${id}"]){display:none}`)
+  .map((id) => `.tips-page:has([name="tip-tool"][value="${id}"]:checked) .tip:not(:target):not([data-tools~="${id}"]){display:none}`)
   .join('');
 
 const ogImageAlt = zh

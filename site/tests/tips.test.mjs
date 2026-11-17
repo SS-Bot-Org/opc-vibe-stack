@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, cp, symlink, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { parseDocument } from 'yaml';
 import { tipSchema, assertTipConditional, assertTipPairing } from '../src/lib/content-schema.mjs';
 import { readInventory } from '../src/lib/inventory.mjs';
 import { routeLastmod } from '../src/lib/lastmod.mjs';
@@ -10,6 +12,9 @@ import { inspectHtml, assertIndexedPageSeo, assertTipsSeo, assertHreflangRecipro
 import { serializeJsonLd, itemListJsonLd, breadcrumbList } from '../src/lib/seo.mjs';
 
 const site = process.cwd();
+const chromeBin = process.env.CHROME_BIN
+  || ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium']
+    .find((bin) => spawnSync(bin, ['--version'], { encoding: 'utf8' }).status === 0);
 
 async function fixture(run) {
   const dir = await mkdtemp(path.join(tmpdir(), 'opc-tips-'));
@@ -74,6 +79,67 @@ test('inventory rejects wording that drifts between locales', async () => {
     const raw = await readFile(file, 'utf8');
     await writeFile(file, raw.replace('wording: claude import codex --dry-run', 'wording: claude import codex'));
     await assert.rejects(() => readInventory(dir), /import-codex-dry-run wording must match across en\/zh/);
+  });
+});
+
+test('both Explore examples explicitly restrict the custom agent to read-only tools', async () => {
+  const { tips } = await readInventory();
+  const examples = tips.filter((entry) => entry.data.slug === 'explore-subagent-haiku');
+  assert.equal(examples.length, 2);
+  for (const { data } of examples) {
+    const config = parseDocument(data.wording).toJS();
+    assert.equal(config.name, 'Explore');
+    assert.equal(config.model, 'haiku');
+    assert.deepEqual(config.tools?.split(',').map((tool) => tool.trim()), ['Read', 'Grep', 'Glob'], data.locale);
+  }
+});
+
+test('rendered EN/ZH tip fragments remain visible outside the selected tool filter', async (t) => {
+  if (!chromeBin) {
+    t.skip('no Chromium/Chrome binary; set CHROME_BIN to run the rendered filter check');
+    return;
+  }
+  await fixture(async (dir) => {
+    const build = spawnSync('npm', ['run', 'build'], { cwd: dir, encoding: 'utf8', timeout: 60000 });
+    assert.equal(build.status, 0, build.stdout + build.stderr);
+    for (const locale of ['en', 'zh']) {
+      const html = await readFile(path.join(dir, 'dist', locale, 'tips/index.html'), 'utf8');
+      // Exercise the generated filter CSS and real tip IDs, without depending on search JS.
+      const probe = `<script>
+        const selected = document.querySelector('input[name="tip-tool"][value="codex"]');
+        selected.checked = true;
+        const visible = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
+        const snap = () => ({
+          matching: visible('import-codex-dry-run'),
+          ownership: visible('say-who-owns-the-code'),
+          audit: visible('doctor-prompt-audit'),
+        });
+        const before = snap();
+        location.hash = 'say-who-owns-the-code';
+        const targeted = snap();
+        location.hash = 'doctor-prompt-audit';
+        const moved = snap();
+        location.hash = '';
+        const cleared = snap();
+        document.querySelector('input[name="tip-tool"][value="all"]').checked = true;
+        document.body.setAttribute('data-filter-result', JSON.stringify({ before, targeted, moved, cleared, all: snap() }));
+      </script>`;
+      const file = path.join(dir, `filter-${locale}.html`);
+      await writeFile(file, html.replace('</body>', probe + '</body>'));
+      const result = spawnSync(chromeBin, [
+        '--headless=new', '--disable-gpu', '--no-sandbox', '--dump-dom', `file://${file}`,
+      ], { encoding: 'utf8', maxBuffer: 5 * 1024 * 1024, timeout: 30000 });
+      assert.equal(result.status, 0, result.stderr);
+      const match = /data-filter-result="([^"]+)"/.exec(result.stdout);
+      assert.ok(match, `missing browser result for ${locale}`);
+      assert.deepEqual(JSON.parse(match[1].replace(/&quot;/g, '"')), {
+        before: { matching: true, ownership: false, audit: false },
+        targeted: { matching: true, ownership: true, audit: false },
+        moved: { matching: true, ownership: false, audit: true },
+        cleared: { matching: true, ownership: false, audit: false },
+        all: { matching: true, ownership: true, audit: true },
+      }, locale);
+    }
   });
 });
 

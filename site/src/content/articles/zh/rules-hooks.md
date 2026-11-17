@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
 published: "2026-11-06"
-updated: "2026-11-15"
+updated: "2026-11-17"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -77,9 +77,13 @@ tags: [build, hooks, skills, mcp, safety]
 2. 启动新的 Claude Code 会话，用 `/context all` 查看已加载的记忆文件，用 `/permissions` 查看生效规则。
 3. 要求它通过 **Read 工具**读取假文件。只有工具在内容传给模型前拒绝调用才算通过；模型口头说“不读取”并不能证明权限拦截生效。
 4. 若读取成功，停止并检查路径、配置作用域和已安装版本，不换成生产凭证继续试。记录工具名、规则、版本与实际结果。
-5. 换第二条路径再测一次：在新提示里输入 `@.env.guardrail-demo`。官方事实（[hooks 参考](https://code.claude.com/docs/en/hooks#pretooluse)）：默认情况下，`@` 引用的文件在构建提示词时直接插入，不经过工具调用，因此**任何 `PreToolUse` hook 都不会触发，包括匹配 `Read` 的 hook**。[权限文档](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover)称 Claude Code 会尽力（best-effort）把 `Read(path)` 拒绝规则也应用到 `@` 引用上。只有假值没有出现在对话里才算通过；按路径分别记录结果，不要把整份文件记成一次通过。
+5. 换第二条路径再测一次：在新提示里输入 `@.env.guardrail-demo`。官方事实（[hooks 参考](https://code.claude.com/docs/en/hooks#pretooluse)）：默认情况下，`@` 引用的文件在构建提示词时直接插入，不经过工具调用，因此**任何 `PreToolUse` hook 都不会触发，包括匹配 `Read` 的 hook**。[权限文档](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover)称 Claude Code 会尽力（best-effort）把 `Read(path)` 拒绝规则也应用到 `@` 引用上。编辑建议的验证标准：
+   - **通过：** 客户端执行层提供证据，表明该附件在内容到达模型之前已被拒绝或排除。若客户端提供相关信息，记录被拦截的路径，以及能证明排除生效的诊断信息或完整组装后输入的检查结果。
+   - **失败：** 假文件内容已包含在模型输入中，即使模型没有在回复里复述，也算失败。
+   - **无法判定：** 客户端没有提供可靠的排除证据。可见对话中没有假值、模型口头拒绝，或没有 `Read` hook 事件，都不能证明防护生效。不能据此记为通过，也不要换成真实秘密继续测试。
+   分别为 Read 工具和 `@` 两条路径记录版本、访问路径、结果及支撑证据。
 
-这只验证一条访问路径。[Read/Edit 拒绝规则不覆盖所有子进程](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover)：脚本仍可能间接打开文件；`.gitignore` 也不限制读取。真正隔离秘密需要配置合适的沙箱或系统权限，并将凭证放在 agent 无权访问的环境。CI 不能撤销已经发生的泄露。
+这些检查仅覆盖已测试的两条访问路径。[Read/Edit 拒绝规则不覆盖所有子进程](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover)：脚本仍可能间接打开文件；`.gitignore` 也不限制读取。真正隔离秘密需要配置合适的沙箱或系统权限，并将凭证放在 agent 无权访问的环境。CI 不能撤销已经发生的泄露。
 
 > [!FLOW] 五层 Agent 控制与拦截管线
 >

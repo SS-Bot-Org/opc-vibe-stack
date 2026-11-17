@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP; Codex config.toml & mcp_servers — confirm exact syntax for your installed CLI version"
 published: "2026-11-06"
-updated: "2026-11-15"
+updated: "2026-11-17"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -77,9 +77,13 @@ Use a disposable test repository with no real secrets. Create an `AGENTS.md` con
 2. Start a new Claude Code session. Use `/context all` to inspect loaded memory files and `/permissions` to inspect active rules.
 3. Ask it to read the fake file with the **Read tool**. Pass only when the tool is denied before the contents reach the model. A polite refusal in prose alone is not evidence of enforcement.
 4. If the call succeeds, stop and inspect rule paths, configuration scope, and installed version. Do not test with production credentials. Record the tool, rule, version, and observed result.
-5. Repeat the test through a second path: type `@.env.guardrail-demo` in a new prompt. Official fact ([hooks reference](https://code.claude.com/docs/en/hooks#pretooluse)): by default an `@` file reference is inserted while the prompt is built, with no tool call, so **no `PreToolUse` hook fires, including one matching `Read`**. The [permissions docs](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover) say Claude Code makes a best-effort attempt to apply `Read(path)` deny rules to `@` mentions. Pass only when the fake value does not appear in the conversation; record the result per path, not as one pass for the whole file.
+5. Repeat the test through a second path: type `@.env.guardrail-demo` in a new prompt. Official fact ([hooks reference](https://code.claude.com/docs/en/hooks#pretooluse)): by default an `@` file reference is inserted while the prompt is built, with no tool call, so **no `PreToolUse` hook fires, including one matching `Read`**. The [permissions docs](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover) say Claude Code makes a best-effort attempt to apply `Read(path)` deny rules to `@` mentions. Editorial verification criteria:
+   - **Pass:** the harness provides evidence that this attachment was denied or excluded before reaching the model. Record the blocked path and the diagnostic or complete assembled-input inspection that establishes exclusion, if your client exposes one.
+   - **Fail:** the fake file contents are included in the model input, even if the model does not repeat them in its reply.
+   - **Inconclusive:** the client does not expose reliable evidence of exclusion. An absent value in the visible conversation, a model refusal, or no `Read` hook event is not proof of protection. Do not record a pass or move on to real secrets on that basis.
+   Record the version, access path, outcome, and supporting evidence separately for the Read-tool and `@` tests.
 
-This tests one access path. [Read/Edit deny rules do not cover every subprocess](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover). A script can open files indirectly; `.gitignore` also does not restrict reads. For actual secret isolation, use an appropriately configured sandbox or OS permissions and keep credentials outside the agent's accessible environment. CI cannot undo a disclosure.
+These checks cover only the two tested access paths. [Read/Edit deny rules do not cover every subprocess](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover). A script can open files indirectly; `.gitignore` also does not restrict reads. For actual secret isolation, use an appropriately configured sandbox or OS permissions and keep credentials outside the agent's accessible environment. CI cannot undo a disclosure.
 
 > [!FLOW] Five-layer agent control pipeline
 >

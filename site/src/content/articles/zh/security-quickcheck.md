@@ -11,7 +11,7 @@ status: published
 evidence: unverified
 applicableToolsVersions: "所有本地编程 agent CLI、桌面聊天客户端、MCP 服务器与编辑器扩展市场；工具升级后请复查"
 published: "2026-11-06"
-updated: "2026-11-15"
+updated: "2026-11-17"
 internalBriefing:
   - date: "2026-11-01"
     note: "Cursor marketplace Claude Code extension compromise report"
@@ -115,7 +115,10 @@ GitHub 用户可按[安全日志指引](https://docs.github.com/en/authenticatio
 6. **验证命令坚持本地闭环。** 优先跑纯本地单测与静态构建（`npm test`、`npm run build`），拒绝在验证脚本里 `curl` 外部陌生脚本。
 7. **接入 MCP 与 `SKILL.md` 前先审代码。** 正如 Claude Code 官方 MCP 文档提醒，凡是会抓取外部不受控网页的 MCP 服务，都可能把提示词注入带进本地会话。
 8. **检查个人 agent 设置有没有被提交。** 在每个仓库里运行 `git ls-files .claude .codex`。官方事实（[权限](https://code.claude.com/docs/en/permissions)、[设置](https://code.claude.com/docs/en/settings)）：对 Bash 命令或 WebFetch 域名选择 “Yes, and don't ask again” 时，Claude Code 会把这条规则存进 `.claude/settings.local.json`；该文件由 Claude Code 创建时会自动排除在 git 之外，手动创建的则需要你自己加进 `.gitignore`。编辑推断：保存的规则包含你批准过的命令文本，如果那段命令里带了密钥，一旦文件被跟踪或推送，就应把该密钥视为已暴露。先吊销密钥，再执行 `git rm --cached .claude/settings.local.json` 并补上忽略规则；历史记录里仍保留着旧文件。
-9. **只在你打算信任的目录里启动 agent，不要在 `~/Downloads` 或主目录里启动。** 官方事实（[安全](https://code.claude.com/docs/en/security)、[权限](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)）：交互式 Claude Code 遇到未信任目录会弹出工作区信任对话框，但 `claude -p` 和 SDK 运行不会弹出；而且即使该目录从未被信任，仓库设置文件里的 hooks、`env` 块以及 `apiKeyHelper` 等辅助命令仍会被使用。在不是你写的仓库里跑 `claude -p` 之前，加 `--setting-sources user` 或 `--bare`，或为这次运行传入 `--settings '{"disableAllHooks": true}'`。Codex [只在项目受信任时加载项目级配置](https://developers.openai.com/codex/config-advanced)。无论用哪个工具，信任仓库之前都先读一遍它的 `AGENTS.md`、`CLAUDE.md`、`.mcp.json`、hooks 和 `.codex/`；即使配置被跳过，说明文件仍可能引导模型。
+9. **只在你打算信任的目录里启动 agent，不要在 `~/Downloads` 或主目录里启动。** 官方事实（[安全](https://code.claude.com/docs/en/security)、[权限](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)）：交互式 Claude Code 遇到未信任目录会弹出工作区信任对话框，但 `claude -p` 和 SDK 运行不会弹出。在这些非交互运行中，即使目录从未被信任，仓库设置文件里的 hooks、`env` 块及 `apiKeyHelper` 等辅助命令仍可能被使用。
+   - **在不熟悉的仓库中运行前排除仓库配置：** 传入 `--setting-sources user`，排除项目/本地设置及仓库的 `.mcp.json`。使用 SDK 时，让 `settingSources` 不包含项目设置。这只是排除配置，并不是沙箱，也不保证执行不可信代码是安全的。
+   - **区分作用更窄的选项，不要把它们当作替代方案：** `--bare` 跳过项目 hooks、技能、自定义命令、子代理、插件及 `.mcp.json` 服务器，但项目的 `env` 块和 `awsAuthRefresh` 等辅助命令仍会生效；在 bare 模式下，`apiKeyHelper` 仅从 `--settings` 读取。`--settings '{"disableAllHooks": true}'` 只关闭 hooks，并不排除项目环境设置、辅助命令或 `.mcp.json` 服务器。单独使用这两个选项中的任何一个，都不能达到 `--setting-sources user` 对仓库配置的排除范围。
+   - **审阅其余输入：** Codex [只在项目受信任时加载项目级配置](https://developers.openai.com/codex/config-advanced)。无论用哪个工具，信任仓库之前都先读一遍它的 `AGENTS.md`、`CLAUDE.md`、`.mcp.json`、hooks 和 `.codex/`；即使配置被跳过，说明文件仍可能引导模型。
 
 ## 可直接复制的安全基线模板
 

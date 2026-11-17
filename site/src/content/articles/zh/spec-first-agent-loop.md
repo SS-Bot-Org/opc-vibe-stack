@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code、Codex 或 Grok Build 任一；可选安装 GitHub Spec Kit；配合仓库本地验证命令"
 published: "2026-11-06"
-updated: "2026-11-10"
+updated: "2026-11-15"
 internalBriefing:
   - date: "2026-11-01"
     note: "Spec Kit / specify-before-code brief"
@@ -21,6 +21,10 @@ internalBriefing:
     note: "Voice→tech-spec and clear task framing"
   - date: "2026-11-05"
     note: "Boundary → stories → acceptance before code"
+  - date: "2026-11-13"
+    note: "Write the test before the agent writes the code"
+  - date: "2026-11-15"
+    note: "Review in a separate context from the one that wrote the code"
 publicSources:
   - title: "Spec Kit quickstart (GitHub)"
     url: "https://github.github.com/spec-kit/quickstart.html"
@@ -37,6 +41,12 @@ publicSources:
   - title: "Clear task / outcome / done / don’t (practice tip)"
     url: "https://x.com/DDXG_99/status/2117853995985441174"
     kind: x
+  - title: "Claude Code best practices: give Claude a check to run, review against your spec"
+    url: "https://code.claude.com/docs/en/best-practices"
+    kind: docs
+  - title: "Codex CLI slash commands (/review)"
+    url: "https://developers.openai.com/codex/cli/slash-commands"
+    kind: docs
 tags: [research, spec, workflow]
 ---
 
@@ -92,18 +102,19 @@ tags: [research, spec, workflow]
 ## 步骤
 
 1. **五句话框住本切片：** 目标用户、具体痛点、可观察的成功信号、明确非目标、时间上限。
-2. **写出「陌生人也能打勾」的验收项：** 明确到 URL 行为、CLI 输出或测试名——禁用「更优雅」「更现代」之类无法检验的形容词。
+2. **写出「陌生人也能打勾」的验收项：** 明确到 URL 行为、CLI 输出或测试名——禁用「更优雅」「更现代」之类无法检验的形容词。能做到时，在动手实现前先把其中一条变成会失败的测试；Anthropic [最佳实践页](https://code.claude.com/docs/en/best-practices)用的也是这个模式（“write a failing test that reproduces it, then fix it”）。编辑建议：agent 写完代码后再给自己写的测试证据力较弱，所以要先写，或交给一个没看过这段代码的会话来写。
 3. **冻结本轮接口边界：** 标出本切片绝不允许漂移的路由、schema 字段与禁改目录。
 4. **跑通 specify → plan → tasks 流程。** 用 Spec Kit（或 `specs/` 目录下的精简文档）先澄清歧义、生成计划并拆出任务列表，再交给 [Claude Code](/zh/articles/claude-code/)、[Codex](/zh/articles/codex/) 或 [Grok Build](/zh/articles/grok-build/)。
 5. **可选脑暴预整理（社区未验证技巧）：** 想法还很散时，可先把语音或杂乱思路倒进推理聊天，让它整理成无歧义技术规格草稿（数据流、目录边界、异常情况、验收项）——**由你亲自删改定稿后**，再交给编码 agent。
 6. **用「四要素任务单」替代空话铺垫：** 写清做什么、成品长什么样、如何验证完成、绝对禁止做什么；省掉空洞的「请一步步仔细思考」。
 7. **一次只交一个切片任务。** 在提示词与项目规则中明确禁止顺手重构无关文件（配合[规则文件 + hooks](/zh/articles/rules-hooks/)）。
 8. **验证全绿再提交。** 验证不过就地修复或回滚重审规格，绝不在红灯状态下继续叠新功能。
+9. **让没写这段代码的一方对照规格审查。** 官方事实：在 Claude Code 中，`/code-review` 会在一个从未看过你对话的全新子代理里审查 diff；把自定义子代理限制为 `tools: Read, Grep, Glob`，它就只能审查、不能修改（[最佳实践](https://code.claude.com/docs/en/best-practices)）。Codex 的 [`/review`](https://developers.openai.com/codex/cli/slash-commands) 会汇总工作区里的问题，默认使用当前会话的模型，除非你设置了 `review_model`。编辑建议：只给审查方规格、diff 和验证输出，不带上写代码会话里的推理过程，并只要求它报告影响正确性的缺口。Anthropic 对 “skip style” 这句的说明是：被要求找问题的审查者总能找出点什么。
 
 本仓库的[坏链接发布门禁实例](/zh/articles/48h-mvp-agent-stack/#broken-link-release-gate)是一个已固定 commit、可复现的验证命令失败例子。
 
 > [!NOTE] 来源与证据边界说明
-> `specify → plan → tasks → implement` 主流程有 GitHub 官方 Spec Kit 文档支撑（**文档依据**）。社交帖提到的仓库星标热度、「先语音倾倒再转技术规格」与「四字段提示法」属于社区经验分享——在你用自己的项目实测前，请将相关效率数字视作**发帖人单方主张（未验证）**。
+> `specify → plan → tasks → implement` 主流程有 GitHub 官方 Spec Kit 文档支撑（**文档依据**）。社交帖提到的仓库星标热度、「先语音倾倒再转技术规格」与「四字段提示法」属于社区经验分享——在你用自己的项目实测前，请将相关效率数字视作**发帖人单方主张（未验证）**。第 9 步的独立上下文审查，其中提到的命令有官方文档依据（**文档依据**）；本站尚未测量它能多发现多少缺陷。
 
 > [!NOTE] 先替换项目专属配置
 > 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
@@ -156,12 +167,30 @@ tags: [research, spec, workflow]
    - 若发现规格与现有类型定义冲突，立即停下提问，不要自行猜测改契约
 ```
 
+### 3. 只读规格审查子代理（`.claude/agents/reviewer.md`）
+
+下面是 Anthropic [最佳实践页](https://code.claude.com/docs/en/best-practices)里的审查子代理文件，指向上面的切片规格。让它只读的是 `tools` 这一行，由 Claude Code 强制执行，而不是靠提示词。正文保留官方英文原文。
+
+```markdown
+---
+name: reviewer
+description: Reviews changed files against the spec they were built from. Use after implementing a feature, before opening the PR.
+tools: Read, Grep, Glob
+---
+You're reviewing code you didn't write. Compare the changed files against the spec you're given,
+check that every requirement is implemented and the listed edge cases have tests,
+and report only the gaps that affect correctness. Skip style.
+```
+
+然后对 Claude 说：`have the reviewer compare the changes against specs/001-slice.md`。
+
 ## 完成定义
 
 - [ ] 在 agent 改动业务代码前，已有书面规格文档（`specs/...` 或 Spec Kit 产物）
 - [ ] 每一条验收条件都能通过自动化测试、构建门禁或明确的页面操作客观检验
 - [ ] 交接提示词中明确列出了禁改目录与非目标
 - [ ] 当前切片的验证命令返回 `0` 且 diff 已审阅后，才进入下一切片
+- [ ] 已由没写这段代码的审查方对照规格检查 diff，并且只处理了影响正确性的缺口
 
 ## 反模式
 

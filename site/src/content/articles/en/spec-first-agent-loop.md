@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code, Codex, or Grok Build; GitHub Spec Kit when installed; paired with your repo’s verify command"
 published: "2026-11-06"
-updated: "2026-11-10"
+updated: "2026-11-15"
 internalBriefing:
   - date: "2026-11-01"
     note: "Spec Kit / specify-before-code brief"
@@ -21,6 +21,10 @@ internalBriefing:
     note: "Voice→tech-spec and clear task framing"
   - date: "2026-11-05"
     note: "Boundary → stories → acceptance before code"
+  - date: "2026-11-13"
+    note: "Write the test before the agent writes the code"
+  - date: "2026-11-15"
+    note: "Review in a separate context from the one that wrote the code"
 publicSources:
   - title: "Spec Kit quickstart (GitHub)"
     url: "https://github.github.com/spec-kit/quickstart.html"
@@ -37,6 +41,12 @@ publicSources:
   - title: "Clear task / outcome / done / don’t (practice tip)"
     url: "https://x.com/DDXG_99/status/2117853995985441174"
     kind: x
+  - title: "Claude Code best practices: give Claude a check to run, review against your spec"
+    url: "https://code.claude.com/docs/en/best-practices"
+    kind: docs
+  - title: "Codex CLI slash commands (/review)"
+    url: "https://developers.openai.com/codex/cli/slash-commands"
+    kind: docs
 tags: [research, spec, workflow]
 ---
 
@@ -91,18 +101,19 @@ Fill in the actual route, files in scope, and existing check command. Run the ch
 ## Steps
 
 1. **Capture the slice in five lines:** target user, concrete pain, observable success signal, explicit non-goals, and timebox.
-2. **Write stranger-testable acceptance checks:** concrete URLs, CLI exit codes, or named test cases—never subjective adjectives like “clean” or “modern.”
+2. **Write stranger-testable acceptance checks:** concrete URLs, CLI exit codes, or named test cases—never subjective adjectives like “clean” or “modern.” Where you can, turn one check into a failing test before implementation starts; Anthropic's [best-practices page](https://code.claude.com/docs/en/best-practices) uses the same pattern (“write a failing test that reproduces it, then fix it”). Editorial recommendation: a test the agent writes after its own code is weaker evidence, so write it first or have a session that hasn't seen the code write it.
 3. **Freeze interfaces for this slice:** routes, schema fields, and directories that must **not** drift during implementation.
 4. **Run a structured specify → plan → tasks pass.** Using GitHub Spec Kit (or plain Markdown files in `specs/`), establish project boundaries once, clarify ambiguities before planning, and break the plan into ordered tasks before calling [Claude Code](/en/articles/claude-code/), [Codex](/en/articles/codex/), or [Grok Build](/en/articles/grok-build/).
 5. **Optional pre-spec brain dump (unverified community tip):** when an idea is still rough, talk or type raw notes into a reasoning chat and ask it to draft a structured technical spec (data flow, edge cases, file tree, acceptance checks)—then **edit that draft yourself** before handing it to a coding agent.
 6. **Frame the coding prompt with four concrete fields** (what to build, what finished looks like, how to verify it is done, and what must never be done) rather than filler phrases like *“think carefully step by step.”*
 7. **Execute one task at a time.** Forbid drive-by refactors in both your prompt and your project rules ([Rules files + hooks](/en/articles/rules-hooks/)).
 8. **Verify, then commit.** If the verify command fails, either fix the defect within scope or revert and refine the spec—never pile new features onto a broken build.
+9. **Review against the spec with something that didn't write the code.** Official fact: in Claude Code, `/code-review` reviews the diff in a fresh subagent that never saw your conversation, and a custom subagent limited to `tools: Read, Grep, Glob` can review but not edit ([best practices](https://code.claude.com/docs/en/best-practices)). Codex's [`/review`](https://developers.openai.com/codex/cli/slash-commands) summarizes issues in the working tree and uses the current session model unless you set `review_model`. Editorial recommendation: give the reviewer only the spec, the diff, and the verify output—not the build session's reasoning—and ask for correctness gaps only. Anthropic's note on the “skip style” instruction: a reviewer asked to find problems will always find something.
 
 This repository’s own [broken-link release gate](/en/articles/48h-mvp-agent-stack/#broken-link-release-gate) is a concrete, pinned example of a deterministic verify command failing a bad content release.
 
 > [!NOTE] Evidence boundary on sources
-> The `specify → plan → tasks → implement` workflow is **documentation-backed** via GitHub’s official Spec Kit quickstart. Social star counts, the voice-to-spec pre-pass, and the four-field prompt framing come from briefing-linked X posts—treat any productivity multipliers as **poster-claimed and unverified** until you test them on your own repository.
+> The `specify → plan → tasks → implement` workflow is **documentation-backed** via GitHub’s official Spec Kit quickstart. Social star counts, the voice-to-spec pre-pass, and the four-field prompt framing come from briefing-linked X posts—treat any productivity multipliers as **poster-claimed and unverified** until you test them on your own repository. The fresh-context review step (step 9) is **documentation-backed** for the commands it names; this site has not measured how many defects it catches.
 
 > [!NOTE] Adapt repository-specific examples
 > `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
@@ -152,12 +163,30 @@ This repository’s own [broken-link release gate](/en/articles/48h-mvp-agent-st
    - Stop and ask if a requirement in specs/001-slice.md conflicts with existing types
 ```
 
+### 3. Read-only spec reviewer (`.claude/agents/reviewer.md`)
+
+This is the reviewer file from Anthropic's [best-practices page](https://code.claude.com/docs/en/best-practices), pointed at the slice spec above. The `tools` line is what makes it read-only; Claude Code enforces it, not the prompt.
+
+```markdown
+---
+name: reviewer
+description: Reviews changed files against the spec they were built from. Use after implementing a feature, before opening the PR.
+tools: Read, Grep, Glob
+---
+You're reviewing code you didn't write. Compare the changed files against the spec you're given,
+check that every requirement is implemented and the listed edge cases have tests,
+and report only the gaps that affect correctness. Skip style.
+```
+
+Then ask: `have the reviewer compare the changes against specs/001-slice.md`.
+
 ## Definition of done
 
 - [ ] A written spec artifact (`specs/...` or Spec Kit output) exists before any agent edits application code
 - [ ] Every acceptance item can be checked objectively via a test, build gate, or concrete UI action
 - [ ] Forbidden paths and non-goals are stated explicitly in the handoff prompt
 - [ ] Your verify command passes (`exit 0`) on the resulting diff before you move to the next slice
+- [ ] A reviewer that didn't write the code checked the diff against the spec, and you acted only on correctness gaps
 
 ## Anti-patterns
 

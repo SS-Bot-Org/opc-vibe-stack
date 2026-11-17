@@ -11,12 +11,16 @@ status: published
 evidence: unverified
 applicableToolsVersions: "All local coding-agent CLIs, desktop chat apps, MCP servers, and editor extension marketplaces; re-audit after updates"
 published: "2026-11-06"
-updated: "2026-11-10"
+updated: "2026-11-17"
 internalBriefing:
   - date: "2026-11-01"
     note: "Cursor marketplace Claude Code extension compromise report"
   - date: "2026-11-05"
     note: "Windows infostealer targeting coding-agent tokens"
+  - date: "2026-11-10"
+    note: "Check whether .claude/settings.local.json is committed"
+  - date: "2026-11-13"
+    note: "Don't start coding agents in ~/Downloads or other untrusted folders"
 publicSources:
   - title: "Tampered Claude Code extension in Cursor marketplace (report)"
     url: "https://x.com/neuralnotions/status/2116883761329803580"
@@ -44,6 +48,15 @@ publicSources:
     kind: docs
   - title: "Claude Code permissions"
     url: "https://code.claude.com/docs/en/permissions"
+    kind: docs
+  - title: "Claude Code settings files and scopes (settings.local.json)"
+    url: "https://code.claude.com/docs/en/settings"
+    kind: docs
+  - title: "Claude Code security: workspace trust dialog"
+    url: "https://code.claude.com/docs/en/security"
+    kind: docs
+  - title: "Codex advanced configuration (project config only for trusted projects)"
+    url: "https://developers.openai.com/codex/config-advanced"
     kind: docs
 tags: [alert, security]
 notice:
@@ -101,6 +114,11 @@ If you suspect an active compromise, isolate the affected device and use a trust
 5. **Scope deployment identities tightly.** Limit the deploy identity to the release paths and the reviewed activation/rollback operation it actually needs. Writing `releases/` alone does not authorize switching `current`; avoid broad administrative access just to make the deploy succeed.
 6. **Keep verify commands local and offline-safe.** Prefer deterministic local test/build scripts (`npm test`, `npm run build`) over commands that `curl` external scripts.
 7. **Vet every MCP server and `SKILL.md` folder before enabling.** Per Anthropic’s MCP security guidance, MCP servers that fetch arbitrary external content can expose your agent session to indirect prompt injection.
+8. **Check that personal agent settings are not committed.** Run `git ls-files .claude .codex` in each repository. Official fact ([permissions](https://code.claude.com/docs/en/permissions), [settings](https://code.claude.com/docs/en/settings)): when you choose “Yes, and don't ask again” for a Bash command or WebFetch domain, Claude Code saves that rule to `.claude/settings.local.json`; Claude Code keeps that file out of git when it creates it, but a hand-made file needs its own `.gitignore` entry. Editorial inference: a saved rule holds the command text you approved, so if that text contained a key, treat the key as exposed once the file is tracked or pushed. Revoke it first, then `git rm --cached .claude/settings.local.json` and add the ignore line; history still contains the old file.
+9. **Start agents only in folders you mean to trust—not `~/Downloads` or your home directory.** Official fact ([security](https://code.claude.com/docs/en/security), [permissions](https://code.claude.com/docs/en/permissions#what-runs-before-you-trust-a-folder)): interactive Claude Code shows a workspace trust dialog for an untrusted folder, but `claude -p` and SDK runs show none. In those non-interactive runs, repository settings-file hooks, the `env` block, and helpers such as `apiKeyHelper` can be used even when the folder was never trusted.
+   - **Exclude repository configuration before an unfamiliar run:** pass `--setting-sources user` to exclude project/local settings and the repository's `.mcp.json`. For the SDK, select `settingSources` without project settings. This excludes configuration; it is not a sandbox or a guarantee that untrusted code is safe to execute.
+   - **Treat the other controls as narrower options, not substitutes:** `--bare` skips project hooks, skills, custom commands, subagents, plugins, and `.mcp.json` servers, but the project's `env` block and helpers such as `awsAuthRefresh` still apply; in bare mode, `apiKeyHelper` is read only from `--settings`. `--settings '{"disableAllHooks": true}'` disables hooks only: it does not exclude project environment settings, helper commands, or `.mcp.json` servers. Neither option alone provides the same repository-configuration exclusion as `--setting-sources user`.
+   - **Review the remaining inputs:** Codex [loads project-scoped config only for trusted projects](https://developers.openai.com/codex/config-advanced). With either tool, read the repository's `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, hooks, and `.codex/` before trusting it; instruction files can still steer the model even where configuration is skipped.
 
 ## Copy-pasteable hygiene baselines
 
@@ -117,6 +135,9 @@ If you suspect an active compromise, isolate the affected device and use a trust
 *.key
 ops/records/
 dist/
+
+# Personal agent settings (saved approvals may contain command text)
+.claude/settings.local.json
 ```
 
 ### Private 15-minute security audit log (keep outside public repo)
@@ -128,6 +149,7 @@ Editor extensions checked (publisher verified, unused removed):
 ~/.ssh/authorized_keys checked (workstation + VPS):
 Agent CLI & API keys rotated on:
 Active MCP servers & SKILL.md packs reviewed:
+`git ls-files .claude .codex` result per repo:
 Deploy key scope verified (non-root, path-restricted):
 ```
 
@@ -137,6 +159,7 @@ Deploy key scope verified (non-root, path-restricted):
 - [ ] `~/.ssh/authorized_keys` on both local machine and VPS contains zero unrecognized public keys
 - [ ] Recorded the scope and result of secret scanning; revoked any exposed credential before addressing tracked files/history
 - [ ] Agent CLIs and MCP configs reference environment variables rather than plaintext tokens in repo files
+- [ ] `.claude/settings.local.json` is untracked in every repo, and no agent was started in `~/Downloads` or another folder you didn't intend to trust
 - [ ] Production VPS deploy credentials are non-root and scoped strictly to the release directory
 - [ ] Recorded the revocation controls and responsible owner for sessions, OAuth grants, API keys, and deployment credentials at each provider you use
 

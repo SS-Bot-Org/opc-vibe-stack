@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP; Codex config.toml & mcp_servers — confirm exact syntax for your installed CLI version"
 published: "2026-11-06"
-updated: "2026-11-10"
+updated: "2026-11-17"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -23,6 +23,8 @@ internalBriefing:
     note: "Lean CLAUDE.md; manual-only side-effect skills"
   - date: "2026-11-08"
     note: "One shared rules file; permissions enforce, prompts don't"
+  - date: "2026-11-12"
+    note: "@ file references skip PreToolUse hooks"
 publicSources:
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
@@ -75,8 +77,13 @@ Use a disposable test repository with no real secrets. Create an `AGENTS.md` con
 2. Start a new Claude Code session. Use `/context all` to inspect loaded memory files and `/permissions` to inspect active rules.
 3. Ask it to read the fake file with the **Read tool**. Pass only when the tool is denied before the contents reach the model. A polite refusal in prose alone is not evidence of enforcement.
 4. If the call succeeds, stop and inspect rule paths, configuration scope, and installed version. Do not test with production credentials. Record the tool, rule, version, and observed result.
+5. Repeat the test through a second path: type `@.env.guardrail-demo` in a new prompt. Official fact ([hooks reference](https://code.claude.com/docs/en/hooks#pretooluse)): by default an `@` file reference is inserted while the prompt is built, with no tool call, so **no `PreToolUse` hook fires, including one matching `Read`**. The [permissions docs](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover) say Claude Code makes a best-effort attempt to apply `Read(path)` deny rules to `@` mentions. Editorial verification criteria:
+   - **Pass:** the harness provides evidence that this attachment was denied or excluded before reaching the model. Record the blocked path and the diagnostic or complete assembled-input inspection that establishes exclusion, if your client exposes one.
+   - **Fail:** the fake file contents are included in the model input, even if the model does not repeat them in its reply.
+   - **Inconclusive:** the client does not expose reliable evidence of exclusion. An absent value in the visible conversation, a model refusal, or no `Read` hook event is not proof of protection. Do not record a pass or move on to real secrets on that basis.
+   Record the version, access path, outcome, and supporting evidence separately for the Read-tool and `@` tests.
 
-This tests one access path. [Read/Edit deny rules do not cover every subprocess](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover). A script can open files indirectly; `.gitignore` also does not restrict reads. For actual secret isolation, use an appropriately configured sandbox or OS permissions and keep credentials outside the agent's accessible environment. CI cannot undo a disclosure.
+These checks cover only the two tested access paths. [Read/Edit deny rules do not cover every subprocess](https://code.claude.com/docs/en/permissions#what-read-and-edit-rules-cover). A script can open files indirectly; `.gitignore` also does not restrict reads. For actual secret isolation, use an appropriately configured sandbox or OS permissions and keep credentials outside the agent's accessible environment. CI cannot undo a disclosure.
 
 > [!FLOW] Five-layer agent control pipeline
 >
@@ -112,7 +119,7 @@ This tests one access path. [Read/Edit deny rules do not cover every subprocess]
 
 | Fragile prose-only rule | Deterministic hook / build replacement |
 |---|---|
-| *“Please never edit `.env` or production deploy keys”* | `permissions.deny` rules such as `Read(./.env)` / `Edit(./.env)`, a `PreToolUse` hook for patterns the rules can't express, plus `.gitignore` |
+| *“Please never edit `.env` or production deploy keys”* | `permissions.deny` rules such as `Read(./.env)` / `Edit(./.env)`, a `PreToolUse` hook for patterns the rules can't express (hooks don't see `@` file references), plus `.gitignore` |
 | *“Never touch production”* in `CLAUDE.md` | `deny` or `ask` rules for the deploy commands you actually use (for example `Bash(git push *)`), and keep production credentials off the agent's machine |
 | *“Always run `npm run check` before saying you’re done”* | `Stop` hook runs `npm run check`, maps failures to exit `2`, and guards `stop_hook_active`; post-edit checks cannot undo an edit |
 | *“Don’t break translated slugs or changelog page links”* | `scripts/validate.mjs` + `scripts/validate-output.mjs` fail `npm run build` automatically ([pinned broken-link release gate](/en/articles/48h-mvp-agent-stack/#broken-link-release-gate)) |
@@ -127,7 +134,7 @@ This tests one access path. [Read/Edit deny rules do not cover every subprocess]
 
 1. **Audit your `AGENTS.md` / `CLAUDE.md` and cut bloat.** Anthropic's [memory docs](https://code.claude.com/docs/en/memory) target under 200 lines per `CLAUDE.md` and note that `@path` imports organize a file but don't reduce its context cost. We aim for ~80 lines: directory layout, exact commands, code style, and top boundaries. Move instructions for one part of the codebase into path-scoped rules or a skill.
 2. **Keep one rules file for every tool.** Codex and most other agents read `AGENTS.md`; Claude Code reads `CLAUDE.md` and can also read `AGENTS.md` directly in supported sessions. The default fallback depends on the absence of `CLAUDE.md` and `CLAUDE.local.md` in the working directory and its ancestors; versions and instruction settings matter. If you also keep a `CLAUDE.md`, make its first line `@AGENTS.md` and put only Claude-specific notes below it, so the two files never drift. A `CLAUDE.md` → `AGENTS.md` symlink also works, but the docs recommend the import if anyone clones on Windows. Run `/context all` and confirm the file appears under **Memory files**.
-3. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a permission rule, hook, or build-script check. The [permissions docs](https://code.claude.com/docs/en/permissions) are explicit: rules are enforced by Claude Code, not the model, and instructions in `CLAUDE.md` don't change what it allows. Deny rules win over allow rules. Bash rules match the command text Claude writes, so a push written another way (`git -C . push`) slips past `Bash(git push *)`; use an appropriately configured sandbox or OS access control for a filesystem boundary; a `PreToolUse` hook only covers the calls it actually inspects. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
+3. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a permission rule, hook, or build-script check. The [permissions docs](https://code.claude.com/docs/en/permissions) are explicit: rules are enforced by Claude Code, not the model, and instructions in `CLAUDE.md` don't change what it allows. Deny rules win over allow rules. Bash rules match the command text Claude writes, so a push written another way (`git -C . push`) slips past `Bash(git push *)`; use an appropriately configured sandbox or OS access control for a filesystem boundary; a `PreToolUse` hook only covers the calls it actually inspects. That includes `@` file references: they reach the prompt without a tool call, so a `Read` hook never sees them. Back sensitive paths with `Read` deny rules (applied best-effort to `@` mentions), or set `CLAUDE_CODE_DISABLE_FILE_MENTIONS=1` in your shell, user, or managed settings so mentioned paths go through file tools and your hooks run; the docs list v2.1.299 or later and say project and local settings ignore this variable. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
 4. **Keep hook commands fast.** Run targeted lint/type/path checks inside edit hooks; leave heavy full-repo integration suites for `Stop` or pre-push/CI so you never disable hooks out of impatience.
 5. **Extract recurring playbooks into `SKILL.md` folders.** Follow the [Agent Skills](https://agentskills.io/) structure (`SKILL.md` with YAML `name` + `description` + step-by-step instructions). Claude Code loads project skills from `.claude/skills/<skill-name>/SKILL.md`; verify exact skill directory paths in each tool’s current docs before symlinking across tools. For skills with side effects (deploy, publish, send), add `disable-model-invocation: true` so the skill runs only when you type `/skill-name`; `context: fork` runs a skill in its own subagent context, which suits heavy search jobs.
 6. **Configure shared MCP servers once per tool—in each tool’s native dialect.** One MCP server can serve Claude Code, Codex, and Cursor, **but there is no single universal config file**:
@@ -282,6 +289,7 @@ The stdin `stop_hook_active` guard follows the [official loop-prevention guidanc
 - [ ] `AGENTS.md` / `CLAUDE.md` is concise and states exact build, check, and test commands
 - [ ] Confirmed the intended instructions actually load in each tool; use the explicit import when sharing files
 - [ ] Every “must never happen” rule is enforced by a permission rule, lifecycle hook, or nonzero build/CI check—not prose alone
+- [ ] Each secret-path guard was tested through both the Read tool and an `@` reference, with the result recorded per path
 - [ ] Repeated multi-step workflows are extracted into `SKILL.md` folders with clear trigger descriptions
 - [ ] Each coding agent connects to any shared MCP server via its own native config file without secrets in Git
 - [ ] Context is cleared between unrelated tasks so stale session overrides do not linger

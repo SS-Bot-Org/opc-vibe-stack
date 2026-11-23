@@ -103,19 +103,19 @@ Google Antigravity is an agent app, CLI (`agy`), and set of editor extensions. T
 | Allow / Ask / Deny rules for sites the browser subagent may open | [Browser use](https://antigravity.google/docs/browser/) | Settings > Browser > Browser Actuation Rules |
 | Implementation plan waits for review | [Implementation plan](https://antigravity.google/docs/implementation-plan/) | App and IDE extensions; `/plan` always stops for approval |
 | Walkthrough after implementation, with screenshots on request | [Walkthrough](https://antigravity.google/docs/walkthrough/) | App and IDE extensions. Browser recordings are optional and not guaranteed |
-| Permission presets: Request Review, Default, Auto, Turbo | [Agent permissions](https://antigravity.google/docs/permissions/) | Default runs terminal commands in a sandbox (workspace and temp dirs, no network) and asks before running outside it. Turbo is unrestricted |
+| App permission presets | [Agent permissions](https://antigravity.google/docs/permissions/) | In Default, terminal commands run in the sandbox. Running outside it prompts for approval unless an existing rule allows the command. |
 | `AGENTS.md` / `GEMINI.md` and `.agents/rules/` are loaded as rules | [Rules](https://antigravity.google/docs/rules/) | Loaded from the workspace folder up to the repository root, not from subfolders below it; 24,000 bytes per file |
 
 ## Prerequisites
 
-- Antigravity App or CLI installed and signed in per the [official guide](https://antigravity.google/docs/getting-started/); check which browser path your account has under **Settings > Browser**
+- Install the App or CLI and sign in using the [official guide](https://antigravity.google/docs/getting-started/). In the App, **Settings > Browser** shows which browser backend your account uses.
 - A local preview command and a build command for the page you are changing
 - A shared `AGENTS.md` with exact commands and boundaries (see [Rules files + hooks](/en/articles/rules-hooks/))
-- For `/browser`: Chrome v144+ on the same machine, with remote debugging allowed at `chrome://inspect/#remote-debugging`; Node.js on your `PATH` for the CLI and IDE
+- With the built-in App browser, a plain-language request or `/browser` uses the side panel directly. Only the Chrome DevTools path needs Chrome v144+ running locally with remote debugging enabled at `chrome://inspect/#remote-debugging`. The CLI and IDE also need Node.js (`npx`) on your `PATH`.
 
 ## Steps
 
-1. **Keep the Default permission preset for this job.** Official fact ([permissions](https://antigravity.google/docs/permissions/)): Default runs terminal commands in the sandbox and asks before running them outside it; Turbo gives unrestricted commands and full filesystem access. Editorial recommendation: a page-and-CTA check doesn’t need Turbo.
+1. **Check who approves terminal commands.** In the App, check the permission picker and use **Default** for this task when the sandbox is available. In the CLI, check the mode in `/config`. Version 1.5.7+ starts in `auto` where available, so a command judged safe and reversible can run outside the sandbox without a prompt. For individual command review, select `default` with the `request-review` tool policy and check your existing permission rules, which take precedence. [Agent permissions](https://antigravity.google/docs/permissions/)
 2. **Reuse your existing `AGENTS.md`.** Antigravity loads it as an always-on rule, and also loads `GEMINI.md` and `.agents/rules/*.md`. Keep instructions tool-neutral. Editorial recommendation: put tool-specific notes in that tool’s own file instead of writing “if you are tool X” branches in a shared file. One user reported a project stalling on such a line; we have not reproduced it.
 3. **Plan, then comment.** Use `/plan` or Planning mode, and comment on the [implementation plan](https://antigravity.google/docs/implementation-plan/) until it touches only the page, its styles, and its CTA.
 4. **Run the build yourself.** Use the project’s own build and preview commands. A browser pass on a stale dev server proves nothing about the release build.
@@ -124,7 +124,7 @@ Google Antigravity is an agent app, CLI (`agy`), and set of editor extensions. T
 7. **Choose models by plan, not by default.** Official fact ([models](https://antigravity.google/docs/models/)): Gemini 4 Neon isn’t available on Free and Plus plans. Orchestrator, which plans with one model and hands steps to a faster one, can use a Neon planner on Google AI Pro and Ultra; on Gemini Enterprise it pairs Gemini 4 Carbon with Gemini 4 Hydrogen. This site has not compared model quality or cost.
 
 > [!NOTE] What this guide does not test
-> We have not run Antigravity on this repository for this update. All tool behavior above comes from the official docs opened on 2026-11-22. Browser features are rolling out by account type and version, so check your own **Settings > Browser** before you plan around them.
+> We have not run Antigravity on this repository for this update. All tool behavior above comes from the official docs opened on 2026-11-22. Browser features are rolling out by account type and version, so App users should check **Settings > Browser** before planning a browser task.
 
 ## Starter templates
 
@@ -162,6 +162,6 @@ Open issues:
 
 ## Anti-patterns
 
-- **Switching to Turbo to make prompts go away** — it removes the terminal sandbox and allows full filesystem access; add specific allow rules instead.
+- **Switching the App to Turbo to make prompts go away** — it removes the terminal sandbox and allows full filesystem access; add specific allow rules instead.
 - **Counting the agent’s browser pass as a launch check** — it ran against a local preview in the agent’s browser profile; a cold visitor on the deployed URL is a separate test.
 - **Letting the browser subagent sign in to production admin consoles** — keep it to local previews and staging; sign-in handoff means you are granting that session access.

@@ -24,7 +24,7 @@ discoverySource: &a2
   url: https://x.com/linklin63793/status/2121212612172288493
   kind: x
 dateAdded: "2026-11-16"
-lastVerified: "2026-11-16"
+lastVerified: "2026-11-22"
 status: active
 internalBriefing:
   - date: "2026-11-13"

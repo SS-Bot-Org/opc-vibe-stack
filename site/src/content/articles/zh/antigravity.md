@@ -103,19 +103,19 @@ Google Antigravity 包括 agent 桌面应用、CLI（`agy`）和一组编辑器�
 | 为浏览器子 agent 可打开的网站设置 Allow / Ask / Deny 规则 | [Browser use](https://antigravity.google/docs/browser/) | 设置 > Browser > Browser Actuation Rules |
 | 实施计划会等待审阅 | [Implementation plan](https://antigravity.google/docs/implementation-plan/) | 应用与 IDE 扩展；`/plan` 总会停下等你批准 |
 | 实施完成后生成 walkthrough，可按要求附截图 | [Walkthrough](https://antigravity.google/docs/walkthrough/) | 应用与 IDE 扩展。浏览器录屏是可选的，且不保证生成 |
-| 权限预设：Request Review、Default、Auto、Turbo | [Agent permissions](https://antigravity.google/docs/permissions/) | Default 在沙箱中运行终端命令（工作区与临时目录，无网络），在沙箱外运行前会询问。Turbo 不受限制 |
+| 桌面应用的权限预设 | [Agent permissions](https://antigravity.google/docs/permissions/) | Default 在沙箱中运行终端命令。命令需要在沙箱外运行时会请求批准，已有规则允许的命令除外。 |
 | `AGENTS.md` / `GEMINI.md` 与 `.agents/rules/` 作为规则加载 | [Rules](https://antigravity.google/docs/rules/) | 从工作区文件夹向上加载到仓库根目录，不加载其下的子文件夹；单文件上限 24,000 字节 |
 
 ## 前置条件
 
-- 已按[官方指南](https://antigravity.google/docs/getting-started/)安装并登录应用或 CLI；在 **设置 > Browser** 里确认你的账号走哪条浏览器路径
+- 按[官方指南](https://antigravity.google/docs/getting-started/)安装桌面应用或 CLI 并登录。桌面应用用户可在 **设置 > Browser** 查看当前账号使用的浏览器。
 - 所改页面的本地预览命令和构建命令
 - 一份写明精确命令与边界的共享 `AGENTS.md`（见[规则文件 + hooks](/zh/articles/rules-hooks/)）
-- 使用 `/browser` 时：同一台机器上的 Chrome v144+，并在 `chrome://inspect/#remote-debugging` 允许远程调试；CLI 和 IDE 还需要 `PATH` 上有 Node.js
+- 桌面应用启用内置浏览器后，自然语言请求和 `/browser` 都直接使用侧栏。只有通过 Chrome DevTools 连接本机 Chrome 时，才需要先启动 Chrome v144+ 并在 `chrome://inspect/#remote-debugging` 允许远程调试。CLI 和 IDE 还需要能在 `PATH` 中找到 Node.js（`npx`）。
 
 ## 步骤
 
-1. **这类任务保持 Default 权限预设。** 官方事实（[权限文档](https://antigravity.google/docs/permissions/)）：Default 在沙箱中运行终端命令，在沙箱外运行前会询问；Turbo 不限制命令，并可访问整个文件系统。编辑建议：检查一个页面和 CTA 用不着 Turbo。
+1. **确认终端命令由谁批准。** 在桌面应用的权限选择器里查看当前预设，沙箱可用时可为本次任务选择 **Default**。在 CLI 中，用 `/config` 查看当前模式。CLI 1.5.7+ 在支持的环境中默认使用 `auto`，被判定为安全且可逆的命令可能无需确认就能在沙箱外运行。需要逐条审阅命令时，选择 `default` 模式并使用 `request-review` 工具策略，同时检查已有的权限规则，因为它们优先生效。[官方权限说明](https://antigravity.google/docs/permissions/)
 2. **沿用现有的 `AGENTS.md`。** Antigravity 会把它当作始终生效的规则加载，同时也加载 `GEMINI.md` 和 `.agents/rules/*.md`。指令要保持与工具无关。编辑建议：工具专属的说明放进该工具自己的文件，不要在共享文件里写“如果你是某某工具”这类分支。有用户反映项目因为这样一行指令卡住，本站未复现。
 3. **先出计划，再留评论。** 用 `/plan` 或 Planning 模式，在[实施计划](https://antigravity.google/docs/implementation-plan/)上留评论，直到它只涉及该页面、样式和 CTA。
 4. **构建由你自己运行。** 使用项目自己的构建和预览命令。在过期的开发服务器上通过浏览器检查，证明不了发布构建没问题。
@@ -124,7 +124,7 @@ Google Antigravity 包括 agent 桌面应用、CLI（`agy`）和一组编辑器�
 7. **按方案选模型，别只看默认值。** 官方事实（[模型文档](https://antigravity.google/docs/models/)）：Free 和 Plus 方案不能用 Gemini 4 Neon。Orchestrator 用一个模型做规划、把步骤交给更快的模型执行；在 Google AI Pro 和 Ultra 上可以用 Neon 做规划，在 Gemini Enterprise 上则固定为 Gemini 4 Carbon 搭配 Gemini 4 Hydrogen。本站没有比较过模型质量或成本。
 
 > [!NOTE] 本指南没有测试什么
-> 本次更新没有在本仓库上实际运行 Antigravity。上文所有工具行为都来自 2026-11-22 打开的官方文档。浏览器功能按账号类型和版本逐步推出，规划前请先看你自己的 **设置 > Browser**。
+> 本次更新没有在本仓库上实际运行 Antigravity。上文所有工具行为都来自 2026-11-22 打开的官方文档。浏览器功能按账号类型和版本逐步推出，桌面应用用户规划任务前可在 **设置 > Browser** 确认可用性。
 
 ## 入门模板
 
@@ -162,6 +162,6 @@ Put screenshots of each step in the walkthrough.
 
 ## 反模式
 
-- **为了不再弹确认就切到 Turbo** — 它会移除终端沙箱、放开整个文件系统；应改为添加具体的 allow 规则。
+- **为了不再弹确认就把桌面应用切到 Turbo** — 它会移除终端沙箱、放开整个文件系统；应改为添加具体的 allow 规则。
 - **把 agent 的浏览器检查当成上线检查** — 它跑的是本地预览，用的是 agent 的浏览器配置；陌生访客访问已部署 URL 是另一项测试。
 - **让浏览器子 agent 登录生产后台** — 只让它访问本地预览和预发布环境；登录交接意味着你把那个会话的权限交给了它。

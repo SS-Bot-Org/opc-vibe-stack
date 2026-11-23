@@ -7,7 +7,7 @@ locale: en
 status: published
 changes:
   - type: added
-    text: "New tool guide for Google Antigravity in the sell stage: plan one buyer-facing change, have the agent check the path in a browser, and review the walkthrough and screenshots. Built from the official docs opened 2026-11-22; not run on this site. It replaces Grok Build in the homepage’s featured three after a week of sustained English and Chinese discussion (evidence in the pull request). The Grok Build guide stays published, with a notice, and is listed under Previously featured on the Stack page."
+    text: "New tool guide for Google Antigravity in the sell stage: plan one buyer-facing change, have the agent check the path in a browser, and review the walkthrough and screenshots. Built from the official docs opened 2026-11-22; not run on this site. It replaces Grok Build in the homepage’s featured three following seven days of activity in a language-unrestricted X query. A separate sample of Chinese-language posts also discussed the product (see PR #11). The Grok Build guide stays published, with a notice, and is listed under Previously featured on the Stack page."
     affectedPages:
       - /en/articles/antigravity/
       - /zh/articles/antigravity/
@@ -60,6 +60,9 @@ internalBriefing:
   - date: "2026-11-20"
     note: "Claude Code 2.1.329 onFailure and trust dialog; Codex CLI 0.171.0; Antigravity 2.34.0"
 publicSources:
+  - title: "PR #11: X queries used for the featured-tool change"
+    url: "https://github.com/SS-Bot-Org/opc-vibe-stack/pull/11"
+    kind: other
   - title: "Google Antigravity docs: Browser use"
     url: "https://antigravity.google/docs/browser/"
     kind: docs

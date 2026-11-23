@@ -7,7 +7,7 @@ locale: zh
 status: published
 changes:
   - type: added
-    text: "销售阶段新增 Google Antigravity 工具指南：为一处面向买家的改动做计划，让 agent 在浏览器里走查路径，再审阅 walkthrough 和截图。内容依据 2026-11-22 打开的官方文档编写，本站未实际运行。经过一周中英文持续讨论（证据见 PR），它在首页主推三款工具中替换了 Grok Build。Grok Build 指南继续保留并加了提示，在工具栈页的“曾经主推的工具”中列出。"
+    text: "销售阶段新增 Google Antigravity 工具指南：为一处面向买家的改动做计划，让 agent 在浏览器里走查路径，再审阅 walkthrough 和截图。内容依据 2026-11-22 打开的官方文档编写，本站未实际运行。不限语言的 X 查询连续七天都有相关讨论，另行抽查的中文帖子也在讨论这款产品（见 PR #11）。本周首页将它列入主推三款工具，替换 Grok Build。Grok Build 指南继续保留并加了提示，在工具栈页的“曾经主推的工具”中列出。"
     affectedPages:
       - /en/articles/antigravity/
       - /zh/articles/antigravity/
@@ -60,6 +60,9 @@ internalBriefing:
   - date: "2026-11-20"
     note: "Claude Code 2.1.329 onFailure and trust dialog; Codex CLI 0.171.0; Antigravity 2.34.0"
 publicSources:
+  - title: "PR #11：主推工具调整所用的 X 查询"
+    url: "https://github.com/SS-Bot-Org/opc-vibe-stack/pull/11"
+    kind: other
   - title: "Google Antigravity docs: Browser use"
     url: "https://antigravity.google/docs/browser/"
     kind: docs

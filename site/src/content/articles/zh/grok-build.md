@@ -25,6 +25,9 @@ toolAvailability: active
 bestFor: "已有可运行仓库与明确检查时，完成有边界的页面或演示任务。"
 poorFit: "以为开启编码会话就自动具备托管、录屏或生产环境访问能力。"
 caveats: "上线环节是本站建议的分工，不是厂商能力排名；托管和录屏需分别核实。"
+notice:
+  text: "自 2026-11-22 起，Grok Build 不再是首页主推的三款工具之一，因为近期公开讨论集中在其他编程 agent 上。本指南继续保留；自上次更新日期以来，内容未重新核对。"
+  relatedSlugs: [antigravity]
 ---
 
 ## 结论

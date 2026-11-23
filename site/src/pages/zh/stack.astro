@@ -1,9 +1,10 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getStackCards, articleHref, featuredToolNames } from '../../lib/content';
+import { getStackCards, getFormerStackCards, articleHref, featuredToolNames } from '../../lib/content';
 import { stackDocumentTitle } from '../../lib/seo.mjs';
 
 const cards = await getStackCards('zh');
+const formerCards = await getFormerStackCards('zh');
 const title = stackDocumentTitle(featuredToolNames(cards), 'zh');
 ---
 <SiteLayout
@@ -62,4 +63,16 @@ const title = stackDocumentTitle(featuredToolNames(cards), 'zh');
       </article>
     ))}
   </section>
+
+  {formerCards.length > 0 && (
+    <section class="stack-former" style="margin-top:2rem" aria-labelledby="former-heading">
+      <h2 id="former-heading">曾经主推的工具</h2>
+      <p>讨论重心转向其他工具后，这些工具指南已移出首页主推的三款工具，但页面仍然保留；参考前请先看更新日期。</p>
+      <ul>
+        {formerCards.map((c) => (
+          <li><a href={articleHref(c.data.slug, 'zh')}>{c.data.title}</a>：{c.data.summary} <span class="meta">更新于 {c.data.updated}</span></li>
+        ))}
+      </ul>
+    </section>
+  )}
 </SiteLayout>

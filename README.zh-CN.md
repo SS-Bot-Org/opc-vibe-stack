@@ -15,7 +15,7 @@
 ## 你可以在这里找到什么
 
 - **调研、构建、销售**三个阶段，各自有入口问题、交付物和建议阅读顺序；跨阶段文章作为补充参考：[调研](https://opcvibestack.com/zh/research/)、[构建](https://opcvibestack.com/zh/build/)、[销售](https://opcvibestack.com/zh/sell/)。
-- 当前主推工具的**使用指南**——目前是 [Claude Code](https://opcvibestack.com/zh/articles/claude-code/)、[Codex](https://opcvibestack.com/zh/articles/codex/) 与 [Grok Build](https://opcvibestack.com/zh/articles/grok-build/)。对照见[工具栈](https://opcvibestack.com/zh/stack/)。
+- 当前主推工具的**使用指南**——目前是 [Claude Code](https://opcvibestack.com/zh/articles/claude-code/)、[Codex](https://opcvibestack.com/zh/articles/codex/) 与 [Google Antigravity](https://opcvibestack.com/zh/articles/antigravity/)。曾经主推的指南（如 [Grok Build](https://opcvibestack.com/zh/articles/grok-build/)）继续保留。对照见[工具栈](https://opcvibestack.com/zh/stack/)。
 - **Playbook**，包括[建议的 48 小时 MVP 时间预算](https://opcvibestack.com/zh/articles/48h-mvp-agent-stack/)（这是建议预算，不是交付承诺）和[内容站周更闭环](https://opcvibestack.com/zh/articles/weekly-content-site-refresh/)。全部列表：[Playbooks](https://opcvibestack.com/zh/playbooks/)。
 - 每篇文章都有**证据标签**：`tested`（编辑已复现或等价验证，并记录日期与环境）、`documentation-backed`（与官方或主要厂商文档一致，不一定本周重跑）、`unverified`（已核对来源，但未复测）。说明见[关于](https://opcvibestack.com/zh/about/)。
 - 配合步骤与表格的**图解**（自行绘制，不是界面截图）。约定见 [docs/illustrations.md](docs/illustrations.md)。

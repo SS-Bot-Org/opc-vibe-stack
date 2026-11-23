@@ -2,10 +2,13 @@ export const site = {
   name: 'OPC Vibe Stack',
   domain: 'opcvibestack.com',
   origin: 'https://opcvibestack.com',
-  tagline: 'Ship alone, faster—with Claude Code, Codex, and Grok Build—then sell.',
+  tagline: 'Ship alone, faster—with Claude Code, Codex, and Google Antigravity—then sell.',
   defaultLocale: 'en' as const,
   locales: ['en', 'zh'] as const,
-  primaryToolIds: ['claude-code', 'codex', 'grok-build'] as const,
+  /** Homepage featured three; rotates with sustained discussion (see changelog). */
+  primaryToolIds: ['claude-code', 'codex', 'antigravity'] as const,
+  /** Tool cards that stay live after leaving the featured three. */
+  formerToolIds: ['grok-build'] as const,
   ogImagePath: '/og/default.png',
 };
 

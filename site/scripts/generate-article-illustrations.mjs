@@ -134,6 +134,19 @@ const diagrams = [
     },
   },
   {
+    slug: 'antigravity', height: 580,
+    en: ['Check the path a buyer takes', 'Plan, browse, record, then decide.', ['Review the plan', 'Browse the local preview', 'Read the walkthrough', 'Release stays human'], ['Implementation plan before edits', 'Desktop + 390px · CTA · console', 'Screenshots + pass/fail per step', 'Deploy, DNS, rollback: by you'], 'An agent report is not a deploy.', 'Re-run the CTA yourself once live.'],
+    zh: ['检查买家实际走的路径', '先计划，再浏览、留记录，最后由人决定。', ['审阅实施计划', '在本地预览里走一遍', '阅读 walkthrough', '发版仍由人负责'], ['改代码前先看计划', '桌面与 390px · CTA · 控制台', '截图 + 每步通过/失败', '部署、DNS、回滚由你执行'], 'agent 的报告不等于已上线。', '上线后亲自再点一次 CTA。'],
+    draw(c, t, p) {
+      t[2].forEach((heading, i) => {
+        const y = 120 + i * 92;
+        c.step(y, String(i + 1).padStart(2, '0'), heading, t[3][i], ['blue', 'amber', 'green', 'red'][i]);
+        if (i < 3) c.line(`M210 ${y + 77} V${y + 90}`, p.muted, true);
+      });
+      c.note(496, t[4], t[5], 'amber');
+    },
+  },
+  {
     slug: 'hardware-soft-split', height: 614,
     en: ['Three independent releases', 'Core controls must work offline.', 'Cloud · optional', 'Backup / sync / opt-in telemetry', 'Companion app', 'Pairing / controls / diagnostics', 'BLE / USB contract + mock', 'Firmware', 'Device behavior / bench testing', 'Human-held signing keys', 'Hardware checks before release'],
     zh: ['三层架构，独立发版', '断开云服务，核心控制仍然可用。', '云服务 · 可选', '备份 / 同步 / 自愿诊断数据', '配套应用', '配对 / 控制 / 故障诊断', 'BLE / USB 协议与模拟器', '设备固件', '设备行为 / 实物台架测试', '签名密钥由人保管', '通过实物测试，再发布固件'],

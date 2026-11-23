@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 580" role="img" aria-labelledby="title desc">
+<title id="title">检查买家实际走的路径</title><desc id="desc">先计划，再浏览、留记录，最后由人决定。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#b6becb" stroke-width="1.5"/></marker></defs>
+<rect width="420" height="580" rx="12" fill="#16191e"/>
+<g font-family="system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif"><text x="24" y="31" font-size="12" fill="#b6becb" font-weight="650" text-anchor="start">OPC / FIELD GUIDE</text>
+<text x="24" y="68" font-size="25" fill="#edf0f5" font-weight="700" text-anchor="start">检查买家实际走的路径</text>
+<text x="24" y="96" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">先计划，再浏览、留记录，最后由人决定。</text>
+<rect x="24" y="120" width="372" height="76" rx="10" fill="#24314a" stroke="#a4c2ff"/>
+<text x="42" y="150" font-size="17" fill="#a4c2ff" font-weight="700" text-anchor="start">01</text>
+<text x="83" y="150" font-size="21" fill="#edf0f5" font-weight="650" text-anchor="start">审阅实施计划</text>
+<text x="83" y="176" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">改代码前先看计划</text>
+<path d="M210 197 V210" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="212" width="372" height="76" rx="10" fill="#3b3020" stroke="#e8c783"/>
+<text x="42" y="242" font-size="17" fill="#e8c783" font-weight="700" text-anchor="start">02</text>
+<text x="83" y="242" font-size="21" fill="#edf0f5" font-weight="650" text-anchor="start">在本地预览里走一遍</text>
+<text x="83" y="268" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">桌面与 390px · CTA · 控制台</text>
+<path d="M210 289 V302" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="304" width="372" height="76" rx="10" fill="#20362a" stroke="#9cd6ae"/>
+<text x="42" y="334" font-size="17" fill="#9cd6ae" font-weight="700" text-anchor="start">03</text>
+<text x="83" y="334" font-size="21" fill="#edf0f5" font-weight="650" text-anchor="start">阅读 walkthrough</text>
+<text x="83" y="360" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">截图 + 每步通过/失败</text>
+<path d="M210 381 V394" fill="none" stroke="#b6becb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="24" y="396" width="372" height="76" rx="10" fill="#3e252b" stroke="#efaaaa"/>
+<text x="42" y="426" font-size="17" fill="#efaaaa" font-weight="700" text-anchor="start">04</text>
+<text x="83" y="426" font-size="21" fill="#edf0f5" font-weight="650" text-anchor="start">发版仍由人负责</text>
+<text x="83" y="452" font-size="17" fill="#b6becb" font-weight="400" text-anchor="start">部署、DNS、回滚由你执行</text>
+<rect x="24" y="496" width="372" height="70" rx="10" fill="#3b3020" stroke="none"/>
+<text x="42" y="525" font-size="18" fill="#e8c783" font-weight="650" text-anchor="start">agent 的报告不等于已上线。</text>
+<text x="42" y="550" font-size="17" fill="#e8c783" font-weight="400" text-anchor="start">上线后亲自再点一次 CTA。</text></g>
+</svg>

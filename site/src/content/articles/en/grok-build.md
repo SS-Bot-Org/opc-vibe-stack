@@ -25,6 +25,9 @@ toolAvailability: active
 bestFor: "A bounded page or demo task with a working repository and explicit checks."
 poorFit: "Assuming a coding session automatically supplies hosting, recording, or production access."
 caveats: "The shipping role is this site’s suggested workflow, not a vendor capability ranking. Verify hosting and recording separately."
+notice:
+  text: "As of 2026-11-22, Grok Build is no longer one of the homepage’s three featured tools, because recent public discussion has centered on other coding agents. This guide stays published; its content has not been re-checked since its last update date."
+  relatedSlugs: [antigravity]
 ---
 
 ## Conclusion

@@ -45,6 +45,7 @@ const toolNames: Record<string, string> = {
   'claude-code': 'Claude Code',
   codex: 'Codex',
   'grok-build': 'Grok Build',
+  antigravity: 'Google Antigravity',
 };
 
 const availabilityLabels: Record<string, string> = zh
@@ -136,7 +137,7 @@ if (related.length > 0) {
               <li>
                 {d.category === 'stack' && tool === (d.toolId ?? d.slug) ? (
                   <span class="tool-chip tool-chip--current">{toolNames[tool] ?? tool}</span>
-                ) : site.primaryToolIds.includes(tool as (typeof site.primaryToolIds)[number]) ? (
+                ) : ([...site.primaryToolIds, ...site.formerToolIds] as string[]).includes(tool) ? (
                   <a class="tool-chip" href={articleHref(tool, locale)}>{toolNames[tool] ?? tool}</a>
                 ) : (
                   <span class="tool-chip">{toolNames[tool] ?? tool}</span>

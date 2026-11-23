@@ -47,8 +47,12 @@ test('published tips are paired across en/zh with matching wording and sources',
   }
   assert.ok(inventory.routes.has('/en/tips/'));
   assert.ok(inventory.routes.has('/zh/tips/'));
-  assert.equal(routeLastmod('/en/tips/', inventory), '2026-11-16');
-  assert.equal(routeLastmod('/zh/tips/', inventory), '2026-11-16');
+  // The list page's lastmod follows the newest dateAdded/lastVerified among listed tips.
+  for (const [route, entries] of [['/en/tips/', en], ['/zh/tips/', zh]]) {
+    const newest = entries.flatMap((entry) => [entry.data.dateAdded, entry.data.lastVerified].filter(Boolean)).sort().at(-1);
+    assert.ok(newest >= '2026-11-16');
+    assert.equal(routeLastmod(route, inventory), newest);
+  }
 });
 
 test('documentation-backed tips require official sources and reject inverted dates', async () => {

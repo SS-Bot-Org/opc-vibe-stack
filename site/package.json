@@ -21,7 +21,7 @@
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
-  "description": "OPC Vibe Stack — English-first best-practice site for one-person companies using Claude Code, Codex, and Grok Build",
+  "description": "OPC Vibe Stack — English-first best-practice site for one-person companies using Claude Code, Codex, and Google Antigravity",
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@types/node": "^22.20.5",

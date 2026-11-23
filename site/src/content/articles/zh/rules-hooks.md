@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP；Codex config.toml 与 mcp_servers — 具体键名请对照当前已安装版本的官方文档"
 published: "2026-11-06"
-updated: "2026-11-17"
+updated: "2026-11-22"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -25,6 +25,10 @@ internalBriefing:
     note: "One shared rules file; permissions enforce, prompts don't"
   - date: "2026-11-12"
     note: "@ file references skip PreToolUse hooks"
+  - date: "2026-11-18"
+    note: "Claude Code sandbox covers shell commands only"
+  - date: "2026-11-20"
+    note: "Policy hooks should set onFailure block"
 publicSources:
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
@@ -37,6 +41,15 @@ publicSources:
     kind: docs
   - title: "Configure permissions (Claude Code)"
     url: "https://code.claude.com/docs/en/permissions"
+    kind: docs
+  - title: "Hooks reference: block the action when a hook fails (Claude Code)"
+    url: "https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails"
+    kind: docs
+  - title: "Claude Code changelog (2.1.328, 2.1.329)"
+    url: "https://code.claude.com/docs/en/changelog"
+    kind: docs
+  - title: "Configure the sandboxed Bash tool: what runs outside the sandbox (Claude Code)"
+    url: "https://code.claude.com/docs/en/sandboxing"
     kind: docs
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
@@ -134,15 +147,16 @@ tags: [build, hooks, skills, mcp, safety]
 
 1. **给 `AGENTS.md` / `CLAUDE.md` 瘦身。** Anthropic 的[记忆文档](https://code.claude.com/docs/en/memory)建议每份 `CLAUDE.md` 控制在 200 行以内，并指出 `@path` 导入能整理文件结构，但**不会**降低上下文占用。我们的目标是约 80 行：目录说明、精确命令、编码规范与最高优先级边界。只针对仓库某一部分的说明，挪到按路径作用域的规则或 skill。
 2. **全工具共用一份规则源文件。** Codex 与多数其他 agent 读 `AGENTS.md`；Claude Code 读 `CLAUDE.md`，在支持的会话中也可直接读 `AGENTS.md`。默认回退取决于工作目录及其上级目录中是否存在 `CLAUDE.md` 或 `CLAUDE.local.md`，还受版本与指令设置影响。若仍保留 `CLAUDE.md`，把首行写成 `@AGENTS.md`，其下只放 Claude 专属备注，避免两份文件漂移。`CLAUDE.md` → `AGENTS.md` 符号链接也能用，但官方文档在有人会在 Windows 上克隆时更推荐 import。跑 `/context all`，确认文件出现在 **Memory files** 下。
-3. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上权限规则、hook 或构建脚本校验。[权限文档](https://code.claude.com/docs/en/permissions)写得很清楚：规则由 Claude Code 强制执行，不是靠模型自觉，`CLAUDE.md` 里的文字改变不了它允许什么。deny 优先于 allow。Bash 规则匹配的是 Claude 写出的命令文本，因此换一种写法（如 `git -C . push`）就能绕过 `Bash(git push *)`；需要文件系统边界时，使用正确配置的沙箱或系统访问权限；`PreToolUse` hook 只覆盖它实际检查到的调用。`@` 文件引用也属于此类：它不经过工具调用就进入提示词，`Read` hook 根本看不到。敏感路径要用 `Read` 拒绝规则兜底（对 `@` 引用为尽力应用），或在 shell、用户设置或托管设置里设 `CLAUDE_CODE_DISABLE_FILE_MENTIONS=1`，让被引用的路径改走文件工具、从而触发 hook；文档注明需要 v2.1.299 或更高版本，且项目设置和本地设置中的该变量会被忽略。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
+3. **挑出前 3 条「绝对不能出事」的红线**（触碰 `.env*`、篡改历史迁移、跳过验证直接收工），逐条补上权限规则、hook 或构建脚本校验。[权限文档](https://code.claude.com/docs/en/permissions)写得很清楚：规则由 Claude Code 强制执行，不是靠模型自觉，`CLAUDE.md` 里的文字改变不了它允许什么。deny 优先于 allow。Bash 规则匹配的是 Claude 写出的命令文本，因此换一种写法（如 `git -C . push`）就能绕过 `Bash(git push *)`；需要文件系统边界时，使用正确配置的沙箱或系统访问权限。Claude Code 自带的[沙箱](https://code.claude.com/docs/en/sandboxing#what-runs-outside-the-sandbox)只包住 shell 命令：Read、Edit、Write、WebFetch、WebSearch 改由权限规则管理，沙箱里的 `denyRead` 挡不住 Read 工具，command hook 和本地 MCP server 以你的完整权限运行。`PreToolUse` hook 只覆盖它实际检查到的调用。`@` 文件引用也属于此类：它不经过工具调用就进入提示词，`Read` hook 根本看不到。敏感路径要用 `Read` 拒绝规则兜底（对 `@` 引用为尽力应用），或在 shell、用户设置或托管设置里设 `CLAUDE_CODE_DISABLE_FILE_MENTIONS=1`，让被引用的路径改走文件工具、从而触发 hook；文档注明需要 v2.1.299 或更高版本，且项目设置和本地设置中的该变量会被忽略。Claude Code 的 `PreToolUse` 可在执行前拒绝工具调用；`PostToolUse` 在成功后运行，不能阻止或撤销操作；`Stop` 只能阻止结束，不能逆转此前动作。
 4. **严控 Hook 耗时。** 高频触发的编辑期 hook 只跑路径白名单或单文件语法检查；全量构建与集成测试放到 `Stop` 阶段或提交前门禁，避免因太慢而自己动手关掉保护。
-5. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。对有副作用的 skill（部署、发布、发送），加上 `disable-model-invocation: true`，只有你输入 `/skill-name` 才会运行；`context: fork` 会在独立子 agent 上下文中跑 skill，适合重搜索类任务。
-6. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
+5. **让策略类 hook 失败即拦截。** 官方事实（[hooks 参考](https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails)）：在多数事件上，hook 无法启动、超时、以 0 或 2 以外的退出码结束或输出无法解析时，Claude Code 仍会执行原动作。负责拦截必须拒绝之事的 `command`、`http` 或 `mcp_tool` hook，要设置 `"onFailure": "block"`；在支持该字段的事件上，失败按该事件的退出码 2 行为处理。PermissionRequest 是例外：启用该字段后，hook 失败会直接拒绝权限请求；仅返回退出码 2 则继续原有权限流程。需要 v2.1.295 或更高版本，`mcp_tool` hook 需要 v2.1.328 或更高版本。它对 `Stop`、`SubagentStop`、`TaskCompleted`、`TeammateIdle` 和后台（`async` 或 `asyncRewake`）hook 不起作用。[2.1.329 changelog](https://code.claude.com/docs/en/changelog) 还改了 Code Mode：PreToolUse hook 出错时，除非设置了这个字段，否则不再拒绝脚本发起的工具调用。照官方文档的方法测试：把匹配 `Bash` 的同步 `PreToolUse` 命令 hook 指向一个不存在的脚本，让 Claude 跑一个无害命令（如 `ls`），确认被拒绝。本次更新没有实际跑这个测试。格式化之类的建议性 hook 不要设置它，否则 hook 服务一不稳定就会拦住日常操作。
+6. **把重复干三次以上的活抽成 `SKILL.md`。** 遵循 [Agent Skills](https://agentskills.io/) 开放结构（YAML 头部的 `name` + `description` + 正文执行步骤）。Claude Code 默认读取 `.claude/skills/<skill-name>/SKILL.md`；跨工具共用前先查清各工具当前版本的目录约定。对有副作用的 skill（部署、发布、发送），加上 `disable-model-invocation: true`，只有你输入 `/skill-name` 才会运行；`context: fork` 会在独立子 agent 上下文中跑 skill，适合重搜索类任务。
+7. **跨工具共用同一台 MCP 服务器时，各写各的原生配置文件。** 服务可以只跑一份，但切勿幻想所有 CLI 自动共读同一份配置：
    - **Claude Code：** 项目 `.mcp.json`（或 `claude mcp add --scope project ...`）
    - **Codex：** `~/.codex/config.toml`（或受信任项目配置）中的 `[mcp_servers.<name>]`
    - **Cursor（若辅助使用）：** `.cursor/mcp.json`
    配完后分别在各工具自带的 MCP 状态页确认连通，密钥一律走环境变量引用，严禁明文入库。
-7. **犯错当天闭环。** 每次踩坑复盘后，当天补一行规则、收紧对应 `SKILL.md` 或加一条拦截规则。
+8. **犯错当天闭环。** 每次踩坑复盘后，当天补一行规则、收紧对应 `SKILL.md` 或加一条拦截规则。
 
 > [!NOTE] 先替换项目专属配置
 > 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。
@@ -290,6 +304,7 @@ stdin 中的 `stop_hook_active` 防循环检查遵循[官方指引](https://code
 - [ ] 已逐个工具确认目标指令实际加载；共用文件时优先显式 import
 - [ ] 每条「绝不能发生」的底线都由权限规则、生命周期 hook 或非零退出的构建/CI 脚本兜底，而非只靠文字祈祷
 - [ ] 每条敏感路径防护都分别通过 Read 工具和 `@` 引用测试过，并按路径记录结果
+- [ ] 对支持 `"onFailure": "block"` 的同步拦截 hook，各触发一次可控故障，核对该事件的实际结果（例如，`PreToolUse` 的脚本缺失时，匹配的工具调用被拒绝）
 - [ ] 重复性多步任务已抽成独立 `SKILL.md`，触发描述具体不撞车
 - [ ] 所用的每个 agent 都通过各自原生配置文件连上共享 MCP，且 Git 仓库中零密钥残留
 - [ ] 无关任务切换时主动清空上下文，避免旧指令残留污染

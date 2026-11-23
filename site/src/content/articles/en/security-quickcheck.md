@@ -11,7 +11,7 @@ status: published
 evidence: unverified
 applicableToolsVersions: "All local coding-agent CLIs, desktop chat apps, MCP servers, and editor extension marketplaces; re-audit after updates"
 published: "2026-11-06"
-updated: "2026-11-17"
+updated: "2026-11-22"
 internalBriefing:
   - date: "2026-11-01"
     note: "Cursor marketplace Claude Code extension compromise report"
@@ -21,6 +21,12 @@ internalBriefing:
     note: "Check whether .claude/settings.local.json is committed"
   - date: "2026-11-13"
     note: "Don't start coding agents in ~/Downloads or other untrusted folders"
+  - date: "2026-11-17"
+    note: "Committed .claude/settings.json used to deliver a backdoor (GTIG report)"
+  - date: "2026-11-19"
+    note: "Malicious repos use AGENTS.md / CLAUDE.md and session-start hooks (Bitdefender report)"
+  - date: "2026-11-20"
+    note: "Claude Code trust dialog names where hooks are declared"
 publicSources:
   - title: "Tampered Claude Code extension in Cursor marketplace (report)"
     url: "https://x.com/neuralnotions/status/2116883761329803580"
@@ -57,6 +63,18 @@ publicSources:
     kind: docs
   - title: "Codex advanced configuration (project config only for trusted projects)"
     url: "https://developers.openai.com/codex/config-advanced"
+    kind: docs
+  - title: "Bitdefender Labs: AI agents as targets in a GitHub malware campaign (report, 2026-11-17)"
+    url: "https://www.bitdefender.com/en-us/blog/labs/how-ai-agents-become-new-targets-in-github-malware-campaign"
+    kind: blog
+  - title: "Google Threat Intelligence Group: agentic threat activity report (2026-11-16)"
+    url: "https://cloud.google.com/blog/topics/threat-intelligence/agentic-threat-activity-crosses-a-significant-threshold"
+    kind: blog
+  - title: "Claude Code changelog (2.1.329 trust dialog hook warning)"
+    url: "https://code.claude.com/docs/en/changelog"
+    kind: docs
+  - title: "GitHub Docs: About code owners (Require review from Code Owners)"
+    url: "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners"
     kind: docs
 tags: [alert, security]
 notice:
@@ -119,6 +137,10 @@ If you suspect an active compromise, isolate the affected device and use a trust
    - **Exclude repository configuration before an unfamiliar run:** pass `--setting-sources user` to exclude project/local settings and the repository's `.mcp.json`. For the SDK, select `settingSources` without project settings. This excludes configuration; it is not a sandbox or a guarantee that untrusted code is safe to execute.
    - **Treat the other controls as narrower options, not substitutes:** `--bare` skips project hooks, skills, custom commands, subagents, plugins, and `.mcp.json` servers, but the project's `env` block and helpers such as `awsAuthRefresh` still apply; in bare mode, `apiKeyHelper` is read only from `--settings`. `--settings '{"disableAllHooks": true}'` disables hooks only: it does not exclude project environment settings, helper commands, or `.mcp.json` servers. Neither option alone provides the same repository-configuration exclusion as `--setting-sources user`.
    - **Review the remaining inputs:** Codex [loads project-scoped config only for trusted projects](https://developers.openai.com/codex/config-advanced). With either tool, read the repository's `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, hooks, and `.codex/` before trusting it; instruction files can still steer the model even where configuration is skipped.
+10. **Review agent configuration files like code—in repositories you clone and in your own.**
+    - **Reported incidents (vendor reports; not reproduced here):** [Bitdefender Labs](https://www.bitdefender.com/en-us/blog/labs/how-ai-agents-become-new-targets-in-github-malware-campaign) (2026-11-17) describes 22 malicious GitHub links whose `AGENTS.md` / `CLAUDE.md` called a setup script a "sealed binary artifact," told the agent not to read it, and asked it to run the script without confirmation; another path used a session-start hook in `.claude/settings.json` that runs once you open and trust the repository. [Google Threat Intelligence Group](https://cloud.google.com/blog/topics/threat-intelligence/agentic-threat-activity-crosses-a-significant-threshold) (2026-11-16) reports an intruder who changed `.claude/settings.json` in internal repositories so that starting Claude Code downloaded a backdoor. No indicators from these reports are reproduced here.
+    - **Before you trust a cloned repository:** read `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.codex/`, `.cursor/`, `.gemini/`, `.mcp.json`, and `.vscode/tasks.json`. Treat any instruction that says not to inspect a file before running it, to skip confirmation, or to hide output as hostile (Bitdefender's review list). Official fact ([Claude Code changelog 2.1.329](https://code.claude.com/docs/en/changelog), 2026-11-19): the trust dialog now warns where a folder's hooks are declared, so read the files it names before you accept.
+    - **In repositories you own (editorial recommendation):** list those paths in `CODEOWNERS` and turn on **Require review from Code Owners** in branch protection or a ruleset ([GitHub Docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)). The GTIG case involved someone with repository write access, so agent-side self-protection rules alone would not cover it. This site has not measured how often such reviews catch a change.
 
 ## Copy-pasteable hygiene baselines
 
@@ -160,8 +182,10 @@ Deploy key scope verified (non-root, path-restricted):
 - [ ] Recorded the scope and result of secret scanning; revoked any exposed credential before addressing tracked files/history
 - [ ] Agent CLIs and MCP configs reference environment variables rather than plaintext tokens in repo files
 - [ ] `.claude/settings.local.json` is untracked in every repo, and no agent was started in `~/Downloads` or another folder you didn't intend to trust
+- [ ] Read the agent instruction and configuration files of every newly cloned repository before trusting it; agent config paths in your own repositories have code owners
 - [ ] Production VPS deploy credentials are non-root and scoped strictly to the release directory
 - [ ] Recorded the revocation controls and responsible owner for sessions, OAuth grants, API keys, and deployment credentials at each provider you use
+
 
 ## Anti-patterns
 

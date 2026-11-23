@@ -1,9 +1,10 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import { getStackCards, articleHref, featuredToolNames } from '../../lib/content';
+import { getStackCards, getFormerStackCards, articleHref, featuredToolNames } from '../../lib/content';
 import { stackDocumentTitle } from '../../lib/seo.mjs';
 
 const cards = await getStackCards('en');
+const formerCards = await getFormerStackCards('en');
 const title = stackDocumentTitle(featuredToolNames(cards), 'en');
 ---
 <SiteLayout
@@ -62,4 +63,16 @@ const title = stackDocumentTitle(featuredToolNames(cards), 'en');
       </article>
     ))}
   </section>
+
+  {formerCards.length > 0 && (
+    <section class="stack-former" style="margin-top:2rem" aria-labelledby="former-heading">
+      <h2 id="former-heading">Previously featured</h2>
+      <p>These tool guides left the homepage’s featured three when discussion shifted to other tools. The pages stay published; check the updated date before relying on them.</p>
+      <ul>
+        {formerCards.map((c) => (
+          <li><a href={articleHref(c.data.slug)}>{c.data.title}</a>: {c.data.summary} <span class="meta">Updated {c.data.updated}</span></li>
+        ))}
+      </ul>
+    </section>
+  )}
 </SiteLayout>

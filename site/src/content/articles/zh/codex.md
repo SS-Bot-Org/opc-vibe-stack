@@ -11,10 +11,14 @@ tools: [codex]
 priority: P0
 status: published
 evidence: documentation-backed
-applicableToolsVersions: "OpenAI Codex CLI/agent；具体 CLI 参数与 config.toml 键名请以 OpenAI 最新官方文档为准"
+applicableToolsVersions: "OpenAI Codex CLI/agent；默认模型与网页搜索说明已于 2026-11-22 对照 Codex CLI 0.171.0（2026-11-19 PT）及网页搜索文档核对。具体参数与 config.toml 键名请以官方文档为准"
 published: "2026-11-06"
-updated: "2026-11-10"
-internalBriefing: []
+updated: "2026-11-22"
+internalBriefing:
+  - date: "2026-11-18"
+    note: "Codex web search defaults to cached results"
+  - date: "2026-11-20"
+    note: "Codex CLI 0.171.0 changes the default model"
 publicSources:
   - title: "OpenAI Codex documentation"
     url: "https://developers.openai.com/codex"
@@ -24,6 +28,12 @@ publicSources:
     kind: docs
   - title: "Codex CLI setup"
     url: "https://learn.chatgpt.com/docs/codex/cli"
+    kind: docs
+  - title: "Codex CLI 0.171.0 release notes"
+    url: "https://github.com/openai/codex/releases/tag/rust-v0.171.0"
+    kind: docs
+  - title: "Web search (Codex CLI and local search modes)"
+    url: "https://learn.chatgpt.com/docs/web-search"
     kind: docs
 tags: [stack, build, cli, workflow]
 toolId: codex
@@ -87,6 +97,12 @@ caveats: "产品界面会演进；升级后请固定文档链接并复查命令�
 3. **每次投喂「四要素任务单」**（目标、范围内文件、范围外禁区、验证命令）。如果连验收怎么测都还没想好，先退回[先写规格，再让 agent 改代码](/zh/articles/spec-first-agent-loop/)。
 4. **一会话只干一件事。** 切换到无关问题前先清空上下文或重开会话，避免上一次的文件假设污染新 diff。
 5. **提交前跑 `git diff --stat` 并精读敏感改动**——重点看依赖项、环境变量处理与构建门禁脚本。
+
+### 升级之后：复查你依赖的默认值
+
+- **默认模型。** 官方事实（[Codex CLI 0.171.0 发布说明](https://github.com/openai/codex/releases/tag/rust-v0.171.0)，2026-11-19 PT 发布）：GPT-6.2 Sol 和 Astra 加入模型目录，Sol 成为目录中的默认选项。编辑建议：升级后先确认新会话用的是哪个模型，再跑一遍验证命令和一个有代表性的任务，然后再沿用按旧默认模型调好的提示词或预算预期。本站没有对比过这两个模型。
+- **网页搜索模式。** 官方事实（[网页搜索文档](https://learn.chatgpt.com/docs/web-search)）：本地 Codex 默认使用缓存搜索，结果来自 OpenAI 维护的索引，而不是实时抓取网页。这能降低提示注入风险，但不能消除。`codex --search` 只在本次运行中实时抓取；在 `config.toml` 里写 `web_search = "live"` 会把实时搜索设为默认，`"disabled"` 则关闭该工具。以完全访问权限运行时，搜索默认就是实时的。网页搜索是托管工具，不受沙箱网络代理和域名白名单限制。
+- 编辑建议：只在任务依赖索引建立之后才发布的页面（比如昨天的发布说明）时开启实时搜索，并把每条结果都当作不可信输入。做依赖升级时，优先看厂商的 changelog 或发布页，而不是搜索摘要。
 
 > [!NOTE] 先替换项目专属配置
 > 下方 `site/`、`npm run check` 与 `ops/` 路径属于 OPC Vibe Stack。用于其他项目时，先查 README 和已有脚本再替换。本站完整测试使用 Linux CI 环境；部署示例依赖 GNU 工具和 `flock`。跳过平台测试不等于部署通过。

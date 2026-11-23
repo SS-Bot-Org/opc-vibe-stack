@@ -11,10 +11,14 @@ tools: [codex]
 priority: P0
 status: published
 evidence: documentation-backed
-applicableToolsVersions: "OpenAI Codex CLI/agent; confirm current CLI flags and config.toml keys against official OpenAI docs"
+applicableToolsVersions: "OpenAI Codex CLI/agent; default-model and web-search notes checked against Codex CLI 0.171.0 (2026-11-19 PT) and the web search docs on 2026-11-22. Confirm current flags and config.toml keys in official docs"
 published: "2026-11-06"
-updated: "2026-11-10"
-internalBriefing: []
+updated: "2026-11-22"
+internalBriefing:
+  - date: "2026-11-18"
+    note: "Codex web search defaults to cached results"
+  - date: "2026-11-20"
+    note: "Codex CLI 0.171.0 changes the default model"
 publicSources:
   - title: "OpenAI Codex documentation"
     url: "https://developers.openai.com/codex"
@@ -24,6 +28,12 @@ publicSources:
     kind: docs
   - title: "Codex CLI setup"
     url: "https://learn.chatgpt.com/docs/codex/cli"
+    kind: docs
+  - title: "Codex CLI 0.171.0 release notes"
+    url: "https://github.com/openai/codex/releases/tag/rust-v0.171.0"
+    kind: docs
+  - title: "Web search (Codex CLI and local search modes)"
+    url: "https://learn.chatgpt.com/docs/web-search"
     kind: docs
 tags: [stack, build, cli, workflow]
 toolId: codex
@@ -87,6 +97,12 @@ Use independent tasks only when their file ownership and acceptance checks are c
 3. **Hand Codex a four-part task brief** (goal, in-scope files, out-of-scope boundaries, verify command). If you cannot write the verify check yet, step back to [Spec first, then let the agent change code](/en/articles/spec-first-agent-loop/).
 4. **Run one slice per session.** Clear or start a new session before switching to an unrelated problem so earlier file assumptions do not bleed across diffs.
 5. **Review `git diff --stat` and security-sensitive lines** before committing—especially dependencies, environment handling, and build gates.
+
+### After an upgrade: re-check the defaults you rely on
+
+- **Default model.** Official fact ([Codex CLI 0.171.0 release notes](https://github.com/openai/codex/releases/tag/rust-v0.171.0), published 2026-11-19 PT): GPT-6.2 Sol and Astra were added to the model catalogs, with Sol as the default catalog selection. Editorial recommendation: after upgrading, check which model a new session uses, then rerun your verify command and one representative task before reusing prompts or budget assumptions tuned on the previous default. This site has not compared the two models.
+- **Web search mode.** Official fact ([Web search docs](https://learn.chatgpt.com/docs/web-search)): local Codex uses cached search by default, which returns results from an OpenAI-maintained index instead of fetching pages live. That lowers prompt-injection risk but doesn't remove it. `codex --search` fetches live results for one run; `web_search = "live"` in `config.toml` makes live the default, and `"disabled"` turns the tool off. With full access, search already defaults to live. Web search is a hosted tool, so the sandbox's network proxy and domain allowlist don't limit it.
+- Editorial recommendation: turn on live search only for a task that depends on pages published after the index was built, such as yesterday's release notes, and treat every result as untrusted input. For dependency upgrades, prefer the vendor's changelog or release page over a search summary.
 
 > [!NOTE] Adapt repository-specific examples
 > `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.

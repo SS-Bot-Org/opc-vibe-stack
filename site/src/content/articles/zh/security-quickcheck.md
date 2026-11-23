@@ -11,7 +11,7 @@ status: published
 evidence: unverified
 applicableToolsVersions: "所有本地编程 agent CLI、桌面聊天客户端、MCP 服务器与编辑器扩展市场；工具升级后请复查"
 published: "2026-11-06"
-updated: "2026-11-17"
+updated: "2026-11-22"
 internalBriefing:
   - date: "2026-11-01"
     note: "Cursor marketplace Claude Code extension compromise report"
@@ -21,6 +21,12 @@ internalBriefing:
     note: "Check whether .claude/settings.local.json is committed"
   - date: "2026-11-13"
     note: "Don't start coding agents in ~/Downloads or other untrusted folders"
+  - date: "2026-11-17"
+    note: "Committed .claude/settings.json used to deliver a backdoor (GTIG report)"
+  - date: "2026-11-19"
+    note: "Malicious repos use AGENTS.md / CLAUDE.md and session-start hooks (Bitdefender report)"
+  - date: "2026-11-20"
+    note: "Claude Code trust dialog names where hooks are declared"
 publicSources:
   - title: "Tampered Claude Code extension in Cursor marketplace (report)"
     url: "https://x.com/neuralnotions/status/2116883761329803580"
@@ -57,6 +63,18 @@ publicSources:
     kind: docs
   - title: "Codex advanced configuration (project config only for trusted projects)"
     url: "https://developers.openai.com/codex/config-advanced"
+    kind: docs
+  - title: "Bitdefender Labs: AI agents as targets in a GitHub malware campaign (report, 2026-11-17)"
+    url: "https://www.bitdefender.com/en-us/blog/labs/how-ai-agents-become-new-targets-in-github-malware-campaign"
+    kind: blog
+  - title: "Google Threat Intelligence Group: agentic threat activity report (2026-11-16)"
+    url: "https://cloud.google.com/blog/topics/threat-intelligence/agentic-threat-activity-crosses-a-significant-threshold"
+    kind: blog
+  - title: "Claude Code changelog (2.1.329 trust dialog hook warning)"
+    url: "https://code.claude.com/docs/en/changelog"
+    kind: docs
+  - title: "GitHub Docs: About code owners (Require review from Code Owners)"
+    url: "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners"
     kind: docs
 tags: [alert, security]
 notice:
@@ -119,6 +137,10 @@ GitHub 用户可按[安全日志指引](https://docs.github.com/en/authenticatio
    - **在不熟悉的仓库中运行前排除仓库配置：** 传入 `--setting-sources user`，排除项目/本地设置及仓库的 `.mcp.json`。使用 SDK 时，让 `settingSources` 不包含项目设置。这只是排除配置，并不是沙箱，也不保证执行不可信代码是安全的。
    - **区分作用更窄的选项，不要把它们当作替代方案：** `--bare` 跳过项目 hooks、技能、自定义命令、子代理、插件及 `.mcp.json` 服务器，但项目的 `env` 块和 `awsAuthRefresh` 等辅助命令仍会生效；在 bare 模式下，`apiKeyHelper` 仅从 `--settings` 读取。`--settings '{"disableAllHooks": true}'` 只关闭 hooks，并不排除项目环境设置、辅助命令或 `.mcp.json` 服务器。单独使用这两个选项中的任何一个，都不能达到 `--setting-sources user` 对仓库配置的排除范围。
    - **审阅其余输入：** Codex [只在项目受信任时加载项目级配置](https://developers.openai.com/codex/config-advanced)。无论用哪个工具，信任仓库之前都先读一遍它的 `AGENTS.md`、`CLAUDE.md`、`.mcp.json`、hooks 和 `.codex/`；即使配置被跳过，说明文件仍可能引导模型。
+10. **像审代码一样审 agent 配置文件——别人的仓库要审，自己的仓库也要审。**
+    - **已报告的事件（厂商报告，本站未复现）：** [Bitdefender Labs](https://www.bitdefender.com/en-us/blog/labs/how-ai-agents-become-new-targets-in-github-malware-campaign)（2026-11-17）描述了 22 个恶意 GitHub 链接：其中的 `AGENTS.md` / `CLAUDE.md` 把一个安装脚本称为“密封的二进制产物”，要求 agent 不要读它，并在不确认的情况下直接运行；另一条路径是 `.claude/settings.json` 里的会话启动 hook，你打开并信任仓库后就会执行。[Google 威胁情报团队（GTIG）](https://cloud.google.com/blog/topics/threat-intelligence/agentic-threat-activity-crosses-a-significant-threshold)（2026-11-16）报告，入侵者修改了内部仓库里的 `.claude/settings.json`，同事一启动 Claude Code 就会下载后门。本站没有转载这些报告中的任何特征指标。
+    - **信任克隆来的仓库之前：** 先读 `AGENTS.md`、`CLAUDE.md`、`.claude/`、`.codex/`、`.cursor/`、`.gemini/`、`.mcp.json` 和 `.vscode/tasks.json`。凡是要求“运行前别看这个文件”、跳过确认或隐藏输出的指令，一律按恶意处理（这是 Bitdefender 给出的检查清单）。官方事实（[Claude Code changelog 2.1.329](https://code.claude.com/docs/en/changelog)，2026-11-19）：信任对话框现在会提示该文件夹的 hook 是在哪里声明的，点“信任”前先读一遍它列出的文件。
+    - **自己维护的仓库（编辑建议）：** 把这些路径写进 `CODEOWNERS`，并在分支保护或 ruleset 中开启 **Require review from Code Owners**（[GitHub 文档](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)）。GTIG 的案例里，改动来自有仓库写权限的人，只靠 agent 侧“不能改自己规则”的保护覆盖不到。本站没有测量过这类审核能拦下多少改动。
 
 ## 可直接复制的安全基线模板
 
@@ -160,8 +182,10 @@ Agent CLI 会话与 API 密钥上次轮换日期：
 - [ ] 已记录秘密扫描范围与结果；发现暴露凭证时先撤销，再处理跟踪文件与历史
 - [ ] 各 agent CLI 与 MCP 配置均通过环境变量引用凭证，仓库配置文件零明文密钥
 - [ ] 每个仓库里 `.claude/settings.local.json` 都未被跟踪，且没有在 `~/Downloads` 或其他不打算信任的目录里启动过 agent
+- [ ] 信任新克隆的仓库之前，已读过它的 agent 指令与配置文件；自己仓库里的 agent 配置路径都有 code owner
 - [ ] 线上 VPS 部署身份非 `root`，权限严格限制在站点发布目录内
 - [ ] 已记录所用厂商的会话、OAuth 授权、API Key 与部署凭证的撤销入口及负责人
+
 
 ## 反模式
 

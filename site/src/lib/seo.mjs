@@ -36,6 +36,7 @@ const ARTICLE_OG = {
   'claude-code': { en: '/og/claude-code.en.png', zh: '/og/claude-code.zh.png' },
   codex: { en: '/og/codex.en.png', zh: '/og/codex.zh.png' },
   'grok-build': { en: '/og/grok-build.en.png', zh: '/og/grok-build.zh.png' },
+  antigravity: { en: '/og/antigravity.en.png', zh: '/og/antigravity.zh.png' },
   'spec-first-agent-loop': { en: '/og/spec-first-agent-loop.en.png', zh: '/og/spec-first-agent-loop.zh.png' },
   'rules-hooks': { en: '/og/rules-hooks.en.png', zh: '/og/rules-hooks.zh.png' },
 };

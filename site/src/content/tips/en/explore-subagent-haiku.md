@@ -27,7 +27,7 @@ discoverySource: &a2
   url: https://x.com/qyq5201314/status/2120751731034259714
   kind: x
 dateAdded: "2026-11-16"
-lastVerified: "2026-11-16"
+lastVerified: "2026-11-22"
 status: active
 internalBriefing:
   - date: "2026-11-12"

@@ -1,6 +1,6 @@
 # OPC Vibe Stack (site)
 
-English-first static site for one-person companies using Claude Code, Codex, and Grok Build.
+English-first static site for one-person companies using the AI coding agents featured each week (currently Claude Code, Codex, and Google Antigravity).
 
 - Product: [PRD v0.5](../PRD-v0.5-en.md)
 - Design: [SDD v0.2](../SDD-v0.2.md)

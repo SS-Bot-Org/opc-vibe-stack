@@ -6,8 +6,8 @@ export const editorial = {
   nameZh: 'OPC Vibe Stack 编辑团队',
   repoUrl: 'https://github.com/SS-Bot-Org/opc-vibe-stack',
   correctionsUrl: 'https://github.com/SS-Bot-Org/opc-vibe-stack/issues',
-  /** Substantive About-page update date (author/correction section added). */
-  aboutUpdated: '2026-11-10',
+  /** Substantive About-page update date. */
+  aboutUpdated: '2026-11-22',
 } as const;
 
 export function editorialName(locale: Locale | string): string {

@@ -74,6 +74,8 @@ CARDS = [
     ('codex.zh.png', '工具指南', 'Codex', '从任务规格到可验证的代码改动'),
     ('grok-build.en.png', 'Tool guide', 'Grok Build', 'Buyer-facing pages, honest proof, and a CTA'),
     ('grok-build.zh.png', '工具指南', 'Grok Build', '面向买家的页面、诚实证据与主 CTA'),
+    ('antigravity.en.png', 'Tool guide', 'Google Antigravity', 'Check the buyer path in a browser and keep the evidence'),
+    ('antigravity.zh.png', '工具指南', 'Google Antigravity', '在浏览器里走查买家路径，并留下可审阅的证据'),
     ('spec-first-agent-loop.en.png', 'Research guide', 'Spec first, then let the agent change code', 'Outcomes, boundaries, and a verify command before edits'),
     ('spec-first-agent-loop.zh.png', '调研指南', '先写规格，再让 agent 改代码', '先写清结果、边界和验收命令，再改仓库'),
     ('rules-hooks.en.png', 'Build checklist', 'Rules files + hooks', 'Don’t rely on AGENTS.md alone'),

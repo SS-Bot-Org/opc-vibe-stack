@@ -11,7 +11,7 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Claude Code hooks/skills/MCP; Codex config.toml & mcp_servers — confirm exact syntax for your installed CLI version"
 published: "2026-11-06"
-updated: "2026-11-17"
+updated: "2026-11-22"
 internalBriefing:
   - date: "2026-11-02"
     note: "Hooks vs AGENTS.md alone"
@@ -25,6 +25,10 @@ internalBriefing:
     note: "One shared rules file; permissions enforce, prompts don't"
   - date: "2026-11-12"
     note: "@ file references skip PreToolUse hooks"
+  - date: "2026-11-18"
+    note: "Claude Code sandbox covers shell commands only"
+  - date: "2026-11-20"
+    note: "Policy hooks should set onFailure block"
 publicSources:
   - title: "Automate actions with hooks (Claude Code)"
     url: "https://code.claude.com/docs/en/hooks-guide"
@@ -37,6 +41,15 @@ publicSources:
     kind: docs
   - title: "Configure permissions (Claude Code)"
     url: "https://code.claude.com/docs/en/permissions"
+    kind: docs
+  - title: "Hooks reference: block the action when a hook fails (Claude Code)"
+    url: "https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails"
+    kind: docs
+  - title: "Claude Code changelog (2.1.328, 2.1.329)"
+    url: "https://code.claude.com/docs/en/changelog"
+    kind: docs
+  - title: "Configure the sandboxed Bash tool: what runs outside the sandbox (Claude Code)"
+    url: "https://code.claude.com/docs/en/sandboxing"
     kind: docs
   - title: "Extend Claude with skills (SKILL.md)"
     url: "https://code.claude.com/docs/en/skills"
@@ -134,15 +147,16 @@ These checks cover only the two tested access paths. [Read/Edit deny rules do no
 
 1. **Audit your `AGENTS.md` / `CLAUDE.md` and cut bloat.** Anthropic's [memory docs](https://code.claude.com/docs/en/memory) target under 200 lines per `CLAUDE.md` and note that `@path` imports organize a file but don't reduce its context cost. We aim for ~80 lines: directory layout, exact commands, code style, and top boundaries. Move instructions for one part of the codebase into path-scoped rules or a skill.
 2. **Keep one rules file for every tool.** Codex and most other agents read `AGENTS.md`; Claude Code reads `CLAUDE.md` and can also read `AGENTS.md` directly in supported sessions. The default fallback depends on the absence of `CLAUDE.md` and `CLAUDE.local.md` in the working directory and its ancestors; versions and instruction settings matter. If you also keep a `CLAUDE.md`, make its first line `@AGENTS.md` and put only Claude-specific notes below it, so the two files never drift. A `CLAUDE.md` → `AGENTS.md` symlink also works, but the docs recommend the import if anyone clones on Windows. Run `/context all` and confirm the file appears under **Memory files**.
-3. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a permission rule, hook, or build-script check. The [permissions docs](https://code.claude.com/docs/en/permissions) are explicit: rules are enforced by Claude Code, not the model, and instructions in `CLAUDE.md` don't change what it allows. Deny rules win over allow rules. Bash rules match the command text Claude writes, so a push written another way (`git -C . push`) slips past `Bash(git push *)`; use an appropriately configured sandbox or OS access control for a filesystem boundary; a `PreToolUse` hook only covers the calls it actually inspects. That includes `@` file references: they reach the prompt without a tool call, so a `Read` hook never sees them. Back sensitive paths with `Read` deny rules (applied best-effort to `@` mentions), or set `CLAUDE_CODE_DISABLE_FILE_MENTIONS=1` in your shell, user, or managed settings so mentioned paths go through file tools and your hooks run; the docs list v2.1.299 or later and say project and local settings ignore this variable. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
+3. **Identify your top 3 “must never happen” failures** (touching `.env*`, editing frozen migrations, skipping verification) and back each one with a permission rule, hook, or build-script check. The [permissions docs](https://code.claude.com/docs/en/permissions) are explicit: rules are enforced by Claude Code, not the model, and instructions in `CLAUDE.md` don't change what it allows. Deny rules win over allow rules. Bash rules match the command text Claude writes, so a push written another way (`git -C . push`) slips past `Bash(git push *)`; use an appropriately configured sandbox or OS access control for a filesystem boundary. Claude Code's own [sandbox](https://code.claude.com/docs/en/sandboxing#what-runs-outside-the-sandbox) wraps shell commands only: Read, Edit, Write, WebFetch, and WebSearch follow permission rules instead, a sandbox `denyRead` entry doesn't stop the Read tool, and command hooks and local MCP servers run with your full access. A `PreToolUse` hook only covers the calls it actually inspects. That includes `@` file references: they reach the prompt without a tool call, so a `Read` hook never sees them. Back sensitive paths with `Read` deny rules (applied best-effort to `@` mentions), or set `CLAUDE_CODE_DISABLE_FILE_MENTIONS=1` in your shell, user, or managed settings so mentioned paths go through file tools and your hooks run; the docs list v2.1.299 or later and say project and local settings ignore this variable. In Claude Code, `PreToolUse` can reject a tool call before it executes; `PostToolUse` runs after success and cannot prevent or undo it; `Stop` can prevent finishing, not reverse prior actions.
 4. **Keep hook commands fast.** Run targeted lint/type/path checks inside edit hooks; leave heavy full-repo integration suites for `Stop` or pre-push/CI so you never disable hooks out of impatience.
-5. **Extract recurring playbooks into `SKILL.md` folders.** Follow the [Agent Skills](https://agentskills.io/) structure (`SKILL.md` with YAML `name` + `description` + step-by-step instructions). Claude Code loads project skills from `.claude/skills/<skill-name>/SKILL.md`; verify exact skill directory paths in each tool’s current docs before symlinking across tools. For skills with side effects (deploy, publish, send), add `disable-model-invocation: true` so the skill runs only when you type `/skill-name`; `context: fork` runs a skill in its own subagent context, which suits heavy search jobs.
-6. **Configure shared MCP servers once per tool—in each tool’s native dialect.** One MCP server can serve Claude Code, Codex, and Cursor, **but there is no single universal config file**:
+5. **Make policy hooks fail closed.** Official fact ([hooks reference](https://code.claude.com/docs/en/hooks#block-the-action-when-a-hook-fails)): on most events, when a hook can't start, times out, exits with a code other than 0 or 2, or returns unparseable output, Claude Code still carries out the action. Set `"onFailure": "block"` on a `command`, `http`, or `mcp_tool` hook that guards something you must refuse; on supported events a failure then follows the exit 2 behavior. On `PermissionRequest`, a failure with this setting denies the request. Returning exit 2 alone leaves the normal permission flow in place. It requires v2.1.295 or later, and v2.1.328 or later on `mcp_tool` hooks. It has no effect on `Stop`, `SubagentStop`, `TaskCompleted`, `TeammateIdle`, or background (`async` or `asyncRewake`) hooks. The [2.1.329 changelog](https://code.claude.com/docs/en/changelog) also changed Code Mode so an erroring PreToolUse hook no longer refuses a script's tool call unless this field is set. Test it the way the docs do: point a synchronous `PreToolUse` command hook matching `Bash` at a missing script, ask for a harmless command such as `ls`, and confirm it is refused. We have not run that test for this update. Leave it unset on advisory hooks such as formatters; otherwise an unreliable hook service will block routine work.
+6. **Extract recurring playbooks into `SKILL.md` folders.** Follow the [Agent Skills](https://agentskills.io/) structure (`SKILL.md` with YAML `name` + `description` + step-by-step instructions). Claude Code loads project skills from `.claude/skills/<skill-name>/SKILL.md`; verify exact skill directory paths in each tool’s current docs before symlinking across tools. For skills with side effects (deploy, publish, send), add `disable-model-invocation: true` so the skill runs only when you type `/skill-name`; `context: fork` runs a skill in its own subagent context, which suits heavy search jobs.
+7. **Configure shared MCP servers once per tool—in each tool’s native dialect.** One MCP server can serve Claude Code, Codex, and Cursor, **but there is no single universal config file**:
    - **Claude Code:** project `.mcp.json` (or `claude mcp add --scope project ...`)
    - **Codex:** `[mcp_servers.<name>]` in `~/.codex/config.toml` (or trusted project `.codex/config.toml`)
    - **Cursor (if used):** `.cursor/mcp.json`
    Confirm connection health inside each tool’s own MCP status view, and keep API tokens in environment variables—never committed plaintext.
-7. **Log agent mistakes the day they happen.** Append a one-line rule or tighten the relevant `SKILL.md` / hook immediately after any post-mortem.
+8. **Log agent mistakes the day they happen.** Append a one-line rule or tighten the relevant `SKILL.md` / hook immediately after any post-mortem.
 
 > [!NOTE] Adapt repository-specific examples
 > `site/`, the `npm run check` script, and the `ops/` paths below belong to OPC Vibe Stack. In another project, inspect its README and available scripts before replacing them. For this repository’s full test suite, use its Linux CI environment; the deployment example requires GNU tools and `flock`. A skipped platform test is not a deployment pass.
@@ -290,6 +304,7 @@ The stdin `stop_hook_active` guard follows the [official loop-prevention guidanc
 - [ ] Confirmed the intended instructions actually load in each tool; use the explicit import when sharing files
 - [ ] Every “must never happen” rule is enforced by a permission rule, lifecycle hook, or nonzero build/CI check—not prose alone
 - [ ] Each secret-path guard was tested through both the Read tool and an `@` reference, with the result recorded per path
+- [ ] For each synchronous guard that supports `"onFailure": "block"`, trigger a controlled failure and verify the expected decision for its event (for example, a missing script on `PreToolUse` refuses the matched tool call)
 - [ ] Repeated multi-step workflows are extracted into `SKILL.md` folders with clear trigger descriptions
 - [ ] Each coding agent connects to any shared MCP server via its own native config file without secrets in Git
 - [ ] Context is cleared between unrelated tasks so stale session overrides do not linger

@@ -37,6 +37,15 @@ export async function getStackCards(locale = 'en'): Promise<Article[]> {
     .filter((c): c is Article => Boolean(c));
 }
 
+/** Tool cards that left the featured three; their pages stay published and linked. */
+export async function getFormerStackCards(locale = 'en'): Promise<Article[]> {
+  const listed = await getListedArticles(locale);
+  const cards = listed.filter((a) => a.data.category === 'stack');
+  return site.formerToolIds
+    .map((id) => cards.find((c) => c.data.toolId === id || c.data.slug === id))
+    .filter((c): c is Article => Boolean(c));
+}
+
 export async function getArticlesByStage(
   stage: 'research' | 'build' | 'sell',
   locale = 'en',
@@ -92,6 +101,7 @@ export const tipToolLabels: Record<string, string> = {
   'claude-code': 'Claude Code',
   codex: 'Codex',
   'grok-build': 'Grok Build',
+  antigravity: 'Google Antigravity',
   'claude-fable': 'Claude Fable 5.2',
 };
 
@@ -205,6 +215,8 @@ export const toolDisplayNames: Record<string, string> = {
   'claude-code': 'Claude Code',
   codex: 'Codex',
   'grok-build': 'Grok Build',
+  // Short form keeps the Stack page title within the 70-character SEO limit.
+  antigravity: 'Antigravity',
 };
 
 export function featuredToolNames(cards: Article[]): string[] {

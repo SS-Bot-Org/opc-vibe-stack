@@ -8,7 +8,8 @@ import { readInventory } from '../src/lib/inventory.mjs';
 const inventory = await readInventory();
 
 const articlesRoot = path.resolve('src/content/articles');
-const requiredTools = ['claude-code', 'codex', 'grok-build'];
+// Featured three plus tool cards that left the homepage but must stay live.
+const requiredTools = ['claude-code', 'codex', 'antigravity', 'grok-build'];
 const stagesNeeded = new Set(['research', 'build', 'sell']);
 
 async function walk(dir) {

@@ -14,7 +14,7 @@ Markdown files live in `site/src/content/tips/{en,zh}/<slug>.md`. Required front
 | `slug` | Lowercase kebab-case. Must match across `en` and `zh`, and should match the filename. |
 | `summary` | 1–160 characters. Used in search and ItemList JSON-LD. |
 | `locale` | `en` or `zh`, and it must match the directory. |
-| `tools` | IDs such as `claude-code`, `codex`, `grok-build`, `claude-fable`. Same list in both locales, same order. |
+| `tools` | IDs such as `claude-code`, `codex`, `antigravity`, `grok-build`, `claude-fable`. Same list in both locales, same order. |
 | `appliesTo` | Localized tool, version, or model scope. |
 | `tags` | Optional extra search terms. |
 | `evidence` | `tested`, `documentation-backed`, or `unverified` — the same labels as articles. |

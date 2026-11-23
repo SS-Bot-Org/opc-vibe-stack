@@ -23,7 +23,7 @@ discoverySource: &a2
   url: https://x.com/simonw/status/2120029347948220500
   kind: x
 dateAdded: "2026-11-16"
-lastVerified: "2026-11-16"
+lastVerified: "2026-11-22"
 status: active
 internalBriefing: []
 publicSources:

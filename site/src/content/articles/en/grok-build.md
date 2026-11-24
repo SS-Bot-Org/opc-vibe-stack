@@ -16,8 +16,11 @@ published: "2026-11-06"
 updated: "2026-11-23"
 internalBriefing:
   - date: "2026-11-23"
-    note: "Featured-tool notice: language-unrestricted X query and a separate Chinese-language sample (PR #11)"
+    note: "Featured-tool notice: the seven-day X query and separate Chinese-language sample concerned Google Antigravity (PR #11)"
 publicSources:
+  - title: "PR #11: evidence for featuring Google Antigravity"
+    url: "https://github.com/SS-Bot-Org/opc-vibe-stack/pull/11"
+    kind: other
   - title: "xAI Build documentation overview"
     url: "https://docs.x.ai/build/overview"
     kind: docs
@@ -28,7 +31,7 @@ bestFor: "A bounded page or demo task with a working repository and explicit che
 poorFit: "Assuming a coding session automatically supplies hosting, recording, or production access."
 caveats: "The shipping role is this site’s suggested workflow, not a vendor capability ranking. Verify hosting and recording separately."
 notice:
-  text: "As of 2026-11-22, Grok Build is no longer one of the homepage’s three featured tools, following seven days of activity in a language-unrestricted X query. A separate sample of Chinese-language posts also discussed the product (see PR #11). This guide stays published; its body has not been re-checked since 2026-11-10."
+  text: "On 2026-11-22, Google Antigravity replaced Grok Build among the three tools featured on the homepage. An X query for Google Antigravity across all languages found activity on each of the seven days reviewed. A separate sample of Chinese-language posts also discussed Google Antigravity (see PR #11). This Grok Build guide remains available. Its body was last checked on 2026-11-10."
   relatedSlugs: [antigravity]
 ---
 

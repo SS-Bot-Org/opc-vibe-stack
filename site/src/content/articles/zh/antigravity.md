@@ -20,7 +20,7 @@ internalBriefing:
   - date: "2026-11-20"
     note: "Antigravity 2.34.0 changelog"
   - date: "2026-11-23"
-    note: "Restored all official App permission presets; labeled official fact vs editorial recommendation; CLI default mode is request-review"
+    note: "Restored all official App permission presets; labeled official fact vs editorial recommendation; distinguished the CLI execution mode from its command approval policy"
 publicSources:
   - title: "Google Antigravity docs: Get started"
     url: "https://antigravity.google/docs/getting-started/"
@@ -117,7 +117,7 @@ Google Antigravity 包括 agent 桌面应用、CLI（`agy`）和一组编辑器�
 
 ## 步骤
 
-1. **确认终端命令由谁批准。** 官方事实（[权限文档](https://antigravity.google/docs/permissions/)）：桌面应用的权限选择器用于设置预设。CLI 中用 `/config` 查看当前模式。CLI 1.5.7+ 在 `auto` 可用时以此模式启动，被判定为安全且可逆的命令可能无需确认就能在沙箱外运行；否则以 `default` 模式（`request-review`）启动。已配置的 allow、deny、ask 规则优先于预设。编辑建议：沙箱可用时，为本次任务选择 **Default**。
+1. **确认终端命令由谁批准。** 官方事实（[权限文档](https://antigravity.google/docs/permissions/)）：桌面应用通过权限选择器设置预设。CLI 1.5.7+ 在支持 `auto` 的环境中默认以该模式启动，其他环境则以 `default` 启动，除非你另选了模式。在 `auto` 下，被判定为安全且可逆的命令可能无需确认就能在沙箱外运行。在 CLI 的 `default` 模式下，`toolPermission` 决定如何审批 shell 命令，默认值为 `request-review`。显式配置的 allow、deny 和 ask 规则优先生效。编辑建议：使用桌面应用时，沙箱可用即可为本次任务选择 **Default**。使用 CLI 且需要逐条审批命令时，在 `/config` 中选择 `default`，确认 `toolPermission` 为 `request-review`，并检查已有规则放行了哪些命令。
 2. **沿用现有的 `AGENTS.md`。** Antigravity 会把它当作始终生效的规则加载，同时也加载 `GEMINI.md` 和 `.agents/rules/*.md`。指令要保持与工具无关。编辑建议：工具专属的说明放进该工具自己的文件，不要在共享文件里写“如果你是某某工具”这类分支。有用户反映项目因为这样一行指令卡住，本站未复现。
 3. **先出计划，再留评论。** 用 `/plan` 或 Planning 模式，在[实施计划](https://antigravity.google/docs/implementation-plan/)上留评论，直到它只涉及该页面、样式和 CTA。
 4. **构建由你自己运行。** 使用项目自己的构建和预览命令。在过期的开发服务器上通过浏览器检查，证明不了发布构建没问题。

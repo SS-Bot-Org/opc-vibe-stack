@@ -20,7 +20,7 @@ internalBriefing:
   - date: "2026-11-20"
     note: "Antigravity 2.34.0 changelog"
   - date: "2026-11-23"
-    note: "Restored all official App permission presets; labeled official fact vs editorial recommendation; CLI default mode is request-review"
+    note: "Restored all official App permission presets; labeled official fact vs editorial recommendation; distinguished the CLI execution mode from its command approval policy"
 publicSources:
   - title: "Google Antigravity docs: Get started"
     url: "https://antigravity.google/docs/getting-started/"
@@ -117,7 +117,7 @@ Google Antigravity is an agent app, CLI (`agy`), and set of editor extensions. T
 
 ## Steps
 
-1. **Check who approves terminal commands.** Official fact ([permissions](https://antigravity.google/docs/permissions/)): In the App, the permission picker sets the preset. In the CLI, `/config` shows the current mode. Version 1.5.7+ starts in `auto` where that mode is available, so a command judged safe and reversible can run outside the sandbox without a prompt; otherwise it starts in `default` mode (`request-review`). Configured allow, deny, and ask rules take precedence over the preset. Editorial recommendation: use **Default** for this task when the sandbox is available.
+1. **Check who approves terminal commands.** Official fact ([permissions](https://antigravity.google/docs/permissions/)): The App has a permission preset picker. In the CLI, version 1.5.7+ starts in `auto` where available and in `default` otherwise, unless you choose a different mode. In `auto`, a command judged safe and reversible can run outside the sandbox without a prompt. In CLI `default` mode, the `toolPermission` setting controls shell command approval and defaults to `request-review`. Explicit allow, deny, and ask rules take precedence. Editorial recommendation: in the App, use **Default** for this task when the sandbox is available. For individual command review in the CLI, select `default` in `/config`, confirm that `toolPermission` is set to `request-review`, and check which commands your rules already allow.
 2. **Reuse your existing `AGENTS.md`.** Antigravity loads it as an always-on rule, and also loads `GEMINI.md` and `.agents/rules/*.md`. Keep instructions tool-neutral. Editorial recommendation: put tool-specific notes in that tool’s own file instead of writing “if you are tool X” branches in a shared file. One user reported a project stalling on such a line; we have not reproduced it.
 3. **Plan, then comment.** Use `/plan` or Planning mode, and comment on the [implementation plan](https://antigravity.google/docs/implementation-plan/) until it touches only the page, its styles, and its CTA.
 4. **Run the build yourself.** Use the project’s own build and preview commands. A browser pass on a stale dev server proves nothing about the release build.

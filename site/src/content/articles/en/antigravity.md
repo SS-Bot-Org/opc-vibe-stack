@@ -13,12 +13,14 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Google Antigravity App v2.30.0+ (built-in browser agent for personal Google Accounts) and Antigravity CLI (agy) with /browser; checked against the official docs and App v2.34.0 changelog on 2026-11-22. Confirm availability for your plan and account type"
 published: "2026-11-22"
-updated: "2026-11-22"
+updated: "2026-11-23"
 internalBriefing:
   - date: "2026-11-19"
     note: "Gemini 4 Neon and Orchestrator in Antigravity; shared AGENTS.md caution"
   - date: "2026-11-20"
     note: "Antigravity 2.34.0 changelog"
+  - date: "2026-11-23"
+    note: "Restored all official App permission presets; labeled official fact vs editorial recommendation; distinguished the CLI execution mode from its command approval policy"
 publicSources:
   - title: "Google Antigravity docs: Get started"
     url: "https://antigravity.google/docs/getting-started/"
@@ -103,7 +105,7 @@ Google Antigravity is an agent app, CLI (`agy`), and set of editor extensions. T
 | Allow / Ask / Deny rules for sites the browser subagent may open | [Browser use](https://antigravity.google/docs/browser/) | Settings > Browser > Browser Actuation Rules |
 | Implementation plan waits for review | [Implementation plan](https://antigravity.google/docs/implementation-plan/) | App and IDE extensions; `/plan` always stops for approval |
 | Walkthrough after implementation, with screenshots on request | [Walkthrough](https://antigravity.google/docs/walkthrough/) | App and IDE extensions. Browser recordings are optional and not guaranteed |
-| App permission presets | [Agent permissions](https://antigravity.google/docs/permissions/) | In Default, terminal commands run in the sandbox. Running outside it prompts for approval unless an existing rule allows the command. |
+| App permission presets: Request Review, Default, Auto, Turbo | [Agent permissions](https://antigravity.google/docs/permissions/) | Default: terminal commands run in the sandbox (workspace and temp dirs, no network); running outside it prompts for approval unless an existing rule allows the command. Auto: same sandbox, but a command judged safe and reversible can run outside it without a prompt. Request Review: sandbox off, always ask for terminal commands, workspace-only file access. Turbo: unrestricted commands and full filesystem access. Configured allow, deny, and ask rules take precedence over the preset. |
 | `AGENTS.md` / `GEMINI.md` and `.agents/rules/` are loaded as rules | [Rules](https://antigravity.google/docs/rules/) | Loaded from the workspace folder up to the repository root, not from subfolders below it; 24,000 bytes per file |
 
 ## Prerequisites
@@ -115,7 +117,7 @@ Google Antigravity is an agent app, CLI (`agy`), and set of editor extensions. T
 
 ## Steps
 
-1. **Check who approves terminal commands.** In the App, check the permission picker and use **Default** for this task when the sandbox is available. In the CLI, check the mode in `/config`. Version 1.5.7+ starts in `auto` where available, so a command judged safe and reversible can run outside the sandbox without a prompt. For individual command review, select `default` with the `request-review` tool policy and check your existing permission rules, which take precedence. [Agent permissions](https://antigravity.google/docs/permissions/)
+1. **Check who approves terminal commands.** Official fact ([permissions](https://antigravity.google/docs/permissions/)): The App has a permission preset picker. In the CLI, version 1.5.7+ starts in `auto` where available and in `default` otherwise, unless you choose a different mode. In `auto`, a command judged safe and reversible can run outside the sandbox without a prompt. In CLI `default` mode, the `toolPermission` setting controls shell command approval and defaults to `request-review`. Explicit allow, deny, and ask rules take precedence. Editorial recommendation: in the App, use **Default** for this task when the sandbox is available. For individual command review in the CLI, select `default` in `/config`, confirm that `toolPermission` is set to `request-review`, and check which commands your rules already allow.
 2. **Reuse your existing `AGENTS.md`.** Antigravity loads it as an always-on rule, and also loads `GEMINI.md` and `.agents/rules/*.md`. Keep instructions tool-neutral. Editorial recommendation: put tool-specific notes in that tool’s own file instead of writing “if you are tool X” branches in a shared file. One user reported a project stalling on such a line; we have not reproduced it.
 3. **Plan, then comment.** Use `/plan` or Planning mode, and comment on the [implementation plan](https://antigravity.google/docs/implementation-plan/) until it touches only the page, its styles, and its CTA.
 4. **Run the build yourself.** Use the project’s own build and preview commands. A browser pass on a stale dev server proves nothing about the release build.

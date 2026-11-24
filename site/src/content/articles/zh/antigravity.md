@@ -13,12 +13,14 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Google Antigravity App v2.30.0+（个人 Google 账号的内置浏览器 agent）与 Antigravity CLI（agy）的 /browser；已于 2026-11-22 对照官方文档和 App v2.34.0 changelog 核对。请按你的方案和账号类型确认可用性"
 published: "2026-11-22"
-updated: "2026-11-22"
+updated: "2026-11-23"
 internalBriefing:
   - date: "2026-11-19"
     note: "Gemini 4 Neon and Orchestrator in Antigravity; shared AGENTS.md caution"
   - date: "2026-11-20"
     note: "Antigravity 2.34.0 changelog"
+  - date: "2026-11-23"
+    note: "Restored all official App permission presets; labeled official fact vs editorial recommendation; distinguished the CLI execution mode from its command approval policy"
 publicSources:
   - title: "Google Antigravity docs: Get started"
     url: "https://antigravity.google/docs/getting-started/"
@@ -103,7 +105,7 @@ Google Antigravity 包括 agent 桌面应用、CLI（`agy`）和一组编辑器�
 | 为浏览器子 agent 可打开的网站设置 Allow / Ask / Deny 规则 | [Browser use](https://antigravity.google/docs/browser/) | 设置 > Browser > Browser Actuation Rules |
 | 实施计划会等待审阅 | [Implementation plan](https://antigravity.google/docs/implementation-plan/) | 应用与 IDE 扩展；`/plan` 总会停下等你批准 |
 | 实施完成后生成 walkthrough，可按要求附截图 | [Walkthrough](https://antigravity.google/docs/walkthrough/) | 应用与 IDE 扩展。浏览器录屏是可选的，且不保证生成 |
-| 桌面应用的权限预设 | [Agent permissions](https://antigravity.google/docs/permissions/) | Default 在沙箱中运行终端命令。命令需要在沙箱外运行时会请求批准，已有规则允许的命令除外。 |
+| 桌面应用的权限预设：Request Review、Default、Auto、Turbo | [Agent permissions](https://antigravity.google/docs/permissions/) | Default：终端命令在沙箱中运行（工作区与临时目录，无网络）；需要在沙箱外运行时会请求批准，已有规则允许的命令除外。Auto：同样使用沙箱，但被判定为安全且可逆的命令可以不经确认在沙箱外运行。Request Review：关闭沙箱，终端命令一律询问，文件访问限于工作区。Turbo：不限制命令，并可访问整个文件系统。已配置的 allow、deny、ask 规则优先于预设。 |
 | `AGENTS.md` / `GEMINI.md` 与 `.agents/rules/` 作为规则加载 | [Rules](https://antigravity.google/docs/rules/) | 从工作区文件夹向上加载到仓库根目录，不加载其下的子文件夹；单文件上限 24,000 字节 |
 
 ## 前置条件
@@ -115,7 +117,7 @@ Google Antigravity 包括 agent 桌面应用、CLI（`agy`）和一组编辑器�
 
 ## 步骤
 
-1. **确认终端命令由谁批准。** 在桌面应用的权限选择器里查看当前预设，沙箱可用时可为本次任务选择 **Default**。在 CLI 中，用 `/config` 查看当前模式。CLI 1.5.7+ 在支持的环境中默认使用 `auto`，被判定为安全且可逆的命令可能无需确认就能在沙箱外运行。需要逐条审阅命令时，选择 `default` 模式并使用 `request-review` 工具策略，同时检查已有的权限规则，因为它们优先生效。[官方权限说明](https://antigravity.google/docs/permissions/)
+1. **确认终端命令由谁批准。** 官方事实（[权限文档](https://antigravity.google/docs/permissions/)）：桌面应用通过权限选择器设置预设。CLI 1.5.7+ 在支持 `auto` 的环境中默认以该模式启动，其他环境则以 `default` 启动，除非你另选了模式。在 `auto` 下，被判定为安全且可逆的命令可能无需确认就能在沙箱外运行。在 CLI 的 `default` 模式下，`toolPermission` 决定如何审批 shell 命令，默认值为 `request-review`。显式配置的 allow、deny 和 ask 规则优先生效。编辑建议：使用桌面应用时，沙箱可用即可为本次任务选择 **Default**。使用 CLI 且需要逐条审批命令时，在 `/config` 中选择 `default`，确认 `toolPermission` 为 `request-review`，并检查已有规则放行了哪些命令。
 2. **沿用现有的 `AGENTS.md`。** Antigravity 会把它当作始终生效的规则加载，同时也加载 `GEMINI.md` 和 `.agents/rules/*.md`。指令要保持与工具无关。编辑建议：工具专属的说明放进该工具自己的文件，不要在共享文件里写“如果你是某某工具”这类分支。有用户反映项目因为这样一行指令卡住，本站未复现。
 3. **先出计划，再留评论。** 用 `/plan` 或 Planning 模式，在[实施计划](https://antigravity.google/docs/implementation-plan/)上留评论，直到它只涉及该页面、样式和 CTA。
 4. **构建由你自己运行。** 使用项目自己的构建和预览命令。在过期的开发服务器上通过浏览器检查，证明不了发布构建没问题。

@@ -13,8 +13,10 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Grok Build / xAI 构建工具；具体界面与命令流请以 xAI 最新线上文档为准"
 published: "2026-11-06"
-updated: "2026-11-10"
-internalBriefing: []
+updated: "2026-11-23"
+internalBriefing:
+  - date: "2026-11-23"
+    note: "Featured-tool notice: language-unrestricted X query and a separate Chinese-language sample (PR #11)"
 publicSources:
   - title: "xAI Build documentation overview"
     url: "https://docs.x.ai/build/overview"
@@ -26,7 +28,7 @@ bestFor: "已有可运行仓库与明确检查时，完成有边界的页面或�
 poorFit: "以为开启编码会话就自动具备托管、录屏或生产环境访问能力。"
 caveats: "上线环节是本站建议的分工，不是厂商能力排名；托管和录屏需分别核实。"
 notice:
-  text: "自 2026-11-22 起，Grok Build 不再是首页主推的三款工具之一，因为近期公开讨论集中在其他编程 agent 上。本指南继续保留；自上次更新日期以来，内容未重新核对。"
+  text: "自 2026-11-22 起，Grok Build 不再是首页主推的三款工具之一：不限语言的 X 查询连续七天都有相关讨论，另行抽查的中文帖子也在讨论这款产品（见 PR #11）。本指南继续保留；正文自 2026-11-10 以来未重新核对。"
   relatedSlugs: [antigravity]
 ---
 

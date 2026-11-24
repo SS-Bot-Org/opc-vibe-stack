@@ -13,8 +13,10 @@ status: published
 evidence: documentation-backed
 applicableToolsVersions: "Grok Build / xAI build tooling; confirm current product surfaces and CLI/web workflows in live xAI docs"
 published: "2026-11-06"
-updated: "2026-11-10"
-internalBriefing: []
+updated: "2026-11-23"
+internalBriefing:
+  - date: "2026-11-23"
+    note: "Featured-tool notice: language-unrestricted X query and a separate Chinese-language sample (PR #11)"
 publicSources:
   - title: "xAI Build documentation overview"
     url: "https://docs.x.ai/build/overview"
@@ -26,7 +28,7 @@ bestFor: "A bounded page or demo task with a working repository and explicit che
 poorFit: "Assuming a coding session automatically supplies hosting, recording, or production access."
 caveats: "The shipping role is this site’s suggested workflow, not a vendor capability ranking. Verify hosting and recording separately."
 notice:
-  text: "As of 2026-11-22, Grok Build is no longer one of the homepage’s three featured tools, because recent public discussion has centered on other coding agents. This guide stays published; its content has not been re-checked since its last update date."
+  text: "As of 2026-11-22, Grok Build is no longer one of the homepage’s three featured tools, following seven days of activity in a language-unrestricted X query. A separate sample of Chinese-language posts also discussed the product (see PR #11). This guide stays published; its body has not been re-checked since 2026-11-10."
   relatedSlugs: [antigravity]
 ---
 
